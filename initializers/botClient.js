@@ -1,7 +1,7 @@
 const {Client, GatewayIntentBits, Events} = require('discord.js');
 const config = require('../config.json');
 
-const client = new Client({
+const discordClient = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
@@ -9,9 +9,19 @@ const client = new Client({
     ],
 });
 
-client.once(Events.ClientReady, () => {
-    console.log(`Connected as ${client.user.tag}`);
+discordClient.once(Events.ClientReady, async () => {
+    console.log(`Connected as ${discordClient.user.tag}`);
+    await discordClient.user.setPresence({
+        activities: [],
+        status: 'idle'
+    })
 });
-client.login(config.DISCORD_TOKEN);
 
-module.exports = client;
+discordClient.login(config.DISCORD_TOKEN).then(() => {
+    console.log('logged in');
+}).catch(err => {
+    console.error('failed to login:', err);
+    process.exit(1);
+})
+
+module.exports = discordClient;
