@@ -2,5 +2,7 @@
   "DISCORD_TOKEN": "",
   "GEMINI_API_KEY": "",
   "GEMINI_MODEL": "",
-  "ALIASES": []
+  "ALIASES": [],
+  "CHANNELS": [],
+  "GUILD_ID": ""
 }

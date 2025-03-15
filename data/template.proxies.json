@@ -1,0 +1,11 @@
+[
+  {
+    "host": "",
+    "port": "",
+    "protocol": "http",
+    "auth": {
+      "username": "",
+      "password": ""
+    }
+  }
+]
