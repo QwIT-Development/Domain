@@ -11,16 +11,18 @@ const generationConfig = {
     responseMimeType: 'text/plain'
 };
 
-async function promptLoader() {
-    const model = genAI.getGenerativeModel({
-        model: "gemini-2.0-flash-exp",
+async function model() {
+    return genAI.getGenerativeModel({
+        model: config.GEMINI_MODEL,
         systemInstruction: await makePrompt()
-    });
-
-    return model.startChat({
-        generationConfig,
-        history: [],
     });
 }
 
-module.exports = promptLoader;
+function promptLoader(model, history) {
+    return model.startChat({
+        generationConfig,
+        history: history,
+    });
+}
+
+module.exports = {promptLoader, model};

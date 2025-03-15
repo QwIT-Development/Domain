@@ -2,7 +2,7 @@
 async function main() {
     // imports
     const {Events} = require("discord.js");
-    const promptLoader = require('./initializers/geminiClient');
+    const {promptLoader, model} = require('./initializers/geminiClient');
     const messageHandler = require('./eventHandlers/messageHandler');
 
     // initialize stuff inside async thingy
@@ -15,9 +15,17 @@ async function main() {
         await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    const geminiSession = promptLoader();
+    const geminiModel = await model();
+    let history = [];
+    const geminiSession = promptLoader(geminiModel, history);
 
-    discordClient.on(Events.MessageCreate, message => {messageHandler(message, discordClient)} );
+    discordClient.on(Events.MessageCreate, message => {
+        messageHandler(
+            message,
+            discordClient,
+            geminiSession
+        )
+    });
 
 }
 
