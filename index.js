@@ -1,5 +1,6 @@
 // async main thread hell yeah
 async function main() {
+    require('./utils/webui'); // fire up webui
     // imports
     const {Events} = require("discord.js");
     const {promptLoader, model} = require('./initializers/geminiClient');

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css"
+          integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="stylesheet" href="/style.css">
+    <title>Domain WebUI</title>
+</head>
+<body>
+<div id="layout">
+    <a href="#menu" id="menuLink" class="menu-link">
+        <span></span>
+    </a>
+
+    <div id="menu">
+        <div class="pure-menu">
+            <a class="pure-menu-heading">Domain WebUI</a>
+
+            <ul class="pure-menu-list">
+                <li class="pure-menu-item menu-item-divided pure-menu-selected">
+                    <a href="/" class="pure-menu-link">Statistics</a></li>
+                <li class="pure-menu-item">
+                    <a onclick="" class="pure-menu-link">Lobotomize</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="main">
+        <div class="header">
+            <h1>Statistics</h1>
+        </div>
+
+        <div class="content">
+            <h2>Ram usage: <i id="heapused"></i>/<i id="heaptotal"></i></h2>
+            <h2>Messages received: <i id="msgReceived"></i></h2>
+        </div>
+
+    </div>
+</div>
+
+<script src="/ui.js"></script>
+<script>
+    function updateRamUsage() {
+        fetch('/api/usagestats/ram')
+            .then(response => response.json())
+            .then(data => {
+                const heapUsedElement = document.getElementById('heapused');
+                const heapTotalElement = document.getElementById('heaptotal');
+
+                const usedMB = (data.used / (1000 * 1000)).toFixed(2);
+                const totalMB = (data.total / (1000 * 1000)).toFixed(2);
+
+                heapUsedElement.textContent = `${usedMB} MiB`;
+                heapTotalElement.textContent = `${totalMB} MiB`;
+            })
+            .catch(error => {
+                console.error('Error fetching RAM usage:', error);
+            });
+    }
+
+    function updateMsgs() {
+        fetch('/api/usagestats/messagecount')
+            .then(response => response.json())
+            .then(data => {
+                const msgReceivedElement = document.getElementById('msgReceived');
+                msgReceivedElement.textContent = data.count;
+            })
+    }
+
+    updateMsgs();
+    updateRamUsage();
+    setInterval(updateRamUsage, 5000);
+    setInterval(updateMsgs, 5000);
+</script>
+</body>
+</html>
