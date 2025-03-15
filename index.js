@@ -3,6 +3,7 @@ async function main() {
     // imports
     const {Events} = require("discord.js");
     const promptLoader = require('./initializers/geminiClient');
+    const messageHandler = require('./eventHandlers/messageHandler');
 
     // initialize stuff inside async thingy
     let discordClientReady = false;
@@ -16,7 +17,7 @@ async function main() {
 
     const geminiSession = promptLoader();
 
-
+    discordClient.on(Events.MessageCreate, message => {messageHandler(message, discordClient)} );
 
 }
 
