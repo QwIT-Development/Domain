@@ -22,3 +22,7 @@ meg nem kell allandoan rebuildelni a kodot, csak azert, hogy fusson. (kezben tar
 Fuck dotenv, config.jsont hasznalunk. legalabb nem kell kulon package csak azert h betoltsunk egy izet.
 configot
 ```
+```
+remelem jol elbaszta egy kamion azt az elvtarst, aki azt akarta, hogy egy proxy a real ipt forwardolja.
+but like olje meg magat ott ahol van. anyways, mukodokepes a proxy, real useragent, shitty ipket returnol, mintha otbillio proxyn atmenne
+```
