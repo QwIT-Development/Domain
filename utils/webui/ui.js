@@ -11,9 +11,9 @@
     }
 
     function toggleClass(element, className) {
-        var classes = element.className.split(/\s+/);
-        var length = classes.length;
-        var i = 0;
+        const classes = element.className.split(/\s+/);
+        const length = classes.length;
+        let i = 0;
 
         for (; i < length; i++) {
             if (classes[i] === className) {
@@ -30,8 +30,8 @@
     }
 
     function toggleAll() {
-        var active = 'active';
-        var elements = getElements();
+        const active = 'active';
+        const elements = getElements();
 
         toggleClass(elements.layout, active);
         toggleClass(elements.menu, active);
@@ -39,7 +39,7 @@
     }
 
     function handleEvent(e) {
-        var elements = getElements();
+        const elements = getElements();
 
         if (e.target.id === elements.menuLink.id) {
             toggleAll();
