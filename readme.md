@@ -18,3 +18,7 @@ ez nehezebb amugy mint hittem, de mar belekezdtem es megirom, also zypherift ez 
 why tf do u rewrite it in a compiled lang? like, we want to have just in time errors. jobban szeretem
 meg nem kell allandoan rebuildelni a kodot, csak azert, hogy fusson. (kezben tartunk mindent)
 ```
+```
+Fuck dotenv, config.jsont hasznalunk. legalabb nem kell kulon package csak azert h betoltsunk egy izet.
+configot
+```

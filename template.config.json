@@ -1,5 +1,6 @@
 {
   "DISCORD_TOKEN": "",
   "GEMINI_API_KEY": "",
-  "GEMINI_MODEL": ""
+  "GEMINI_MODEL": "",
+  "ALIASES": []
 }
