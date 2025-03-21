@@ -18,13 +18,13 @@ async function main() {
 
     const geminiModel = await model();
     let history = [];
-    const geminiSession = promptLoader(geminiModel, history);
+    global.geminiSession = promptLoader(geminiModel, history);
 
     discordClient.on(Events.MessageCreate, message => {
         messageHandler(
             message,
             discordClient,
-            geminiSession
+            global.geminiSession
         )
     });
 

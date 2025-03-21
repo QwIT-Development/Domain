@@ -11,6 +11,27 @@
     <title>Domain WebUI</title>
 </head>
 <body>
+
+<script>
+    function lobotomize() {
+        fetch('/api/lobotomize', {
+            method: 'PUT'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Message history cleared.');
+                } else {
+                    alert('Failed to clear message history.');
+                }
+            })
+            .catch(error => {
+                console.error('Error lobotomizing bot:', error);
+                alert('Failed to clear message history.');
+            })
+    }
+</script>
+
 <div id="layout">
     <a href="#menu" id="menuLink" class="menu-link">
         <span></span>
@@ -24,7 +45,7 @@
                 <li class="pure-menu-item menu-item-divided pure-menu-selected">
                     <a href="/" class="pure-menu-link">Statistics</a></li>
                 <li class="pure-menu-item">
-                    <a onclick="" class="pure-menu-link">Lobotomize</a></li>
+                    <a onclick="lobotomize()" class="pure-menu-link">Lobotomize</a></li>
             </ul>
         </div>
     </div>

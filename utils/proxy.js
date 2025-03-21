@@ -1,10 +1,31 @@
 const axios = require('axios');
-const proxies = require('../data/proxies.json');
+const fs = require('fs');
 
 async function fetchWithProxies(url) {
+    let proxies = [];
+    try {
+        if (fs.existsSync('../data/proxies.json')) {
+            proxies = require('../data/proxies.json');
+        } else {
+            console.error('data/proxies.json doesn\'t exist. Please add some...');
+        }
+    } catch (err) {
+        console.error("Error while checking if proxies.json exists: ", err);
+        console.error("data/proxies.json cannot be checked. Please make sure it exists...");
+    }
+
     if (proxies.length === 0) {
-        const response = await axios.get(url);
-        return response.data;
+        try {
+            console.warn('No proxies available, using direct connection.');
+            const response = await axios.get(url);
+            return {
+                data: response.data,
+                proxyUsed: 'none',
+                usingProxy: false
+            };
+        } catch (error) {
+            throw new Error(`Direct connection failed: ${error.message}`);
+        }
     }
 
     for (const proxy of proxies) {
@@ -19,21 +40,19 @@ async function fetchWithProxies(url) {
                 auth: `${proxy.auth.username}:${proxy.auth.password}`
             };
 
+            // noinspection JSCheckFunctionSignatures
             const httpsAgent = new httpsProxyAgent.HttpsProxyAgent(agentOptions);
+            // noinspection JSCheckFunctionSignatures
             const httpAgent = new httpProxyAgent.HttpProxyAgent(agentOptions);
 
-            const axiosInstance = axios.create({
+            const axiosInstance = await axios.create({
                 proxy: false,
                 headers: {
                     // legit useragent
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
+                    'User-Agent': await userAgent(),
                     'Proxy-Authorization': `Basic ${Buffer.from(`${proxy.auth.username}:${proxy.auth.password}`).toString('base64')}`,
-
-                    // shitty try at modifying the ip
-                    // I mean, it does indeed look real, like a shitty buildup
-                    // so it should look like this: proxy, home network, internal network, docker network, public ip? (yeah fuck the rfc that wanted to forward the real ip)
-                    'X-Forwarded-For': proxy.host + ", 192.168.1.31, 10.0.0.3, 172.18.0.12",
-                    'X-Real-IP': proxy.host + ", 192.168.1.31, 10.0.0.3, 172.18.0.12"
+                    'X-Forwarded-For': proxy.host,
+                    'X-Real-IP': proxy.host
                 },
                 timeout: 10000,
                 httpsAgent: url.startsWith('https') ? httpsAgent : false,
@@ -54,7 +73,7 @@ async function fetchWithProxies(url) {
         }
     }
 
-    console.log('no more proxies to try');
+    console.warn('No more proxies to try...');
     try {
         const response = await axios.get(url);
         return {
@@ -63,22 +82,27 @@ async function fetchWithProxies(url) {
             usingProxy: false
         };
     } catch (error) {
-        throw new Error('direct connection failed too :(');
+        throw new Error(`Direct connection failed: ${error.message}`);
     }
 }
 
-/*
-async function test() {
-    try {
-        const result = await fetchWithProxies('https://httpbin.org/anything');
-        console.log(result.proxyUsed);
-        console.log(result.data);
-    } catch (error) {
-        console.error('Test failed:', error.message);
-    }
-}
+async function userAgent() {
+    const userAgents = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36 Edg/133.0.0.0",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:136.0) Gecko/20100101 Firefox/136.0",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0",
+        "Mozilla/5.0 (X11; Linux x86_64; rv:135.0) Gecko/20100101 Firefox/135.0"
+    ];
 
-test();
-*/
+    const rng = Math.floor(Math.random() * userAgents.length);
+    return userAgents[rng];
+}
 
 module.exports = fetchWithProxies;
