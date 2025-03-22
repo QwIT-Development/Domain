@@ -7,6 +7,7 @@ async function initData() {
     const memoriesPath = path.join(global.dirname, 'data', 'running', 'memories.json');
     const memories = {};
     if (!fs.existsSync(memoriesPath)) {
+        console.info('Creating memories "db"');
         await fs.writeFileSync(memoriesPath, JSON.stringify(memories));
     }
 
@@ -27,6 +28,7 @@ async function initData() {
     const reputationPath = path.join(global.dirname, 'data', 'running', 'reputation.json');
     const reputation = {};
     if (!fs.existsSync(reputationPath)) {
+        console.info('Creating reputation "db"');
         await fs.writeFileSync(reputationPath, JSON.stringify(reputation));
     }
 
@@ -43,6 +45,7 @@ async function initData() {
     const banlistPath = path.join(global.dirname, 'data', 'running', 'banlist.json');
     const banlist = {};
     if (!fs.existsSync(banlistPath)) {
+        console.info('Creating banlist');
         await fs.writeFileSync(banlistPath, JSON.stringify(banlist));
     }
 

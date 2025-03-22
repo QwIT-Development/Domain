@@ -6,6 +6,7 @@
 const config = require('../config.json');
 const path = require('path');
 const fs = require('fs');
+const log = require('../utils/betterLogs');
 
 function formatDate(date) {
     const year = date.getFullYear();
@@ -33,7 +34,7 @@ async function makePrompt() {
         // path: ./prompts/<PROMPT_PATH>
         prompt = fs.readFileSync(path.join(global.dirname, 'prompts', config.PROMPT_PATH), 'utf8');
     } catch (e) {
-        console.error('failed to create prompt:', e);
+        log(`Failed to create prompt: ${e}`, 'error', 'makeprompt.js');
         return "";
     }
 
@@ -44,7 +45,7 @@ async function makePrompt() {
         muteWords = fs.readFileSync(path.join(global.dirname, 'data', 'muteWords.json'), 'utf8');
         muteWords = JSON.parse(muteWords);
     } catch (e) {
-        console.error('failed to load mute words:', e);
+        log(`Failed to load mute words: ${e}`, 'error', 'makeprompt.js');
         muteWords = [];
     }
 

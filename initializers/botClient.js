@@ -11,6 +11,7 @@ Fuck dotenv, config.jsont hasznalunk. legalabb nem kell kulon package csak azert
 configot
  */
 const config = require('../config.json');
+const log = require('../utils/betterLogs');
 
 // noinspection JSUnresolvedReference
 const discordClient = new Client({
@@ -22,7 +23,7 @@ const discordClient = new Client({
 });
 
 discordClient.once(Events.ClientReady, async () => {
-    console.log(`Connected as ${discordClient.user.tag}`);
+    log(`Connected as ${discordClient.user.tag}`, 'info', 'botclient.js');
     await discordClient.user.setPresence({
         activities: [],
         status: 'idle'
@@ -30,9 +31,9 @@ discordClient.once(Events.ClientReady, async () => {
 });
 
 discordClient.login(config.DISCORD_TOKEN).then(() => {
-    console.log('logged in');
+    log("Bot logged in", 'info', 'botClient.js')
 }).catch(err => {
-    console.error('failed to login:', err);
+    log(`Failed to log in: ${err}`, 'error', 'botClient.js');
     process.exit(1);
 })
 

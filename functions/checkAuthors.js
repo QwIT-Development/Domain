@@ -7,6 +7,7 @@
 const config = require('../config.json');
 const jailbreaks = require('../data/jailbreaks.json');
 const strings = require('../data/strings.json');
+const log = require('../utils/betterLogs');
 
 async function checkAuthors(message, client) {
     // if bot send messsagre = bad
@@ -34,7 +35,7 @@ async function checkAuthors(message, client) {
             const member = await guild.members.fetch(userId);
             await member.timeout(time, strings["jailbreak-attempt"]);
         } catch (e) {
-            console.error('failed to mute user:', e);
+            log(`Failed to mute user: ${e}`, 'error', 'checkAuthors.js');
             return false;
         }
         return false;

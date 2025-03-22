@@ -19,6 +19,8 @@
 
 // async main thread hell yeah
 async function main() {
+    const log = require('./utils/betterLogs');
+    log("Starting Domain-Unchained", 'info');
     global.dirname = __dirname;
     const initData = require('./utils/initData');
     await initData(); // init stuff that will be used by the bot
