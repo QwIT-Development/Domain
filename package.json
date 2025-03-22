@@ -1,8 +1,16 @@
 {
-  "name": "domain-unchained",
+  "name": "@qwit-development/domain-unchained",
+  "bugs": {
+    "url": "https://github.com/QwIT-Development/Domain/issues"
+  },
+  "scripts": {
+    "start": "bun run index.js"
+  },
   "version": "1.0.0",
-  "description": "",
+  "description": "Domain-Unchained, the discord bot that uses gemini api to generate messages",
   "main": "index.js",
+  "license": "AGPL-3.0-or-later",
+  "author": "BalazsManus <contact@mnus.moe> (https://mnus.moe)",
   "private": true,
   "dependencies": {
     "@google/generative-ai": "^0.24.0",
@@ -11,5 +19,8 @@
     "express": "^4.21.2",
     "http-proxy-agent": "^7.0.2",
     "https-proxy-agent": "^7.0.6"
+  },
+  "devDependencies": {
+    "npm-lint": "^0.3.4"
   }
 }
