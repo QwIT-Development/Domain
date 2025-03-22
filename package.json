@@ -17,10 +17,8 @@
     "axios": "^1.8.3",
     "discord.js": "^14.18.0",
     "express": "^4.21.2",
+    "fuse.js": "^7.1.0",
     "http-proxy-agent": "^7.0.2",
     "https-proxy-agent": "^7.0.6"
-  },
-  "devDependencies": {
-    "npm-lint": "^0.3.4"
   }
 }

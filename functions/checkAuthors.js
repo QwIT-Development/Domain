@@ -8,6 +8,7 @@ const config = require('../config.json');
 const jailbreaks = require('../data/jailbreaks.json');
 const strings = require('../data/strings.json');
 const log = require('../utils/betterLogs');
+const {splitFuzzySearch} = require('../utils/fuzzySearch');
 
 async function checkAuthors(message, client) {
     // if bot send messsagre = bad
@@ -45,4 +46,21 @@ async function checkAuthors(message, client) {
     return true;
 }
 
-module.exports = checkAuthors;
+async function checkForMentions(message, client) {
+    // check if bot is mentioned
+    const mentioned = message.mentions.users.has(client.user.id);
+    if (mentioned) return true;
+
+    // check if user is replying to the bot
+    // noinspection JSUnresolvedReference
+    const replied = message.reference?.messageId &&
+        (await message.channel.messages.fetch(message.reference.messageId))
+            .author.id === client.user.id;
+    if (replied) return true;
+
+    if (splitFuzzySearch(message.content, config.ALIASES)) return true;
+
+    return false;
+}
+
+module.exports = {checkAuthors, checkForMentions};

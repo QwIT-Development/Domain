@@ -4,17 +4,19 @@
 */
 
 
-const checkAuthors = require('../functions/checkAuthors');
+const {checkAuthors, checkForMentions} = require('../functions/checkAuthors');
 const state = require('../initializers/state');
 
 async function messageHandler(message, client, gemini) {
     if (await checkAuthors(message, client)) {
-        // skizofren enem azt mondja, h ne bizzak a ++ban
-        state.msgCount += 1;
+        if (await checkForMentions(message, client)) {
+            // skizofren enem azt mondja, h ne bizzak a ++ban
+            state.msgCount += 1;
 
-        let response = await gemini.sendMessage(message.content);
-        response = response.response.text();
-        message.reply(response);
+            let response = await gemini.sendMessage(message.content);
+            response = response.response.text();
+            message.reply(response);
+        }
     }
 }
 
