@@ -1,4 +1,5 @@
 bun.lock
+package-lock.json
 node_modules
 config.json
-data/proxies.json
+pnpm-lock.yaml
