@@ -9,7 +9,8 @@ const state = require('../initializers/state');
 
 async function messageHandler(message, client, gemini) {
     if (await checkAuthors(message, client)) {
-        state.msgCount++;
+        // skizofren enem azt mondja, h ne bizzak a ++ban
+        state.msgCount += 1;
 
         let response = await gemini.sendMessage(message.content);
         response = response.response.text();
