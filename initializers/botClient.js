@@ -12,6 +12,7 @@ configot
  */
 const config = require('../config.json');
 
+// noinspection JSUnresolvedReference
 const discordClient = new Client({
     intents: [
         GatewayIntentBits.Guilds,

@@ -51,6 +51,7 @@ async function main() {
     await botReady(discordClient);
 
     discordClient.on(Events.MessageCreate, message => {
+        // noinspection JSUnresolvedReference
         messageHandler(
             message,
             discordClient,
