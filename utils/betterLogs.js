@@ -1,4 +1,5 @@
 function log(message, type = "info", thread = "index.js") {
+    // https://colors.sh/
     const colors = {
         "info": "\033[38;5;33m",
         "infoWarn": "\033[38;5;15m\033[48;5;7m",
@@ -6,6 +7,7 @@ function log(message, type = "info", thread = "index.js") {
         "error": "\033[38;5;15m\033[48;5;160m",
         "reset": "\033[0m"
     };
+
     const symbols = {
         "info": "",
         "infoWarn": "⚠",
