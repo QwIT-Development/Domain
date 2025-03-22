@@ -18,13 +18,11 @@
 
 
 // async main thread hell yeah
-
-/*
-Y'all bunt kene hasznalni, mert benchmarkok aztat mondtak h gyorsabb mint egy node
-(nagyon remelem nem basztak at)
- */
 async function main() {
     global.dirname = __dirname;
+    const initData = require('./utils/initData');
+    await initData(); // init stuff that will be used by the bot
+
     require('./utils/webui'); // fire up webui
     // imports
     const {Events} = require("discord.js");
