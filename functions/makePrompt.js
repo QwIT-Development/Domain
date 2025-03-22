@@ -33,6 +33,7 @@ async function makePrompt() {
     try {
         // path: ./prompts/<PROMPT_PATH>
         prompt = fs.readFileSync(path.join(global.dirname, 'prompts', config.PROMPT_PATH), 'utf8');
+        log(`Loaded prompt: ${config.PROMPT_PATH}`, 'info', 'makeprompt.js');
     } catch (e) {
         log(`Failed to create prompt: ${e}`, 'error', 'makeprompt.js');
         return "";
@@ -61,8 +62,10 @@ async function makePrompt() {
     }
 
     // load wiki contents, if possible
-    if (prompt.includes("${WIKI_CONTENT}")) {
+    if (config.WIKI_URLS.length > 0) {
+        if (prompt.includes("${WIKI_CONTENT}")) {
 
+        }
     }
 
     // add words, what the bot don't like and will mute users on trigger
@@ -70,6 +73,7 @@ async function makePrompt() {
         prompt = prompt.replace("${MUTE_WORDS}", muteWords.join(', '));
     }
 
+    log(`Prompt ready to go`, 'info', 'makeprompt.js');
     return prompt;
 }
 
