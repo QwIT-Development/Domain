@@ -24,6 +24,7 @@ Y'all bunt kene hasznalni, mert benchmarkok aztat mondtak h gyorsabb mint egy no
 (nagyon remelem nem basztak at)
  */
 async function main() {
+    global.dirname = __dirname;
     require('./utils/webui'); // fire up webui
     // imports
     const {Events} = require("discord.js");

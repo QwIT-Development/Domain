@@ -4,5 +4,8 @@
   "GEMINI_MODEL": "",
   "ALIASES": [],
   "CHANNELS": [],
-  "GUILD_ID": ""
+  "GUILD_ID": "",
+  "PROMPT_PATH": "",
+  "LOCALE": "",
+  "WIKI_URLS": []
 }
