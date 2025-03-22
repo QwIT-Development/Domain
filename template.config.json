@@ -7,5 +7,16 @@
   "GUILD_ID": "",
   "PROMPT_PATH": "",
   "LOCALE": "",
-  "WIKI_URLS": []
+  "WIKI_URLS": [],
+  "PROXIES": [
+    {
+      "host": "",
+      "port": "",
+      "protocol": "http",
+      "auth": {
+        "username": "",
+        "password": ""
+      }
+    }
+  ]
 }

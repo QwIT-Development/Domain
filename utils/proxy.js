@@ -3,22 +3,11 @@
         Copyright (C) 2025  BalazsManus
 */
 
-
 const axios = require('axios');
-const fs = require('fs');
+const config = require('../config.json');
 
 async function fetchWithProxies(url) {
-    let proxies = [];
-    try {
-        if (fs.existsSync('../data/proxies.json')) {
-            proxies = require('../data/proxies.json');
-        } else {
-            console.error('data/proxies.json doesn\'t exist. Please add some...');
-        }
-    } catch (err) {
-        console.error("Error while checking if proxies.json exists: ", err);
-        console.error("data/proxies.json cannot be checked. Please make sure it exists...");
-    }
+    const proxies = config.PROXIES || [];
 
     if (proxies.length === 0) {
         try {
@@ -51,16 +40,11 @@ async function fetchWithProxies(url) {
             // noinspection JSCheckFunctionSignatures
             const httpAgent = new httpProxyAgent.HttpProxyAgent(agentOptions);
 
-            const axiosInstance = await axios.create({
+            const axiosInstance = axios.create({
                 proxy: false,
                 headers: {
-                    // legit useragent
                     'User-Agent': await userAgent(),
                     'Proxy-Authorization': `Basic ${Buffer.from(`${proxy.auth.username}:${proxy.auth.password}`).toString('base64')}`,
-                    /*
-                    remelem jol elbaszta egy kamion azt az elvtarst, aki azt akarta, hogy egy proxy a real ipt forwardolja.
-                    but like olje meg magat ott ahol van. anyways, mukodokepes a proxy
-                     */
                     'X-Forwarded-For': proxy.host,
                     'X-Real-IP': proxy.host
                 },
