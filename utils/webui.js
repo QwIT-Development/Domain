@@ -1,3 +1,9 @@
+/*
+        Domain-Unchained, src of the discord bot, that uses gemini api to generate messages
+        Copyright (C) 2025  BalazsManus
+*/
+
+
 const express = require('express');
 const app = express();
 const port = 4500;
@@ -16,17 +22,19 @@ app.get('/api/usagestats/:id', async (req, res) => {
         });
     }
 
-    if (id === 'messagecount') {
+    if (id === 'botstats') {
         res.json({
-            count: state.msgCount
+            count: state.msgCount,
+            historyClears: state.resetCounts
         })
     }
 })
 
 app.put('/api/lobotomize', async (req, res) => {
     const geminiModel = await model();
-    let history = [];
-    global.geminiSession = promptLoader(geminiModel, history);
+    state.history = [];
+    global.geminiSession = promptLoader(geminiModel, state.history);
+    state.resetCounts += 1;
 
     res.json({
         success: true

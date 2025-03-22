@@ -44,7 +44,7 @@
             <ul class="pure-menu-list">
                 <li class="pure-menu-item menu-item-divided pure-menu-selected">
                     <a href="/" class="pure-menu-link">Statistics</a></li>
-                <li class="pure-menu-item">
+                <li class="pure-menu-item" style="cursor: pointer;">
                     <a onclick="lobotomize()" class="pure-menu-link">Lobotomize</a></li>
             </ul>
         </div>
@@ -58,6 +58,7 @@
         <div class="content">
             <h2>Ram usage: <i id="heapused"></i>/<i id="heaptotal"></i></h2>
             <h2>Messages received: <i id="msgReceived"></i></h2>
+            <h2>Reset count: <i id="resetCount"></i></h2>
         </div>
 
     </div>
@@ -84,18 +85,20 @@
     }
 
     function updateMsgs() {
-        fetch('/api/usagestats/messagecount')
+        fetch('/api/usagestats/botstats')
             .then(response => response.json())
             .then(data => {
                 const msgReceivedElement = document.getElementById('msgReceived');
+                const historyResetCount = document.getElementById('resetCount')
                 msgReceivedElement.textContent = data.count;
+                historyResetCount.textContent = data.historyClears;
             })
     }
 
     updateMsgs();
     updateRamUsage();
-    setInterval(updateRamUsage, 5000);
-    setInterval(updateMsgs, 5000);
+    setInterval(updateRamUsage, 500);
+    setInterval(updateMsgs, 500);
 </script>
 </body>
 </html>

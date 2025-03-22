@@ -1,3 +1,9 @@
+/*
+        Domain-Unchained, src of the discord bot, that uses gemini api to generate messages
+        Copyright (C) 2025  BalazsManus
+*/
+
+
 const axios = require('axios');
 const fs = require('fs');
 
@@ -51,6 +57,10 @@ async function fetchWithProxies(url) {
                     // legit useragent
                     'User-Agent': await userAgent(),
                     'Proxy-Authorization': `Basic ${Buffer.from(`${proxy.auth.username}:${proxy.auth.password}`).toString('base64')}`,
+                    /*
+                    remelem jol elbaszta egy kamion azt az elvtarst, aki azt akarta, hogy egy proxy a real ipt forwardolja.
+                    but like olje meg magat ott ahol van. anyways, mukodokepes a proxy
+                     */
                     'X-Forwarded-For': proxy.host,
                     'X-Real-IP': proxy.host
                 },

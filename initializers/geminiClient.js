@@ -1,3 +1,9 @@
+/*
+        Domain-Unchained, src of the discord bot, that uses gemini api to generate messages
+        Copyright (C) 2025  BalazsManus
+*/
+
+
 const {GoogleGenerativeAI} = require("@google/generative-ai");
 const config = require('../config.json');
 const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);

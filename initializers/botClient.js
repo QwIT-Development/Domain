@@ -1,4 +1,15 @@
+/*
+        Domain-Unchained, src of the discord bot, that uses gemini api to generate messages
+        Copyright (C) 2025  BalazsManus
+*/
+
+
 const {Client, GatewayIntentBits, Events} = require('discord.js');
+
+/*
+Fuck dotenv, config.jsont hasznalunk. legalabb nem kell kulon package csak azert h betoltsunk egy izet.
+configot
+ */
 const config = require('../config.json');
 
 const discordClient = new Client({

@@ -1,10 +1,36 @@
+/*
+        Domain-Unchained, src of the discord bot, that uses gemini api to generate messages
+        Copyright (C) 2025  BalazsManus
+
+        This program is free software: you can redistribute it and/or modify
+        it under the terms of the GNU Affero General Public License as
+        published by the Free Software Foundation, either version 3 of the
+        License, or (at your option) any later version.
+
+        This program is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU Affero General Public License for more details.
+
+        You should have received a copy of the GNU Affero General Public License
+        along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+
 // async main thread hell yeah
+
+/*
+Y'all bunt kene hasznalni, mert benchmarkok aztat mondtak h gyorsabb mint egy node
+(nagyon remelem nem basztak at)
+ */
 async function main() {
     require('./utils/webui'); // fire up webui
     // imports
     const {Events} = require("discord.js");
     const {promptLoader, model} = require('./initializers/geminiClient');
     const messageHandler = require('./eventHandlers/messageHandler');
+    const state = require('./initializers/state');
+    const botReady = require('./functions/botReady');
 
     // initialize stuff inside async thingy
     let discordClientReady = false;
@@ -12,13 +38,17 @@ async function main() {
     discordClient.once(Events.ClientReady, () => {
         discordClientReady = true;
     });
+    // wait for client to finish auth
     while (!discordClientReady) {
         await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     const geminiModel = await model();
-    let history = [];
-    global.geminiSession = promptLoader(geminiModel, history);
+    state.history = [];
+
+    global.geminiSession = promptLoader(geminiModel, state.history);
+
+    await botReady(discordClient);
 
     discordClient.on(Events.MessageCreate, message => {
         messageHandler(

@@ -1,3 +1,9 @@
+/*
+        Domain-Unchained, src of the discord bot, that uses gemini api to generate messages
+        Copyright (C) 2025  BalazsManus
+*/
+
+
 const config = require('../config.json');
 const jailbreaks = require('../data/jailbreaks.json');
 const strings = require('../data/strings.json');
