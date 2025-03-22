@@ -32,6 +32,7 @@ async function makePrompt() {
     // gemini to its default prompt
     try {
         // path: ./prompts/<PROMPT_PATH>
+        // noinspection JSUnresolvedReference
         prompt = fs.readFileSync(path.join(global.dirname, 'prompts', config.PROMPT_PATH), 'utf8');
         log(`Loaded prompt: ${config.PROMPT_PATH}`, 'info', 'makeprompt.js');
     } catch (e) {
@@ -43,6 +44,7 @@ async function makePrompt() {
     let muteWords;
     try {
         // path: ./data/muteWords.json
+        // noinspection JSUnresolvedReference
         muteWords = fs.readFileSync(path.join(global.dirname, 'data', 'muteWords.json'), 'utf8');
         muteWords = JSON.parse(muteWords);
     } catch (e) {
