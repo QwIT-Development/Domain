@@ -3,3 +3,5 @@ package-lock.json
 node_modules
 config.json
 pnpm-lock.yaml
+.idea
+.vscode
