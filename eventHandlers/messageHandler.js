@@ -12,6 +12,14 @@ const wpm = 160;
 
 async function messageHandler(message, client, gemini) {
     if (await checkAuthors(message, client)) {
+        /*
+            A bot ezt a formatot kapja meg:
+            [Reputation Score: 1000] [balazsmanus (ID: 710839743222513715)] Balazs: szia dave
+            masneven
+            [Reputation Score: int] [username (ID: userId)] DisplayName: MessageContent
+        */
+        const formattedMessage = `[Reputation Score: ${score}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
+
         if (await checkForMentions(message, client)) {
             // send typing so it looks more realistic
             await message.channel.sendTyping();
@@ -21,15 +29,6 @@ async function messageHandler(message, client, gemini) {
 
             // TODO: implement reputation system
             const score = 0;
-
-            /*
-            A bot ezt a formatot kapja meg:
-            [Reputation Score: 1000] [balazsmanus (ID: 710839743222513715)] Balazs: szia dave
-            masneven
-            [Reputation Score: int] [username (ID: userId)] DisplayName: MessageContent
-             */
-
-            const formattedMessage = `[Reputation Score: ${score}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
 
             let response = await gemini.sendMessage(formattedMessage);
             response = response.response.text();
@@ -50,10 +49,20 @@ async function messageHandler(message, client, gemini) {
         } else {
             state.msgCount += 1;
 
-
+            await addToHistory('user', formattedMessage, historyContent);
         }
     }
 }
+
+async function addToHistory(role, content, history) {
+    if (history && role && content) {
+        history.push({
+            role: role,
+            parts: [{text: content}]
+        });
+    }
+}
+
 
 async function calculateWPMTime(message) {
     // seconds = words / (wpm / 60)
