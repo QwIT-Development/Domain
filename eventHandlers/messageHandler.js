@@ -58,9 +58,7 @@ async function messageHandler(message, client, gemini) {
 async function calculateWPMTime(message) {
     // seconds = words / (wpm / 60)
     const words = message.match(/\S+/g);
-    const typingTime = words.length / (wpm / 60);
-    log(`Typing time: ${typingTime} seconds, with words: ${words.length}`, 'info', 'messageHandler.js');
-    return typingTime;
+    return words.length / (wpm / 60);
 }
 
 module.exports = messageHandler;
