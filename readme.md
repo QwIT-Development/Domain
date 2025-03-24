@@ -37,3 +37,6 @@ PROXIES lista felépítése:
 4. `bun run index.js` - Elindítja a botot (használj [bun](https://bun.sh/)-t sokkal gyorsabb)
 
 Ha nem tetszik valami a botnak úgy is pampogni fog
+
+## Disclaimer:
+- Olvasd át a kódot, mert prompt íráshoz kelleni fog pár dolog majd (példa: `./eventHandlers/messageHandler.js`)
