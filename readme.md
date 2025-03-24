@@ -2,19 +2,21 @@
 
 Egy szebb, szétszedettebb codebase, hogy könnyebben menjen a fejlesztés
 
-Config leírás:
+## Config leírás:
+**DISCORD_TOKEN** - *string* - discord bot token, https://discord.com/developers/applications<br>
+**GEMINI_API_KEY** - *string* - gemini api token, https://aistudio.google.com/apikey<br>
+**GEMINI_MODEL** - *string* - ai model, https://ai.google.dev/gemini-api/docs/models/#model-variations<br>
+**ALIASES** - *list* - nevei a botnak (pl.: `["domain", "dave"]`), ezekre fog válaszolni<br>
+**CHANNELS** - *list* - csatorna, amelyeket követi a bot (stringként várja az idket)<br>
+**GUILD_ID** - *string* - szerver id (timeoutra és egyebekre)<br>
+**PROMPT_PATH** - *string* - prompt nevét várja, ami a `./prompts` mappában van<br>
+**LOCALE** - *string* - nyelv, pár dologhoz, pl dátum (`hu-HU`, `en-US`, [teljes lista](https://simplelocalize.io/data/locales/))<br>
+**WIKI_URLS** - *list* - urlek, amiből a bot információkat fog szedni<br>
+**PROXIES** - *list* - opcionális, lehet `[]` ha nem akarsz proxyzni, proxy lista, ha el akarnád kerülni, hogy leakelve legyen az ipd
+
+PROXIES lista felépítése:
 ```json5
-{
-  "DISCORD_TOKEN": "", // discord bot token, https://discord.com/developers/applications
-  "GEMINI_API_KEY": "", // gemini api token, https://aistudio.google.com/apikey
-  "GEMINI_MODEL": "", // ai model, https://ai.google.dev/gemini-api/docs/models/#model-variations
-  "ALIASES": [], // nevei a botnak (pl.: ["domain", "dave"]), ezekre fog válaszolni
-  "CHANNELS": [], // csatorna idk, amelyiket követi a bot (stringként várja az idket)
-  "GUILD_ID": "", // szerver id (timeoutra és egyebekre)
-  "PROMPT_PATH": "", // prompt nevét várja, ami a ./prompts mappában van
-  "LOCALE": "", // nyelv, pár dologhoz, pl dátum (hu-HU, en-US, stb.)
-  "WIKI_URLS": [], // urlek, amiből a bot információkat fog szedni
-  "PROXIES": [ // opcionális, lehet [] ha nem akarsz proxyzni, proxy lista, ha el akarnád kerülni, hogy leakelve legyen az ipd
+  "PROXIES": [
     {
       "host": "", // host ip/hostname
       "port": "", // port
@@ -25,5 +27,13 @@ Config leírás:
       }
     }
   ]
-}
 ```
+
+
+## Működőképessé tétel:
+1. `pnpm i` - Használj [pnpm](https://pnpm.io/) (ne npmet, trust me)
+2. Csinálj egy promptot a `./prompts` mappába (ajánlott a gemini modellel átiratni, amit használni fogsz, mert az tudja hogy mivel lesz kompatibilisebb saját magával)
+3. Állíts be mindent a configban (ne felejtsd el átnevezni a `template.config.json`-t `config.json`-ra)
+4. `bun run index.js` - Elindítja a botot (használj [bun](https://bun.sh/)-t sokkal gyorsabb)
+
+Ha nem tetszik valami a botnak úgy is pampogni fog
