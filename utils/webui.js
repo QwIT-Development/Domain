@@ -6,10 +6,10 @@
 
 const express = require('express');
 const app = express();
-const port = 4500;
 const state = require('../initializers/state');
 const {promptLoader, model} = require('../initializers/geminiClient');
 const log = require('./betterLogs');
+const config = require('../config.json');
 
 app.use(express.static('./utils/webui'));
 
@@ -42,7 +42,7 @@ app.put('/api/lobotomize', async (req, res) => {
     });
 });
 
-app.listen(port, () => {
-    log(`WebUI listening at http://localhost:${port}`, 'info', 'webui.js');
+app.listen(config.WEBUI_PORT, () => {
+    log(`WebUI listening at http://localhost:${config.WEBUI_PORT}`, 'info', 'webui.js');
     log("WebUI is not secured, do not expose the port.", 'infoWarn', 'webui.js');
 });

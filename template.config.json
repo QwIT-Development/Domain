@@ -8,6 +8,7 @@
   "PROMPT_PATH": "",
   "LOCALE": "",
   "WIKI_URLS": [],
+  "WEBUI_PORT": 0,
   "PROXIES": [
     {
       "host": "",
