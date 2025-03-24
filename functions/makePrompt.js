@@ -36,7 +36,8 @@ async function makePrompt() {
         prompt = fs.readFileSync(path.join(global.dirname, 'prompts', config.PROMPT_PATH), 'utf8');
         log(`Loaded prompt: ${config.PROMPT_PATH}`, 'info', 'makeprompt.js');
     } catch (e) {
-        log(`Failed to create prompt: ${e}`, 'error', 'makeprompt.js');
+        log(`Failed to load prompt: ${e}`, 'error', 'makeprompt.js');
+        log('Defaulting to nothing', 'error', 'makeprompt.js');
         return "";
     }
 

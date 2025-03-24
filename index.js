@@ -24,6 +24,8 @@ async function main() {
     global.dirname = __dirname;
     const initData = require('./utils/initData');
     await initData(); // init stuff that will be used by the bot
+    const preloadData = require('./initializers/preloadData');
+    await preloadData(); // preload data into state
 
     require('./utils/webui'); // fire up webui
     // imports
