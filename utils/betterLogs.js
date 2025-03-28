@@ -11,6 +11,7 @@ function log(message, type = "info", thread = "index.js") {
         "infoWarn": "\033[38;5;15m\033[48;5;7m",
         "warn": "\033[38;5;208m",
         "error": "\033[38;5;15m\033[48;5;160m",
+        "ignorableErr": "\033[38;5;16m\033[48;5;7m",
         // reserved
         "reset": "\033[0m"
     };
@@ -19,7 +20,8 @@ function log(message, type = "info", thread = "index.js") {
         "info": "",
         "infoWarn": "⚠",
         "warn": "⚠",
-        "error": "X"
+        "error": "X",
+        "ignorableErr": "?.."
     }
     console.log(`${colors[type]}${symbols[type]}[${thread.toUpperCase()}]: ${message}${colors.reset}`);
 }

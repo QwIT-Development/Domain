@@ -36,7 +36,8 @@ async function checkAuthors(message, client) {
             const member = await guild.members.fetch(userId);
             await member.timeout(time, strings["jailbreak-attempt"]);
         } catch (e) {
-            log(`Failed to mute user: ${e}`, 'error', 'checkAuthors.js');
+            // ignoralhato hiba, anyways megy a false
+            log(`Failed to mute user: ${e}`, 'ignorableErr', 'checkAuthors.js');
             return false;
         }
         return false;
