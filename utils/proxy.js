@@ -6,6 +6,17 @@
 const axios = require('axios');
 const config = require('../config.json');
 
+// ja hogy megnyomom a tabot es rak egy ilyet
+// bruh
+/**
+ * kérést küld egy szerver felé proxyval
+ * @async
+ * @param url
+ * @returns {data: any, proxyUsed: string, usingProxy: boolean}
+ *
+ * @desc
+ * visszaad egy *data*-t (ez kell neked) és e mellé egy proxyUsed-et (fölös) és egy usingProxy-t (lehet kell)
+ */
 async function fetchWithProxies(url) {
     const proxies = config.PROXIES || [];
 
