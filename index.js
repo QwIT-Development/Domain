@@ -47,6 +47,7 @@ async function main() {
     }
 
     const geminiModel = await model();
+    // ha jol megy minden akkor siman kiolvasom historyt statebol
     state.history = [];
 
     global.geminiSession = promptLoader(geminiModel, state.history);
