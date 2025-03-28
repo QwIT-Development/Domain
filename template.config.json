@@ -9,6 +9,7 @@
   "LOCALE": "",
   "WIKI_URLS": [],
   "WEBUI_PORT": 0,
+  "OWNERS": [],
   "PROXIES": [
     {
       "host": "",

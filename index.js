@@ -44,6 +44,10 @@ async function main() {
         await new Promise(resolve => setTimeout(resolve, 100));
     }
 
+    // announce commands to servers
+    const announceCommands = require('./commands/setCommands');
+    await announceCommands(discordClient);
+
     const geminiModel = await model();
     // ha jol megy minden akkor siman kiolvasom historyt statebol
     state.history = [];

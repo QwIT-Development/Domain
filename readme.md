@@ -13,6 +13,7 @@ Egy szebb, szétszedettebb codebase, hogy könnyebben menjen a fejlesztés
 **LOCALE** - *string* - nyelv, pár dologhoz, pl dátum (`hu-HU`, `en-US`, [teljes lista](https://simplelocalize.io/data/locales/))<br>
 **WIKI_URLS** - *list* - urlek, amiből a bot információkat fog szedni<br>
 **WEBUI_PORT** - *int* - kezelőpult portja<br>
+**OWNERS** - *list* - bot tulajdonosok idje<br>
 **PROXIES** - *list* - opcionális, lehet `[]` ha nem akarsz proxyzni, proxy lista, ha el akarnád kerülni, hogy leakelve legyen az ipd
 
 PROXIES lista felépítése:
