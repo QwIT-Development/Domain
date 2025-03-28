@@ -4,6 +4,20 @@
 */
 
 
+// köszönöm szépen gemini a segítséget, hogy hogy kell intellij function kommentet írni
+/**
+ * Szexin loggol konzolra.\
+ * Csak azert csinaltam mert nem tetszett a console.log
+ *
+ * @param {string} message - üzenet
+ * @param {string} [type="info"] - (`info`, `infoWarn`, `warn`, `error`, `ignorableErr`)
+ * @param {string} [thread="index.js"] - forrás
+ *
+ * @example
+ * log("szia"); // alap infó, ami "index.js"-ből "jön"
+ * log("jaj ne", "warn"); // "index.js"-ből jövő warn
+ * log("rósz hiba", "error", "kettospontharom.js"); // hiba specifikus forrásból
+ */
 function log(message, type = "info", thread = "index.js") {
     // https://colors.sh/
     const colors = {
