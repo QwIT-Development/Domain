@@ -12,7 +12,8 @@ const config = require('../config.json');
  * kérést küld egy szerver felé proxyval
  * @async
  * @param url
- * @returns {data: any, proxyUsed: string, usingProxy: boolean}
+ * @returns  {data: any, proxyUsed: string, usingProxy: boolean}
+ * @async
  *
  * @desc
  * visszaad egy *data*-t (ez kell neked) és e mellé egy proxyUsed-et (fölös) és egy usingProxy-t (lehet kell)
@@ -54,7 +55,7 @@ async function fetchWithProxies(url) {
             const axiosInstance = axios.create({
                 proxy: false,
                 headers: {
-                    'User-Agent': await userAgent(),
+                    'User-Agent': userAgent(),
                     'Proxy-Authorization': `Basic ${Buffer.from(`${proxy.auth.username}:${proxy.auth.password}`).toString('base64')}`,
                     'X-Forwarded-For': proxy.host,
                     'X-Real-IP': proxy.host
@@ -91,7 +92,12 @@ async function fetchWithProxies(url) {
     }
 }
 
-async function userAgent() {
+
+/**
+ * Literálisan egy darab ua-t ad vissza
+ * @returns string
+ */
+function userAgent() {
     const userAgents = [
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",

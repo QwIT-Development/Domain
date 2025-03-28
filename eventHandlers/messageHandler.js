@@ -54,6 +54,12 @@ async function messageHandler(message, client, gemini) {
     }
 }
 
+/**
+ * pushol egy frissitest a historybe (ezt dobjuk at gemininek)
+ * @param role - (`model`, `user`)
+ * @param content - vajon mi lehet
+ * @param history - history array
+ */
 async function addToHistory(role, content, history) {
     if (history && role && content) {
         history.push({
@@ -63,7 +69,16 @@ async function addToHistory(role, content, history) {
     }
 }
 
-
+/**
+ * uber realistic wpm time calculator 2000
+ * @param message - üzenet
+ * @returns {Promise<number>}
+ * @desc
+ * lényeg az, hogy megszámolja mennyi szó van\
+ * a wpm-et elosztja 60-al (hogy wps legyen)\
+ * a szavak számát elosztja wps-el es megkapjuk eredmenyt\
+ * minden igaz igy van *majomgépelésen* is
+ */
 async function calculateWPMTime(message) {
     // seconds = words / (wpm / 60)
     const words = message.match(/\S+/g);

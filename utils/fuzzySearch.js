@@ -33,6 +33,14 @@ function splitFuzzySearch(pattern, strings, options = {"includeScore": true}) {
     return allWordsMatch;
 }
 
+
+/**
+ * fuzzy kereső, **EGY SZÓRA** lett kitalálva
+ * @param pattern - az egy darab szó (ez NEM szedi szét, erre használd inkább a `splitFuzzySearch`-t)
+ * @param strings - keresendő szavak (arrayban)
+ * @param options - fuzzy.js beállítások (ignorálható)
+ * @returns {boolean} - true/false (előre finomhangolt)
+ */
 function fuzzySearch(pattern, strings, options = {}) {
     if (!pattern || !strings || strings.length === 0) {
         return false;
@@ -41,7 +49,7 @@ function fuzzySearch(pattern, strings, options = {}) {
     const fuse = new Fuse(strings, options);
     const results = fuse.search(pattern);
 
-    return results.length > 0 && results[0].score <= 0.2;
+    return results.length > 0 && results[0].score <= 0.3;
 }
 
 module.exports = {fuzzySearch, splitFuzzySearch};

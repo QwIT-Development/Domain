@@ -8,6 +8,11 @@ const path = require('path');
 const fs = require('fs');
 const log = require('../utils/betterLogs');
 
+/**
+ * Beformázza az időt egy szebb stringbe
+ * @param date
+ * @returns string - 2025. jan 01. Wednesday 12:00
+ */
 function formatDate(date) {
     const year = date.getFullYear();
     // noinspection JSCheckFunctionSignatures
@@ -21,8 +26,10 @@ function formatDate(date) {
     return `${year}. ${month} ${day}. ${weekday} ${hour}:${minute}`;
 }
 
-
-// TODO: finish prompt gen func
+/**
+ * fontos, promptot cisnal
+ * @returns {Promise<string>}
+ */
 async function makePrompt() {
     // noinspection JSUnresolvedReference
     const aliases = config.ALIASES;
@@ -41,18 +48,6 @@ async function makePrompt() {
         return "";
     }
 
-    // load mute words, for later use
-    let muteWords;
-    try {
-        // path: ./data/muteWords.json
-        // noinspection JSUnresolvedReference
-        muteWords = fs.readFileSync(path.join(global.dirname, 'data', 'muteWords.json'), 'utf8');
-        muteWords = JSON.parse(muteWords);
-    } catch (e) {
-        log(`Failed to load mute words: ${e}`, 'error', 'makeprompt.js');
-        muteWords = [];
-    }
-
     // insert aliases to ${ALIASES}
     if (prompt.includes("${ALIASES}")) {
         prompt = prompt.replace("${ALIASES}", aliases.join(', '));
@@ -65,10 +60,23 @@ async function makePrompt() {
     }
 
     // load wiki contents, if possible
+    // TODO: implement loading stuff
     if (config.WIKI_URLS.length > 0) {
         if (prompt.includes("${WIKI_CONTENT}")) {
 
         }
+    }
+
+    // load mute words, for later use
+    let muteWords;
+    try {
+        // path: ./data/muteWords.json
+        // noinspection JSUnresolvedReference
+        muteWords = fs.readFileSync(path.join(global.dirname, 'data', 'muteWords.json'), 'utf8');
+        muteWords = JSON.parse(muteWords);
+    } catch (e) {
+        log(`Failed to load mute words: ${e}`, 'error', 'makeprompt.js');
+        muteWords = [];
     }
 
     // add words, what the bot don't like and will mute users on trigger

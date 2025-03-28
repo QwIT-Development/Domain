@@ -10,7 +10,26 @@ const strings = require('../data/strings.json');
 const log = require('../utils/betterLogs');
 const {splitFuzzySearch} = require('../utils/fuzzySearch');
 
+
+/**
+ * megnezi, hogy megfelel-e az üzenet par dolognak (descriptionban reszletesebben leirva)
+ * @param message - üzenet
+ * @param client - kliens (mutingra)
+ * @returns Promise<boolean>
+ * @async
+ *
+ * @desc
+ * **en vagyok a desc**\
+ * lenyeg h megnezi, hogy bottol jon-e az uzenet, ha igen akk ignoralja\
+ * same if domain sends it (ez leginkabb azert h ne kapjon skizo rohamot)
+ * //-t ignoralja ugyszinten\
+ * ha nincs trackelt csatornaba kuldve az uzenet insta returnol\
+ * jailbreakra mutel is
+ */
 async function checkAuthors(message, client) {
+    // check if message is sent into a tracked channel
+    if (!config.CHANNELS.includes(message.channel.id)) return false;
+
     // if bot send messsagre = bad
     if (message.author.bot) return false;
 
@@ -19,9 +38,6 @@ async function checkAuthors(message, client) {
 
     // if message start with //, it ignor
     if (message.content.startsWith('//')) return false;
-
-    // check if message is sent into a tracked channel
-    if (!config.CHANNELS.includes(message.channel.id)) return false;
 
     // anti-jailbreak thing
     if (jailbreaks.some(jailbreak => message.content.toLowerCase().includes(jailbreak.toLowerCase()))) {
@@ -47,6 +63,13 @@ async function checkAuthors(message, client) {
     return true;
 }
 
+/**
+ * megnezi, hogy megemlitik-e domaint
+ * @param message - uzenet
+ * @param client - kliens (idhez)
+ * @returns Promise<boolean>
+ * @async
+ */
 async function checkForMentions(message, client) {
     // check if bot is mentioned
     const mentioned = message.mentions.users.has(client.user.id);
