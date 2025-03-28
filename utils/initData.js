@@ -6,15 +6,26 @@
 
 const fs = require('fs');
 const path = require('path');
+const state = require('../initializers/state');
+const log = require('../utils/betterLogs');
 
 async function initData() {
     // create memories
     // noinspection JSUnresolvedReference
     const memoriesPath = path.join(global.dirname, 'data', 'running', 'memories.json');
-    const memories = {};
+    let memories = {};
     if (!fs.existsSync(memoriesPath)) {
-        console.info('Creating memories "db"');
+        log('Creating memories "db"', 'info', 'initData.js');
         await fs.writeFileSync(memoriesPath, JSON.stringify(memories));
+        // reinit the same blank thing bc yes
+        state.memories = memories;
+    } else {
+        try {
+            memories = JSON.parse(fs.readFileSync(memoriesPath, 'utf8'));
+        } catch (e) {
+            log(`Failed to parse memories file: ${e}`, 'error', 'initData.js');
+        }
+        state.memories = memories;
     }
 
     /*
@@ -32,10 +43,19 @@ async function initData() {
     // create reputation table
     // noinspection JSUnresolvedReference
     const reputationPath = path.join(global.dirname, 'data', 'running', 'reputation.json');
-    const reputation = {};
+    let reputation = {};
     if (!fs.existsSync(reputationPath)) {
-        console.info('Creating reputation "db"');
+        log('Creating reputation "db"', 'info', 'initData.js');
         await fs.writeFileSync(reputationPath, JSON.stringify(reputation));
+        // {}
+        state.reputation = reputation;
+    } else {
+        try {
+            reputation = JSON.parse(fs.readFileSync(reputationPath, 'utf8'));
+        } catch (e) {
+            log(`Failed to parse reputation file: ${e}`, 'error', 'initData.js');
+        }
+        state.reputation = reputation;
     }
 
     /*
@@ -49,10 +69,19 @@ async function initData() {
     // create banlist
     // noinspection JSUnresolvedReference
     const banlistPath = path.join(global.dirname, 'data', 'running', 'banlist.json');
-    const banlist = {};
+    let banlist = {};
     if (!fs.existsSync(banlistPath)) {
         console.info('Creating banlist');
         await fs.writeFileSync(banlistPath, JSON.stringify(banlist));
+        // useless, bc it is already inited like this, but i put this here
+        state.banlist = banlist;
+    } else {
+        try {
+            banlist = JSON.parse(fs.readFileSync(banlistPath, 'utf8'));
+        } catch (e) {
+            log(`Failed to parse banlist file: ${e}`, 'error', 'initData.js');
+        }
+        state.banlist = banlist;
     }
 
     /*
