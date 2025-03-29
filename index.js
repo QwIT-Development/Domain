@@ -30,6 +30,7 @@ async function main() {
     const {Events} = require("discord.js");
     const {promptLoader, model} = require('./initializers/geminiClient');
     const messageHandler = require('./eventHandlers/messageHandler');
+    const checkForLegacyCommands = require('./eventHandlers/checkForLegacyCommands');
     const state = require('./initializers/state');
     const botReady = require('./functions/botReady');
 
@@ -56,13 +57,40 @@ async function main() {
 
     await botReady(discordClient);
 
-    discordClient.on(Events.MessageCreate, message => {
+    discordClient.on(Events.MessageCreate, async message => {
         // noinspection JSUnresolvedReference
-        messageHandler(
+        await messageHandler(
             message,
             discordClient,
             global.geminiSession
         )
+
+        await checkForLegacyCommands(
+            message,
+            discordClient
+        )
+    });
+
+    discordClient.on('interactionCreate', async interaction => {
+        if (!interaction.isCommand()) return;
+
+        // noinspection JSUnresolvedReference
+        const command = discordClient.commands.get(interaction.commandName);
+        if (!command) return;
+
+        try {
+            await command.execute(interaction);
+        } catch (error) {
+            console.error(error);
+            // skizofrenias az intellijm, pont mint en
+            // noinspection JSCheckFunctionSignatures,JSDeprecatedSymbols
+            await interaction.reply({
+                content: 'Nem sikerült futtatni a parancsot.',
+                flags: [
+                    "Ephemeral"
+                ]
+            });
+        }
     });
 
 }

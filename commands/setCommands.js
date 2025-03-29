@@ -29,6 +29,8 @@ async function announceCommands(client) {
     const commandFiles = fs.readdirSync(commandsPath).filter(f => f.endsWith('.js'));
 
     for (const f of commandFiles) {
+        if (f === 'setCommands.js') continue; // skip command set thing
+
         const filePath = path.join(commandsPath, f);
         const command = require(filePath);
         commands.push(command.data.toJSON());
