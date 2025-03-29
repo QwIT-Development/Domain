@@ -8,6 +8,7 @@ const {GoogleGenerativeAI} = require("@google/generative-ai");
 const config = require('../config.json');
 const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
 const makePrompt = require('../functions/makePrompt');
+const log = require('../utils/betterLogs');
 
 const generationConfig = {
     temperature: 1.15,
@@ -25,10 +26,19 @@ async function model() {
 }
 
 function promptLoader(model, history) {
-    return model.startChat({
-        generationConfig,
-        history: history,
-    });
+    const instances = {};
+
+    // might look shitty, but it works
+    // you all know, when it works don't touch it
+    for (const channel in history) {
+        instances[channel] = model.startChat({
+            generationConfig,
+            history: history[channel],
+        });
+    }
+
+    log(`Created ${Object.keys(instances).length} gemini instances`, 'info', 'geminiClient.js');
+    return instances;
 }
 
 module.exports = {promptLoader, model};

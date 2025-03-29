@@ -12,6 +12,7 @@ const wpm = 160;
 
 async function messageHandler(message, client, gemini) {
     if (await checkAuthors(message, client)) {
+        const channelId = message.channel.id;
         /*
             A bot ezt a formatot kapja meg:
             [Reputation Score: 1000] [balazsmanus (ID: 710839743222513715)] Balazs: szia dave
@@ -30,7 +31,7 @@ async function messageHandler(message, client, gemini) {
             // skizofren enem azt mondja, h ne bizzak a ++ban
             state.msgCount += 1;
 
-            let response = await gemini.sendMessage(formattedMessage);
+            let response = await gemini[channelId].sendMessage(formattedMessage);
             response = response.response.text();
 
             const typingTime = await calculateWPMTime(response);
@@ -49,7 +50,7 @@ async function messageHandler(message, client, gemini) {
         } else {
             state.msgCount += 1;
 
-            await addToHistory('user', formattedMessage, message.channel.id);
+            await addToHistory('user', formattedMessage, channelId);
         }
     }
 }
