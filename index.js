@@ -51,7 +51,8 @@ async function main() {
 
     const geminiModel = await model();
     // ha jol megy minden akkor siman kiolvasom historyt statebol
-    state.history = [];
+    const generateHistory = require('./initializers/historyCreator');
+    await generateHistory();
 
     global.geminiSession = promptLoader(geminiModel, state.history);
 
