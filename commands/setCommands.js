@@ -56,8 +56,6 @@ async function announceCommands(client) {
     for (const data of result) {
         state.commandIds[data.name] = data.id;
     }
-    console.log(state.commandIds);
-
 }
 
 module.exports = announceCommands
