@@ -8,7 +8,6 @@ Egy szebb, szétszedettebb codebase, hogy könnyebben menjen a fejlesztés
 **GEMINI_MODEL** - *string* - ai model, https://ai.google.dev/gemini-api/docs/models/#model-variations<br>
 **ALIASES** - *list* - nevei a botnak (pl.: `["domain", "dave"]`), ezekre fog válaszolni<br>
 **CHANNELS** - *list* - csatorna, amelyeket követi a bot (stringként várja az idket)<br>
-**GUILD_ID** - *string* - szerver id (timeoutra és egyebekre)<br>
 **PROMPT_PATH** - *string* - prompt nevét várja, ami a `./prompts` mappában van<br>
 **LOCALE** - *string* - nyelv, pár dologhoz, pl dátum (`hu-HU`, `en-US`, [teljes lista](https://simplelocalize.io/data/locales/))<br>
 **WIKI_URLS** - *list* - urlek, amiből a bot információkat fog szedni<br>
