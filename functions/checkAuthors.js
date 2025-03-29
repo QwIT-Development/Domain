@@ -48,7 +48,12 @@ async function checkAuthors(message, client) {
         const time = 1000 * 30 * 60; // 30 minutes
 
         try {
-            const guild = await client.guilds.fetch(config.GUILD_ID);
+            const guild = message.guild;
+            if (!guild) {
+                log(`Message wasn't sent into a guild.`, 'ignorableErr', 'checkAuthors.js');
+                return false;
+            }
+
             const member = await guild.members.fetch(userId);
             await member.timeout(time, strings["jailbreak-attempt"]);
         } catch (e) {
@@ -82,6 +87,7 @@ async function checkForMentions(message, client) {
             .author.id === client.user.id;
     if (replied) return true;
 
+    // noinspection RedundantIfStatementJS
     if (splitFuzzySearch(message.content, config.ALIASES)) return true;
 
     return false;
