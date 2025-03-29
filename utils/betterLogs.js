@@ -22,7 +22,7 @@ function log(message, type = "info", thread = "index.js") {
     // https://colors.sh/
     const colors = {
         "info": "\033[38;5;33m",
-        "infoWarn": "\033[38;5;15m\033[48;5;7m",
+        "infoWarn": "\033[38;5;16m\033[48;5;7m",
         "warn": "\033[38;5;208m",
         "error": "\033[38;5;15m\033[48;5;160m",
         "ignorableErr": "\033[38;5;16m\033[48;5;7m",
@@ -35,7 +35,7 @@ function log(message, type = "info", thread = "index.js") {
         "infoWarn": "⚠",
         "warn": "⚠",
         "error": "X",
-        "ignorableErr": "?.."
+        "ignorableErr": "..?"
     }
     console.log(`${colors[type]}${symbols[type]}[${thread.toUpperCase()}]: ${message}${colors.reset}`);
 }

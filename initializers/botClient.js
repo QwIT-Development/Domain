@@ -13,7 +13,7 @@ configot
 const config = require('../config.json');
 const log = require('../utils/betterLogs');
 
-// noinspection JSUnresolvedReference
+// noinspection JSUnresolvedReference,JSCheckFunctionSignatures
 const discordClient = new Client({
     intents: [
         GatewayIntentBits.Guilds,

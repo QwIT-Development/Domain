@@ -4,7 +4,7 @@
 */
 
 const Fuse = require('fuse.js');
-const log = require('../utils/betterLogs');
+//const log = require('../utils/betterLogs');
 
 /**
  * Fuzzy kereső, ami mondatot szétkapja és szavanként rákeres cucclira
