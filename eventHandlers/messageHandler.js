@@ -59,6 +59,7 @@ async function messageHandler(message, client, gemini) {
  * pushol egy frissitest a historybe (ezt dobjuk at gemininek)
  * @param role - (`model`, `user`)
  * @param content - vajon mi lehet
+ * @param channelId - channel id (history management miatt)
  */
 async function addToHistory(role, content, channelId) {
     if (role && content) {
