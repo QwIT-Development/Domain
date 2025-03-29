@@ -26,7 +26,7 @@ async function checkForLegacyCommands(message) {
         try {
             const user = await message.client.users.fetch(message.author.id);
             await user.send({
-                content: 'Az `ai!reset` parancs el lesz távolítva a jövőben, használd a `/reset` parancsot.'
+                content: `Az \`ai!reset\` parancs el lesz távolítva a jövőben, használd a </reset:${state.commandIds["reset"]}> parancsot.`
             });
         } catch (e) {
             log(`Couldn't send dm to user: ${e}`, 'error', 'checkForLegacyCommands.js');
