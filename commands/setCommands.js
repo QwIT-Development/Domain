@@ -10,6 +10,7 @@ const path = require('path');
 const fs = require('fs');
 const config = require('../config.json');
 const log = require('../utils/betterLogs');
+const state = require('../initializers/state');
 
 // add commands here
 const reset = require('./reset');
@@ -38,10 +39,11 @@ async function announceCommands(client) {
 
     const rest = new REST({version: '10'}).setToken(config.DISCORD_TOKEN);
 
+    let result;
     try {
         log(`Registering ${commands.length} commands...`, 'info', 'setCommands.js');
 
-        const result = await rest.put(
+        result = await rest.put(
             Routes.applicationCommands(client.user.id),
             {body: commands}
         )
@@ -50,6 +52,12 @@ async function announceCommands(client) {
     } catch (e) {
         log(`Error while registering commands: ${e}`, 'error', 'setCommands.js');
     }
+
+    for (const data of result) {
+        state.commandIds[data.name] = data.id;
+    }
+    console.log(state.commandIds);
+
 }
 
 module.exports = announceCommands

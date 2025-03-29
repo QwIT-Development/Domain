@@ -10,5 +10,6 @@ module.exports = {
     history: {},
     memories: {},
     reputation: {},
-    banlist: {}
+    banlist: {},
+    commandIds: {}
 };
