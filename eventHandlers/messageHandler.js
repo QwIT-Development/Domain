@@ -18,6 +18,9 @@ async function messageHandler(message, client, gemini) {
             masneven
             [Reputation Score: int] [username (ID: userId)] DisplayName: MessageContent
         */
+
+        // TODO: implement reputation system
+        const score = 0
         const formattedMessage = `[Reputation Score: ${score}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
 
         if (await checkForMentions(message, client)) {
@@ -26,9 +29,6 @@ async function messageHandler(message, client, gemini) {
 
             // skizofren enem azt mondja, h ne bizzak a ++ban
             state.msgCount += 1;
-
-            // TODO: implement reputation system
-            const score = 0;
 
             let response = await gemini.sendMessage(formattedMessage);
             response = response.response.text();
@@ -49,7 +49,7 @@ async function messageHandler(message, client, gemini) {
         } else {
             state.msgCount += 1;
 
-            await addToHistory('user', formattedMessage, historyContent);
+            await addToHistory('user', formattedMessage);
         }
     }
 }
@@ -58,11 +58,13 @@ async function messageHandler(message, client, gemini) {
  * pushol egy frissitest a historybe (ezt dobjuk at gemininek)
  * @param role - (`model`, `user`)
  * @param content - vajon mi lehet
- * @param history - history array
  */
-async function addToHistory(role, content, history) {
-    if (history && role && content) {
-        history.push({
+async function addToHistory(role, content) {
+    if (role && content) {
+        if (role !== 'user' && role !== 'model') {
+            log(`Got invalid role to be pushed to history: ${role}`, 'warn', 'messageHandler.js');
+        }
+        state.history.push({
             role: role,
             parts: [{text: content}]
         });
