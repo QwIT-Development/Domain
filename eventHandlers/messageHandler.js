@@ -49,7 +49,7 @@ async function messageHandler(message, client, gemini) {
         } else {
             state.msgCount += 1;
 
-            await addToHistory('user', formattedMessage);
+            await addToHistory('user', formattedMessage, message.channel.id);
         }
     }
 }
@@ -59,12 +59,12 @@ async function messageHandler(message, client, gemini) {
  * @param role - (`model`, `user`)
  * @param content - vajon mi lehet
  */
-async function addToHistory(role, content) {
+async function addToHistory(role, content, channelId) {
     if (role && content) {
         if (role !== 'user' && role !== 'model') {
             log(`Got invalid role to be pushed to history: ${role}`, 'warn', 'messageHandler.js');
         }
-        state.history.push({
+        state.history[channelId.toString()].push({
             role: role,
             parts: [{text: content}]
         });
