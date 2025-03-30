@@ -12,6 +12,7 @@
   "TIMINGS": {
     "saveReps": 0
   },
+  "SEARX_BASE_URL": "",
   "SLEEPINGRANGE": "00:00-00:00",
   "PROXIES": [
     {
