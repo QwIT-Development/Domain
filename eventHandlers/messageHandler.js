@@ -9,8 +9,6 @@ const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
 const reputation = require('../utils/reputation');
 
-const wpm = 160;
-
 async function messageHandler(message, client, gemini) {
     if (await checkAuthors(message, client)) {
         const channelId = message.channel.id;
@@ -34,18 +32,6 @@ async function messageHandler(message, client, gemini) {
 
             let response = await gemini[channelId].sendMessage(formattedMessage);
             response = response.response.text();
-
-            const typingTime = await calculateWPMTime(response);
-            const interval = 5;
-
-            // realistic typing, idobe telik hogy irjon, erted. ettol realisabbnak tunik!!1!
-            let i = 0;
-            while (i < typingTime) {
-                await message.channel.sendTyping();
-                const sleepTime = Math.min(interval, typingTime - i);
-                await new Promise(resolve => setTimeout(resolve, sleepTime * 1000));
-                i += interval;
-            }
 
             await chunkedMsg(message, response);
         } else {
@@ -74,24 +60,9 @@ async function addToHistory(role, content, channelId) {
     }
 }
 
-/**
- * uber realistic wpm time calculator 2000
- * @param message - üzenet
- * @returns {Promise<number>}
- * @desc
- * lényeg az, hogy megszámolja mennyi szó van\
- * a wpm-et elosztja 60-al (hogy wps legyen)\
- * a szavak számát elosztja wps-el es megkapjuk eredmenyt\
- * minden igaz igy van *majomgépelésen* is
- */
-async function calculateWPMTime(message) {
-    // seconds = words / (wpm / 60)
-    const words = message.match(/\S+/g);
-    return words.length / (wpm / 60);
-}
 
 async function chunkedMsg(message, response) {
-    const chunkSize = 1000;
+    const chunkSize = 2000;
 
     if (response.length <= chunkSize) {
         return message.reply(response);
@@ -102,7 +73,7 @@ async function chunkedMsg(message, response) {
 
     const lines = response.split('\n');
     for (const line of lines) {
-        if (currChunk.length + line.length + 1 > chunkSize && currentChunk.length > 0) {
+        if (currChunk.length + line.length + 1 > chunkSize && currChunk.length > 0) {
             chunks.push(currChunk);
             currChunk = "";
         }

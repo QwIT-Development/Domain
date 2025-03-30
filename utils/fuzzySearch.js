@@ -26,10 +26,14 @@ function splitFuzzySearch(pattern, strings, options = {"includeScore": true}) {
     let allWordsMatch = false;
 
     for (const word of words) {
+        if (word.length < 2) {
+            continue;
+        }
+
         const fuse = new Fuse(strings, options);
         const results = fuse.search(word);
 
-        if (results.length > 0 && results[0].score <= 0.3) {
+        if (results.length > 0 && results[0].score <= 0.1) {
             allWordsMatch = true;
             break;
         }
@@ -54,7 +58,7 @@ function fuzzySearch(pattern, strings, options = {}) {
     const fuse = new Fuse(strings, options);
     const results = fuse.search(pattern);
 
-    return results.length > 0 && results[0].score <= 0.3;
+    return results.length > 0 && results[0].score <= 0.1;
 }
 
 module.exports = {fuzzySearch, splitFuzzySearch};
