@@ -32,6 +32,7 @@ async function main() {
     const messageHandler = require('./eventHandlers/messageHandler');
     const checkForLegacyCommands = require('./eventHandlers/checkForLegacyCommands');
     const state = require('./initializers/state');
+    const config = require('./config.json');
     const botReady = require('./functions/botReady');
 
     // initialize stuff inside async thingy
@@ -49,14 +50,18 @@ async function main() {
     const announceCommands = require('./commands/setCommands');
     await announceCommands(discordClient);
 
-    const geminiModel = await model();
     // ha jol megy minden akkor siman kiolvasom historyt statebol
     const generateHistory = require('./initializers/historyCreator');
     await generateHistory();
 
+    const geminiModel = await model(state.history);
     global.geminiSession = promptLoader(geminiModel, state.history);
 
     await botReady(discordClient);
+
+    // sync sleeping state
+    const schedSleep = require('./functions/sleeping');
+    schedSleep(config.SLEEPINGRANGE);
 
     discordClient.on(Events.MessageCreate, async message => {
         // ignore messages when "sleeping"

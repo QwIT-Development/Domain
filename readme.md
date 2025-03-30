@@ -8,7 +8,7 @@ Egy szebb, szétszedettebb codebase, hogy könnyebben menjen a fejlesztés
 **GEMINI_MODEL** - *string* - ai model, https://ai.google.dev/gemini-api/docs/models/#model-variations<br>
 **ALIASES** - *list* - nevei a botnak (pl.: `["domain", "dave"]`), **ezekre fog válaszolni**<br>
 **CHANNELS** - *list* - csatorna, amelyeket **követi** a bot (stringként várja az idket)<br>
-**PROMPT_PATH** - *string* - prompt nevét várja, ami a `./prompts` mappában van<br>
+**PROMPT_PATHS** - *object* - prompt nevét várja, ami a `./prompts` mappában van<br>
 **LOCALE** - *string* - nyelv, pár dologhoz, pl dátum (`hu-HU`, `en-US`, [teljes lista](https://simplelocalize.io/data/locales/))<br>
 **WIKI_URLS** - *list* - urlek, amiből a bot **információkat** fog szedni<br>
 **WEBUI_PORT** - *int* - kezelőpult portja<br>
@@ -38,6 +38,13 @@ TIMINGS felépítése:
   }
 ```
 
+PROMPT_PATHS felépítése:
+```json5
+  "PROMPT_PATHS": {
+    "channelId": "valami.md",
+    "channelId2": "roleplay.md"
+  }
+```
 
 ## Működőképessé tétel:
 1. `pnpm i` - Használj [pnpm](https://pnpm.io/) (ne npmet, trust me)

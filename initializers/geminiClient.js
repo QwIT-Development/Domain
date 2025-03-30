@@ -18,11 +18,18 @@ const generationConfig = {
     responseMimeType: 'text/plain'
 };
 
-async function model() {
-    return genAI.getGenerativeModel({
-        model: config.GEMINI_MODEL,
-        systemInstruction: await makePrompt()
-    });
+async function model(history) {
+    const models = {};
+
+    for (const channel in history) {
+        models[channel] = genAI.getGenerativeModel({
+            model: config.GEMINI_MODEL,
+            systemInstruction: await makePrompt(channel)
+        });
+    }
+
+    log(`Created ${Object.keys(models).length} gemini models`, 'info', 'geminiClient.js');
+    return models;
 }
 
 function promptLoader(model, history) {
@@ -31,7 +38,7 @@ function promptLoader(model, history) {
     // might look shitty, but it works
     // you all know, when it works don't touch it
     for (const channel in history) {
-        instances[channel] = model.startChat({
+        instances[channel] = model[channel].startChat({
             generationConfig,
             history: history[channel],
         });

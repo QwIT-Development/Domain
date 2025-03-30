@@ -30,7 +30,8 @@ function formatDate(date) {
  * fontos, promptot cisnal
  * @returns {Promise<string>}
  */
-async function makePrompt() {
+async function makePrompt(channelId) {
+    const promptPath = config.PROMPT_PATHS[channelId];
     // noinspection JSUnresolvedReference
     const aliases = config.ALIASES;
     let prompt;
@@ -40,8 +41,8 @@ async function makePrompt() {
     try {
         // path: ./prompts/<PROMPT_PATH>
         // noinspection JSUnresolvedReference
-        prompt = fs.readFileSync(path.join(global.dirname, 'prompts', config.PROMPT_PATH), 'utf8');
-        log(`Loaded prompt: ${config.PROMPT_PATH}`, 'info', 'makeprompt.js');
+        prompt = fs.readFileSync(path.join(global.dirname, 'prompts', promptPath), 'utf8');
+        log(`Loaded prompt: ${promptPath}`, 'info', 'makeprompt.js');
     } catch (e) {
         log(`Failed to load prompt: ${e}`, 'error', 'makeprompt.js');
         log('Defaulting to nothing', 'error', 'makeprompt.js');

@@ -4,7 +4,7 @@
   "GEMINI_MODEL": "",
   "ALIASES": [],
   "CHANNELS": [],
-  "PROMPT_PATH": "",
+  "PROMPT_PATHS": {},
   "LOCALE": "",
   "WIKI_URLS": [],
   "WEBUI_PORT": 0,
@@ -12,6 +12,7 @@
   "TIMINGS": {
     "saveReps": 0
   },
+  "SLEEPINGRANGE": "00:00-00:00",
   "PROXIES": [
     {
       "host": "",
