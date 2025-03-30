@@ -7,6 +7,7 @@
 const {checkAuthors, checkForMentions} = require('../functions/checkAuthors');
 const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
+const reputation = require('../utils/reputation');
 
 const wpm = 160;
 
@@ -21,8 +22,8 @@ async function messageHandler(message, client, gemini) {
         */
 
         // TODO: implement reputation system
-        const score = 0
-        const formattedMessage = `[Reputation Score: ${score}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
+        const score = reputation(message.author.id);
+        const formattedMessage = `[Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
 
         if (await checkForMentions(message, client)) {
             // send typing so it looks more realistic

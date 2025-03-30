@@ -16,10 +16,13 @@ const config = require('../config.json');
  * @param type - `increase`/`decrease` vagy semmi (lekérdezés)
  * @returns {Promise<number|boolean>} - visszaad egy számot vagy boolt (változásnál)
  */
-async function reputation(id, type = '') {
-    if (!id || !type) {
+async function reputation(id, type = "") {
+    if (!id) {
         log(`Missing argument`, 'error', 'reputation.js');
         return false;
+    }
+    if (!type) {
+        type = "";
     }
 
     const maxValue = 1000;
@@ -44,7 +47,7 @@ async function reputation(id, type = '') {
         return db[id];
     }
 
-    return true;
+    return db[id];
 }
 
 //cron job 2 save out rep to file from state
