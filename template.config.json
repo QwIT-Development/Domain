@@ -9,6 +9,9 @@
   "WIKI_URLS": [],
   "WEBUI_PORT": 0,
   "OWNERS": [],
+  "TIMINGS": {
+    "saveReps": 0
+  },
   "PROXIES": [
     {
       "host": "",

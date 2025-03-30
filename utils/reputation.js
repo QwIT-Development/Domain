@@ -5,14 +5,23 @@
 
 const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
+const fs = require('fs');
+const path = require('path');
+const db = state.reputation;
+const config = require('../config.json');
 
+/**
+ * lekérő és változtató func
+ * @param id - userid
+ * @param type - `increase`/`decrease` vagy semmi (lekérdezés)
+ * @returns {Promise<number|boolean>} - visszaad egy számot vagy boolt (változásnál)
+ */
 async function reputation(id, type = '') {
     if (!id || !type) {
         log(`Missing argument`, 'error', 'reputation.js');
         return false;
     }
 
-    const db = state.reputation;
     const maxValue = 1000;
 
     const user = db[id] ? id : null;
@@ -37,3 +46,23 @@ async function reputation(id, type = '') {
 
     return true;
 }
+
+//cron job 2 save out rep to file from state
+async function saveReps() {
+    const filePath = path.join(global.dirname, 'data', 'running', 'reputation.json');
+
+    try {
+        fs.writeFileSync(filePath, JSON.stringify(db));
+    } catch (e) {
+        log(`Failed to save reputation file: ${e}`, 'error', 'reputation.js');
+        return false;
+    }
+    log('Reputation saved', 'info', 'reputation.js');
+    return true;
+}
+
+setInterval(async () => {
+    await saveReps();
+}, config.TIMINGS.saveReps * 1000);
+
+module.exports = reputation;

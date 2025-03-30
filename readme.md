@@ -6,14 +6,15 @@ Egy szebb, szétszedettebb codebase, hogy könnyebben menjen a fejlesztés
 **DISCORD_TOKEN** - *string* - discord bot token, https://discord.com/developers/applications<br>
 **GEMINI_API_KEY** - *string* - gemini api token, https://aistudio.google.com/apikey<br>
 **GEMINI_MODEL** - *string* - ai model, https://ai.google.dev/gemini-api/docs/models/#model-variations<br>
-**ALIASES** - *list* - nevei a botnak (pl.: `["domain", "dave"]`), ezekre fog válaszolni<br>
-**CHANNELS** - *list* - csatorna, amelyeket követi a bot (stringként várja az idket)<br>
+**ALIASES** - *list* - nevei a botnak (pl.: `["domain", "dave"]`), **ezekre fog válaszolni**<br>
+**CHANNELS** - *list* - csatorna, amelyeket **követi** a bot (stringként várja az idket)<br>
 **PROMPT_PATH** - *string* - prompt nevét várja, ami a `./prompts` mappában van<br>
 **LOCALE** - *string* - nyelv, pár dologhoz, pl dátum (`hu-HU`, `en-US`, [teljes lista](https://simplelocalize.io/data/locales/))<br>
-**WIKI_URLS** - *list* - urlek, amiből a bot információkat fog szedni<br>
+**WIKI_URLS** - *list* - urlek, amiből a bot **információkat** fog szedni<br>
 **WEBUI_PORT** - *int* - kezelőpult portja<br>
-**OWNERS** - *list* - bot tulajdonosok idje<br>
-**PROXIES** - *list* - opcionális, lehet `[]` ha nem akarsz proxyzni, proxy lista, ha el akarnád kerülni, hogy leakelve legyen az ipd
+**OWNERS** - *list* - bot tulajdonosok idje (stringben)<br>
+**PROXIES** - *list* - opcionális, lehet `[]` ha nem akarsz proxyzni, proxy lista, ha el akarnád kerülni, hogy leakelve legyen az ipd<br>
+**TIMINGS** - *object* - időzítések, **másodpercben**
 
 PROXIES lista felépítése:
 ```json5
@@ -28,6 +29,13 @@ PROXIES lista felépítése:
       }
     }
   ]
+```
+
+TIMINGS felépítése:
+```json5
+  "TIMINGS": {
+    "saveReps": 0, // reputáció mentési idő (sec)
+  }
 ```
 
 
