@@ -11,5 +11,6 @@ module.exports = {
     memories: {},
     reputation: {},
     banlist: {},
-    commandIds: {}
+    commandIds: {},
+    isSleeping: false
 };

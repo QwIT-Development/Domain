@@ -59,6 +59,9 @@ async function main() {
     await botReady(discordClient);
 
     discordClient.on(Events.MessageCreate, async message => {
+        // ignore messages when "sleeping"
+        if (state.isSleeping) return;
+
         // noinspection JSUnresolvedReference
         await messageHandler(
             message,
