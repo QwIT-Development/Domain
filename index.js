@@ -33,7 +33,7 @@ async function main() {
     const checkForLegacyCommands = require('./eventHandlers/checkForLegacyCommands');
     const state = require('./initializers/state');
     const config = require('./config.json');
-    const botReady = require('./functions/botReady');
+    const {botReady} = require('./functions/botReady');
 
     // initialize stuff inside async thingy
     let discordClientReady = false;
@@ -61,7 +61,7 @@ async function main() {
 
     // sync sleeping state
     const schedSleep = require('./functions/sleeping');
-    schedSleep(config.SLEEPINGRANGE);
+    schedSleep(config.SLEEPINGRANGE, discordClient);
 
     discordClient.on(Events.MessageCreate, async message => {
         // ignore messages when "sleeping"

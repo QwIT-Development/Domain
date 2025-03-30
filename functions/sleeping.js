@@ -1,12 +1,14 @@
 const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
+const {botReady, botSleeping} = require('./botReady');
 
 /**
  * range alapjan elkezdi a sleep beallitasat (ajanlatos configbol szulni)
  * @param {string} range - formatum: `10:00-11:00` (ennyit alszok en is)
+ * @param {*} client
  * @returns {boolean} - ha fasza minden truet ad ~~(ha nem akkor nem)~~
  */
-function schedSleep(range) {
+function schedSleep(range, client) {
     //elmeletben asynceles nelkul is mukszik
     try {
         const [start, end] = range.split('-').map(t => t.trim()); // ha netan telebasznad spaceval
@@ -24,7 +26,7 @@ function schedSleep(range) {
             return false;
         }
 
-        nextSleep(endT, startT);
+        nextSleep(endT, startT, client, end);
         log(`Schedule set: ${start} - ${end}`, 'info', 'sleeping.js');
         return true;
     } catch (error) {
@@ -64,8 +66,10 @@ function parseTime(str) {
  * Következő "csicsikálási" eventet beállítja
  * @param {number} sleep - start time ms
  * @param {number} wake - end tiem ms
+ * @param {*} client
+ * @param {string} wakeStr - ido string
  */
-function nextSleep(sleep, wake) {
+function nextSleep(sleep, wake, client, wakeStr) {
     const now = new Date();
     const midnight = new Date(now).setHours(0, 0, 0, 0);
     const current = now.getTime() - midnight;
@@ -89,11 +93,13 @@ function nextSleep(sleep, wake) {
     if (inSleepTime) {
         state.isSleeping = true;
         log('Sent bot to sleep, bc it should sleep', 'warn', 'sleeping.js');
+        botSleeping(client, wakeStr).then();
 
         setTimeout(() => {
             state.isSleeping = false;
             log('Waked up bot', 'info', 'sleeping.js');
-            nextSleep(sleep, wake);
+            botReady(client).then();
+            nextSleep(sleep, wake, client, wakeStr);
         }, untilWake);
     } else {
         state.isSleeping = false;
@@ -101,11 +107,13 @@ function nextSleep(sleep, wake) {
         setTimeout(() => {
             state.isSleeping = true;
             log('Bot is now sleeping (normally)', 'info', 'sleeping.js');
+            botSleeping(client, wakeStr).then();
 
             setTimeout(() => {
                 state.isSleeping = false;
                 log('Bot is now awake', 'info', 'sleeping.js');
-                nextSleep(sleep, wake);
+                botReady(client).then();
+                nextSleep(sleep, wake, client, wakeStr);
             }, sleepTime);
         }, untilSleep);
     }

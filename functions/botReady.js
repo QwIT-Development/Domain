@@ -17,4 +17,14 @@ async function botReady(client) {
     })
 }
 
-module.exports = botReady;
+async function botSleeping(client, time) {
+    await client.user.setPresence({
+        activities: [{
+            name: `Alszok ${time}-ig`,
+            type: Custom
+        }],
+        status: 'dnd'
+    })
+}
+
+module.exports = {botReady, botSleeping};
