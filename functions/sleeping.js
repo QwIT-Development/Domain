@@ -24,7 +24,7 @@ function schedSleep(range) {
             return false;
         }
 
-        nextSleep(startT, endT);
+        nextSleep(endT, startT);
         log(`Schedule set: ${start} - ${end}`, 'info', 'sleeping.js');
         return true;
     } catch (error) {
