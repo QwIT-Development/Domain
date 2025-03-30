@@ -54,8 +54,8 @@ async function main() {
     const generateHistory = require('./initializers/historyCreator');
     await generateHistory();
 
-    const geminiModel = await model(state.history);
-    global.geminiSession = promptLoader(geminiModel, state.history);
+    global.geminiModel = await model(state.history);
+    global.geminiSession = promptLoader(global.geminiModel, state.history);
 
     await botReady(discordClient);
 
@@ -93,8 +93,11 @@ async function main() {
             console.error(error);
             // skizofrenias az intellijm, pont mint en
             // noinspection JSCheckFunctionSignatures,JSDeprecatedSymbols
-            await interaction.reply({
-                content: 'Nem sikerült futtatni a parancsot.',
+            await interaction.editReply({
+                content: `Nem sikerült futtatni a parancsot.\n
+\`\`\`
+${error}
+\`\`\``,
                 flags: [
                     "Ephemeral"
                 ]

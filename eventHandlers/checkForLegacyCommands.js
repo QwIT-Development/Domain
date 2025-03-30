@@ -4,7 +4,7 @@
 */
 
 const config = require('../config.json');
-const {model, promptLoader} = require("../initializers/geminiClient");
+const {model, promptLoader, resetPrompt} = require("../initializers/geminiClient");
 const state = require("../initializers/state");
 const log = require("../utils/betterLogs");
 
@@ -14,9 +14,10 @@ async function checkForLegacyCommands(message) {
         // noinspection JSCheckFunctionSignatures
         await message.react('🔄');
 
-        const geminiModel = await model();
-        state.history = [];
-        global.geminiSession = promptLoader(geminiModel, state.history);
+        const channel = message.channel.id;
+
+        state.history[channel] = [];
+        global.geminiSession = resetPrompt(global.geminiModel, state.history, channel);
         state.resetCounts += 1;
 
         await message.reactions.removeAll();

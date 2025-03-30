@@ -9,6 +9,7 @@ const config = require('../config.json');
 const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
 const makePrompt = require('../functions/makePrompt');
 const log = require('../utils/betterLogs');
+const state = require('../initializers/state');
 
 const generationConfig = {
     temperature: 1.15,
@@ -48,4 +49,23 @@ function promptLoader(model, history) {
     return instances;
 }
 
-module.exports = {promptLoader, model};
+/**
+ * specific csatorna historyjat reseteli (mert jo)
+ * @param model
+ * @param history
+ * @param channelId - csatorna id
+ * @returns {*}
+ */
+function resetPrompt(model, history, channelId) {
+    const instances = global.geminiSession;
+
+    instances[channelId] = model[channelId].startChat({
+        generationConfig,
+        history: history[channelId],
+    });
+
+    log(`Reset ${channelId} gemini instance`, 'info', 'geminiClient.js');
+    return instances;
+}
+
+module.exports = {promptLoader, model, resetPrompt};

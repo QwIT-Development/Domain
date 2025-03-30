@@ -4,7 +4,7 @@
 */
 
 const { SlashCommandBuilder } = require('discord.js');
-const {promptLoader, model} = require('../initializers/geminiClient');
+const {resetPrompt} = require('../initializers/geminiClient');
 const state = require('../initializers/state');
 const config = require('../config.json');
 
@@ -21,10 +21,10 @@ module.exports = {
                     "Ephemeral"
                 ]
             })
+            const channel = interaction.channel.id;
 
-            const geminiModel = await model();
-            state.history = [];
-            global.geminiSession = promptLoader(geminiModel, state.history);
+            state.history[channel] = [];
+            global.geminiSession = resetPrompt(global.geminiModel, state.history, channel);
             // add +1 to lobotomization count
             state.resetCounts += 1;
 
