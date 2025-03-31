@@ -12,5 +12,7 @@ module.exports = {
     reputation: {},
     banlist: {},
     commandIds: {},
-    isSleeping: false
+    isSleeping: false,
+    emojis: {},
+    bannedSites: []
 };

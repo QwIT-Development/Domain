@@ -8,6 +8,7 @@ const {checkAuthors, checkForMentions} = require('../functions/checkAuthors');
 const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
 const reputation = require('../utils/reputation');
+const parseBotCommands = require('./botCommands');
 
 async function messageHandler(message, client, gemini) {
     if (await checkAuthors(message, client)) {
@@ -32,6 +33,8 @@ async function messageHandler(message, client, gemini) {
 
             let response = await gemini[channelId].sendMessage(formattedMessage);
             response = response.response.text();
+
+            response = await parseBotCommands(response);
 
             await chunkedMsg(message, response);
         } else {

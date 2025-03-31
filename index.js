@@ -46,6 +46,9 @@ async function main() {
         await new Promise(resolve => setTimeout(resolve, 100));
     }
 
+    const emojiResolver = require('./initializers/emojiResolver');
+    await emojiResolver(discordClient);
+
     // announce commands to servers
     const announceCommands = require('./commands/setCommands');
     await announceCommands(discordClient);
