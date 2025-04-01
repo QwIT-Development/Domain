@@ -88,6 +88,7 @@ async function getContext(url) {
         if (!content) {
             return convert(response.data, options);
         } else {
+            log(`We got a wikipedia page...`, 'infoWarn', 'searx.js');
             // if website is a wikipedia page, we do a lot of stuff
             content = convert(content, options);
             // remove [edit] links
@@ -113,10 +114,4 @@ function extractDomain(url) {
     }
 }
 
-function test() {
-    search("google").then((result) => {
-        console.log(result);
-    })
-}
-
-test();
+module.exports = {getContext, search};

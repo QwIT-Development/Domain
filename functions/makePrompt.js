@@ -7,6 +7,7 @@ const config = require('../config.json');
 const path = require('path');
 const fs = require('fs');
 const log = require('../utils/betterLogs');
+const {getContext} = require('../utils/searx');
 
 /**
  * Beformázza az időt egy szebb stringbe
@@ -61,10 +62,13 @@ async function makePrompt(channelId) {
     }
 
     // load wiki contents, if possible
-    // TODO: implement loading stuff
     if (config.WIKI_URLS.length > 0) {
         if (prompt.includes("${WIKI_CONTENT}")) {
-
+            let content = "";
+            for (const url of config.WIKI_URLS) {
+                content += `\n${await getContext(url)}`
+            }
+            prompt = prompt.replace("${WIKI_CONTENT}", content);
         }
     }
 
