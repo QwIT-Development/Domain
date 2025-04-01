@@ -1,3 +1,4 @@
+// TODO: finish ts
 async function parseBotCommands(string) {
     let out = string;
 

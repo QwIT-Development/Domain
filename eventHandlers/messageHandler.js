@@ -20,7 +20,6 @@ async function messageHandler(message, client, gemini) {
             [Reputation Score: int] [username (ID: userId)] DisplayName: MessageContent
         */
 
-        // TODO: implement reputation system
         const score = await reputation(message.author.id);
         const formattedMessage = `[Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
 
@@ -34,6 +33,7 @@ async function messageHandler(message, client, gemini) {
             let response = await gemini[channelId].sendMessage(formattedMessage);
             response = response.response.text();
 
+            // TODO: parse commands from bot
             response = await parseBotCommands(response);
 
             await chunkedMsg(message, response);

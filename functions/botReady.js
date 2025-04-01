@@ -6,7 +6,6 @@
 
 const { ActivityType: {Custom} } = require("discord.js");
 
-// TODO: apply ready presence when bot is ready
 async function botReady(client) {
     await client.user.setPresence({
         activities: [{
