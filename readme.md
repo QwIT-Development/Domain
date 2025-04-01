@@ -1,50 +1,8 @@
 # <img src="https://github.com/user-attachments/assets/b4c1f045-e2c6-4b8d-90ae-a5fb40c32e4e" alt width="100px"> Domain
 
-Egy szebb, szétszedettebb codebase, hogy könnyebben menjen a fejlesztés
+Epicest Intelligent Assistant for Discord
 
-## Config leírás:
-**DISCORD_TOKEN** - *string* - discord bot token, https://discord.com/developers/applications<br>
-**GEMINI_API_KEY** - *string* - gemini api token, https://aistudio.google.com/apikey<br>
-**GEMINI_MODEL** - *string* - ai model, https://ai.google.dev/gemini-api/docs/models/#model-variations<br>
-**ALIASES** - *list* - nevei a botnak (pl.: `["domain", "dave"]`), **ezekre fog válaszolni**<br>
-**CHANNELS** - *list* - csatorna, amelyeket **követi** a bot (stringként várja az idket)<br>
-**PROMPT_PATHS** - *object* - prompt nevét várja, ami a `./prompts` mappában van<br>
-**LOCALE** - *string* - nyelv, pár dologhoz, pl dátum (`hu-HU`, `en-US`, [teljes lista](https://simplelocalize.io/data/locales/))<br>
-**WIKI_URLS** - *list* - urlek, amiből a bot **információkat** fog szedni<br>
-**WEBUI_PORT** - *int* - kezelőpult portja<br>
-**OWNERS** - *list* - bot tulajdonosok idje (stringben)<br>
-**PROXIES** - *list* - opcionális, lehet `[]` ha nem akarsz proxyzni, proxy lista, ha el akarnád kerülni, hogy leakelve legyen az ipd<br>
-**TIMINGS** - *object* - időzítések, **másodpercben**
-
-PROXIES lista felépítése:
-```json5
-  "PROXIES": [
-    {
-      "host": "", // host ip/hostname
-      "port": "", // port
-      "protocol": "http", // protokoll (http, https)
-      "auth": { // authentikáció (opcionális)
-        "username": "", // felhasználónév
-        "password": "" // jelszó
-      }
-    }
-  ]
-```
-
-TIMINGS felépítése:
-```json5
-  "TIMINGS": {
-    "saveReps": 0, // reputáció mentési idő (sec)
-  }
-```
-
-PROMPT_PATHS felépítése:
-```json5
-  "PROMPT_PATHS": {
-    "channelId": "valami.md",
-    "channelId2": "roleplay.md"
-  }
-```
+[for more information, refer to wiki](https://github.com/QwIT-Development/Domain/wiki)
 
 ## Működőképessé tétel:
 1. `pnpm i` - Használj [pnpm](https://pnpm.io/) (ne npmet, trust me)
