@@ -9,7 +9,6 @@ const config = require('../config.json');
 const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
 const makePrompt = require('../functions/makePrompt');
 const log = require('../utils/betterLogs');
-const state = require('../initializers/state');
 
 const generationConfig = {
     temperature: 1.15,

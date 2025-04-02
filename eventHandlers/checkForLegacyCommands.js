@@ -4,7 +4,7 @@
 */
 
 const config = require('../config.json');
-const {model, promptLoader, resetPrompt} = require("../initializers/geminiClient");
+const {resetPrompt} = require("../initializers/geminiClient");
 const state = require("../initializers/state");
 const log = require("../utils/betterLogs");
 
