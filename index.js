@@ -119,6 +119,8 @@ ${error}
 }
 
 async function gracefulShutdown(signal, client) {
+    const {saveReps} = require('./utils/reputation');
+
     log(`Received ${signal}`, 'info');
     try {
         // set bot to offline
@@ -126,12 +128,13 @@ async function gracefulShutdown(signal, client) {
         // mostmar nem kell global
         await botOffline(client);
         await client.destroy();
+        await saveReps();
     } catch (e) {
         log(`Error while doing stuff before shutdown: ${e}`, 'error');
     } finally {
         setTimeout(() => {
             process.exit(0);
-        }, 500);
+        }, 1000);
     }
 }
 

@@ -7,7 +7,7 @@
 const {checkAuthors, checkForMentions} = require('../functions/checkAuthors');
 const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
-const reputation = require('../utils/reputation');
+const {reputation} = require('../utils/reputation');
 const parseBotCommands = require('./botCommands');
 
 async function messageHandler(message, client, gemini) {

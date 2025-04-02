@@ -68,4 +68,4 @@ setInterval(async () => {
     await saveReps();
 }, config.TIMINGS.saveReps * 1000);
 
-module.exports = reputation;
+module.exports = {reputation, saveReps};

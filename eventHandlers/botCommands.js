@@ -1,5 +1,5 @@
 // TODO: finish ts
-const reputation = require("../utils/reputation");
+const {reputation} = require("../utils/reputation");
 const state = require("../initializers/state");
 
 async function parseBotCommands(string, message) {
