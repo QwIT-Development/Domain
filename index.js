@@ -16,10 +16,14 @@
         along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+const log = require('./utils/betterLogs');
+const {Events} = require("discord.js");
+const state = require('./initializers/state');
+const config = require('./config.json');
+const {botReady, botOffline} = require('./functions/botReady');
 
 // async main thread hell yeah
 async function main() {
-    const log = require('./utils/betterLogs');
     log("Starting Domain-Unchained", 'info');
     global.dirname = __dirname;
     const initData = require('./utils/initData');
@@ -27,17 +31,15 @@ async function main() {
 
     require('./utils/webui'); // fire up webui
     // imports
-    const {Events} = require("discord.js");
     const {promptLoader, model} = require('./initializers/geminiClient');
     const messageHandler = require('./eventHandlers/messageHandler');
     const checkForLegacyCommands = require('./eventHandlers/checkForLegacyCommands');
-    const state = require('./initializers/state');
-    const config = require('./config.json');
-    const {botReady} = require('./functions/botReady');
 
     // initialize stuff inside async thingy
     let discordClientReady = false;
     const discordClient = require('./initializers/botClient');
+    // add to global scope, cus we want to use it
+    global.discordClient = discordClient;
     discordClient.once(Events.ClientReady, () => {
         discordClientReady = true;
     });
@@ -65,6 +67,13 @@ async function main() {
     // sync sleeping state
     const schedSleep = require('./functions/sleeping');
     schedSleep(config.SLEEPINGRANGE, discordClient);
+
+    // register some handlers
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGHUP', () => gracefulShutdown('SIGHUP'));
+    process.on('beforeExit', () => gracefulShutdown('beforeExit'));
+    process.on('exit', () => gracefulShutdown('exit'));
 
     discordClient.on(Events.MessageCreate, async message => {
         // ignore messages when "sleeping"
@@ -108,6 +117,21 @@ ${error}
         }
     });
 
+}
+
+async function gracefulShutdown(signal) {
+    log(`Received ${signal}`, 'info');
+    try {
+        // set bot to offline
+        await botOffline(global.discordClient);
+        await global.discordClient.destroy();
+    } catch (e) {
+        log(`Error while doing stuff before shutdown: ${e}`, 'error');
+    } finally {
+        setTimeout(() => {
+            process.exit(0);
+        }, 500);
+    }
 }
 
 main().then();

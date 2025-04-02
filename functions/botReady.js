@@ -26,4 +26,11 @@ async function botSleeping(client, time) {
     })
 }
 
-module.exports = {botReady, botSleeping};
+async function botOffline(client) {
+    await client.user.setPresence({
+        activities: [],
+        status: "invisible"
+    })
+}
+
+module.exports = {botReady, botSleeping, botOffline};
