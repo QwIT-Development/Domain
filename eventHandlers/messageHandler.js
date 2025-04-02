@@ -11,7 +11,9 @@ const {reputation} = require('../utils/reputation');
 const parseBotCommands = require('./botCommands');
 const fs = require('fs');
 const path = require('path');
+const {RNGArray} = require('../functions/rng');
 const {getMemories} = require('../functions/memories');
+const strings = require('../data/strings.json');
 
 async function messageHandler(message, client, gemini) {
     if (await checkAuthors(message, client)) {
@@ -57,11 +59,16 @@ async function messageHandler(message, client, gemini) {
             // skizofren enem azt mondja, h ne bizzak a ++ban
             state.msgCount += 1;
 
-            let response = await gemini[channelId].sendMessage(formattedMessage);
-            response = response.response.text();
+            let response;
+            try {
+                response = await gemini[channelId].sendMessage(formattedMessage);
+                response = response.response.text().trim();
+            } catch (e) {
+                return await message.channel.send(await RNGArray(strings.geminiError))
+            }
 
-            response = response.replaceAll('@everyone', '');
-            response = response.replaceAll('@here', '');
+            response = response.replaceAll('@everyone', '[blocked :3]');
+            response = response.replaceAll('@here', '[blocked :3]');
 
             // TODO: parse commands from bot
             response = await parseBotCommands(response, message);
