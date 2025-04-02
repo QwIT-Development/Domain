@@ -21,6 +21,7 @@ const {Events} = require("discord.js");
 const state = require('./initializers/state');
 const config = require('./config.json');
 const {botReady, botOffline} = require('./functions/botReady');
+const discordClient = require("./initializers/botClient");
 
 // async main thread hell yeah
 async function main() {
@@ -38,8 +39,6 @@ async function main() {
     // initialize stuff inside async thingy
     let discordClientReady = false;
     const discordClient = require('./initializers/botClient');
-    // add to global scope, cus we want to use it
-    global.discordClient = discordClient;
     discordClient.once(Events.ClientReady, () => {
         discordClientReady = true;
     });
@@ -69,11 +68,11 @@ async function main() {
     schedSleep(config.SLEEPINGRANGE, discordClient);
 
     // register some handlers
-    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-    process.on('SIGHUP', () => gracefulShutdown('SIGHUP'));
-    process.on('beforeExit', () => gracefulShutdown('beforeExit'));
-    process.on('exit', () => gracefulShutdown('exit'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT', discordClient));
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM', discordClient));
+    process.on('SIGHUP', () => gracefulShutdown('SIGHUP', discordClient));
+    process.on('beforeExit', () => gracefulShutdown('beforeExit', discordClient));
+    process.on('exit', () => gracefulShutdown('exit', discordClient));
 
     discordClient.on(Events.MessageCreate, async message => {
         // ignore messages when "sleeping"
@@ -119,12 +118,14 @@ ${error}
 
 }
 
-async function gracefulShutdown(signal) {
+async function gracefulShutdown(signal, client) {
     log(`Received ${signal}`, 'info');
     try {
         // set bot to offline
-        await botOffline(global.discordClient);
-        await global.discordClient.destroy();
+        // igen, jol latod csak ide kell a global, ja varj
+        // mostmar nem kell global
+        await botOffline(client);
+        await client.destroy();
     } catch (e) {
         log(`Error while doing stuff before shutdown: ${e}`, 'error');
     } finally {
