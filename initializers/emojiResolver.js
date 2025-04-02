@@ -8,7 +8,7 @@ const state = require('./state');
 const config = require('../config.json');
 const {resolvePartialEmoji} = require("discord.js");
 
-async function emojiResolver(client) {
+async function emojiResolver() {
     for (const emoji in config.EMOJIS) {
         const emojiId = config.EMOJIS[emoji];
         const emojiCache = await resolvePartialEmoji(emojiId);
@@ -17,7 +17,6 @@ async function emojiResolver(client) {
             state.emojis[emoji] = emojiCache
         }
     }
-    console.log(JSON.stringify(state.emojis));
 }
 
 module.exports = emojiResolver;

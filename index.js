@@ -50,7 +50,7 @@ async function main() {
     }
 
     const emojiResolver = require('./initializers/emojiResolver');
-    await emojiResolver(discordClient);
+    await emojiResolver();
 
     // announce commands to servers
     const announceCommands = require('./commands/setCommands');
