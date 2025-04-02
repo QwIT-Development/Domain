@@ -11,6 +11,7 @@ const {reputation} = require('../utils/reputation');
 const parseBotCommands = require('./botCommands');
 const fs = require('fs');
 const path = require('path');
+const {getMemories} = require('../functions/memories');
 
 async function messageHandler(message, client, gemini) {
     if (await checkAuthors(message, client)) {
@@ -23,7 +24,9 @@ async function messageHandler(message, client, gemini) {
         */
 
         const score = await reputation(message.author.id);
-        const formattedMessage = `[Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
+        const memories = await getMemories(message.author.id);
+        const formattedMessage = `[Memories: ${memories}] [Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
+        console.log(formattedMessage);
 
         if (message.content.includes("forceartifact")) {
             let response = "```\ntestartifact\n```";
@@ -39,6 +42,9 @@ async function messageHandler(message, client, gemini) {
 
             let response = await gemini[channelId].sendMessage(formattedMessage);
             response = response.response.text();
+
+            response = response.replaceAll('@everyone', '');
+            response = response.replaceAll('@here', '');
 
             // TODO: parse commands from bot
             response = await parseBotCommands(response, message);

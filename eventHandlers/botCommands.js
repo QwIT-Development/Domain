@@ -25,7 +25,10 @@ async function parseBotCommands(string, message) {
         }
     }
 
+    // handle mem saving mem[message]
+    if (out.includes("mem[")) {
 
+    }
 
     return out;
 }
