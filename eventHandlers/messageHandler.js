@@ -23,9 +23,26 @@ async function messageHandler(message, client, gemini) {
             [Reputation Score: int] [username (ID: userId)] DisplayName: MessageContent
         */
 
+        let repliedTo;
+        try {
+            if (message.reference && message.reference.messageId) {
+                repliedTo = await message.channel.messages.fetch(message.reference.messageId);
+            }
+        } catch (e) {
+            // ignoralhato since honnet tudjam
+            log(`Failed to fetch replied message: ${e}`, 'warn', 'messageHandler.js');
+        }
+
+
         const score = await reputation(message.author.id);
         const memories = await getMemories(message.author.id);
-        const formattedMessage = `[Memories: ${memories}] [Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
+        let formattedMessage;
+        if (repliedTo) {
+            formattedMessage = `Replied to [${repliedTo.author.username} (ID: ${repliedTo.author.id})] ${repliedTo.member.displayName}: ${repliedTo.content}
+            [Memories: ${memories}] [Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
+        } else {
+            formattedMessage = `[Memories: ${memories}] [Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
+        }
         console.log(formattedMessage);
 
         if (message.content.includes("forceartifact")) {
