@@ -5,8 +5,9 @@ const fileManager = new GoogleAIFileManager(config.GEMINI_API_KEY);
 const log = require('../utils/betterLogs');
 const fs = require('fs');
 const path = require('path');
+const state = require('../initializers/state');
 
-async function uploadFilesToGemini(message) {
+async function uploadFilesToGemini(message, client) {
     let files;
     if (message.attachments.size > 0) {
         const files1 = await Promise.all(
@@ -17,7 +18,7 @@ async function uploadFilesToGemini(message) {
                 }
                 const fPath = path.join(global.dirname, 'data', 'running', 'tmp', attachment.name);
                 try {
-                    await message.react('⬆');
+                    await message.react(state.emojis['uploading']);
                     const response = await axios.get(attachment.url, {
                         responseType: 'arraybuffer',
                         validateStatus: () => true
@@ -25,17 +26,21 @@ async function uploadFilesToGemini(message) {
                     fs.writeFileSync(fPath, response.data);
                     const uploadedFile = await uploadToGemini(fPath, attachment.contentType);
                     fs.unlinkSync(fPath);
-                    await message.reactions.removeAll();
-                    await message.react('☁');
+                    await message.reactions.cache.find(reaction => reaction.emoji.id === state.emojis['uploading'].id)?.users.remove(client.user.id);
+                    await message.react(state.emojis['uploaded']);
                     return uploadedFile;
                 } catch (error) {
-                    console.error('Upload failed:', error);
+                    log(`Error uploading file: ${error}`, 'error', 'fileUploader.js');
                     return null;
                 }
             })
         );
         files = files1.filter(file => file !== null);
     }
+    if (!files) {
+        return [];
+    }
+    return files;
 }
 
 async function uploadToGemini(path, mimeType) {
@@ -47,3 +52,5 @@ async function uploadToGemini(path, mimeType) {
     log(`Uploaded file: ${file.name}`, 'info', 'fileUploader.js');
     return file;
 }
+
+module.exports = uploadFilesToGemini;

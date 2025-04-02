@@ -14,6 +14,7 @@ const path = require('path');
 const {RNGArray} = require('../functions/rng');
 const {getMemories} = require('../functions/memories');
 const strings = require('../data/strings.json');
+const uploadFilesToGemini = require('../eventHandlers/fileUploader');
 
 async function messageHandler(message, client, gemini) {
     if (await checkAuthors(message, client)) {
@@ -35,8 +36,14 @@ async function messageHandler(message, client, gemini) {
             log(`Failed to fetch replied message: ${e}`, 'warn', 'messageHandler.js');
         }
 
+        const files = await uploadFilesToGemini(message, client);
+        if (files.length > 0) {
+            message.content += '[Attachment]';
+        }
+        console.log(JSON.stringify(files, null, 2));
 
         const score = await reputation(message.author.id);
+        // TODO: implement memory system
         const memories = await getMemories(message.author.id);
         let formattedMessage;
         if (repliedTo) {
@@ -59,9 +66,22 @@ async function messageHandler(message, client, gemini) {
             // skizofren enem azt mondja, h ne bizzak a ++ban
             state.msgCount += 1;
 
+            let msgParts = [];
+            msgParts.push({text: formattedMessage});
+            if (files.length > 0) {
+                files.forEach(file => {
+                    msgParts.push({
+                        file_data: {
+                            file_uri: file.uri,
+                            mime_type: file.mimeType,
+                        }
+                    });
+                });
+            }
+
             let response;
             try {
-                response = await gemini[channelId].sendMessage(formattedMessage);
+                response = await gemini[channelId].sendMessage(msgParts);
                 response = response.response.text().trim();
             } catch (e) {
                 return await message.channel.send(await RNGArray(strings.geminiError))
