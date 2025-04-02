@@ -22,6 +22,8 @@ function splitFuzzySearch(pattern, strings, options = {"includeScore": true}) {
     }
 
     // split pharse into words, yes it works with dévid
+    // why regex? fuck split, some ppl just put double fucking spaces into their messages and line breaks
+    // who put linebreaks into their messages
     const words = pattern.match(/\S+/g);
     let allWordsMatch = false;
 

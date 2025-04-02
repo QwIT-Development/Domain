@@ -34,13 +34,13 @@ async function messageHandler(message, client, gemini) {
             response = response.response.text();
 
             // TODO: parse commands from bot
-            response = await parseBotCommands(response);
+            response = await parseBotCommands(response, message);
 
-            await chunkedMsg(message, response);
+            return await chunkedMsg(message, response);
         } else {
             state.msgCount += 1;
 
-            await addToHistory('user', formattedMessage, channelId);
+            return await addToHistory('user', formattedMessage, channelId);
         }
     }
 }
@@ -65,6 +65,11 @@ async function addToHistory(role, content, channelId) {
 
 
 async function chunkedMsg(message, response) {
+    // check if response empty
+    if (response.trim().length === 0) {
+        return;
+    }
+
     const chunkSize = 2000;
 
     if (response.length <= chunkSize) {
