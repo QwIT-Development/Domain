@@ -21,12 +21,13 @@ const {Events} = require("discord.js");
 const state = require('./initializers/state');
 const config = require('./config.json');
 const {botReady, botOffline} = require('./functions/botReady');
-const discordClient = require("./initializers/botClient");
+const deleteArtifacts = require('./utils/deleteArtifacts');
 
 // async main thread hell yeah
 async function main() {
     log("Starting Domain-Unchained", 'info');
     global.dirname = __dirname;
+    await deleteArtifacts();
     const initData = require('./utils/initData');
     await initData(); // init stuff that will be used by the bot
 
@@ -129,6 +130,7 @@ async function gracefulShutdown(signal, client) {
         await botOffline(client);
         await client.destroy();
         await saveReps();
+        await deleteArtifacts();
     } catch (e) {
         log(`Error while doing stuff before shutdown: ${e}`, 'error');
     } finally {

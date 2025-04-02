@@ -9,6 +9,8 @@ const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
 const {reputation} = require('../utils/reputation');
 const parseBotCommands = require('./botCommands');
+const fs = require('fs');
+const path = require('path');
 
 async function messageHandler(message, client, gemini) {
     if (await checkAuthors(message, client)) {
@@ -22,6 +24,11 @@ async function messageHandler(message, client, gemini) {
 
         const score = await reputation(message.author.id);
         const formattedMessage = `[Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
+
+        if (message.content.includes("forceartifact")) {
+            let response = "```\ntestartifact\n```";
+            return await chunkedMsg(message, response);
+        }
 
         if (await checkForMentions(message, client)) {
             // send typing so it looks more realistic
@@ -72,8 +79,37 @@ async function chunkedMsg(message, response) {
 
     const chunkSize = 2000;
 
-    if (response.length <= chunkSize) {
-        return message.reply(response);
+    const codeBlockRegex = /```.*?```/gs;
+    let codeBlock = '';
+    let match;
+
+    while ((match = codeBlockRegex.exec(response)) !== null) {
+        response = response.replace(match[0], '');
+        match[0] = match[0].replace(/```\w*/sg, '');
+        codeBlock += match[0] + '\n';
+    }
+
+    const artifactPath = path.join(global.dirname, 'data', 'running', 'tmp', `artifact_${Date.now()}.txt`);
+
+    if (codeBlock.trim().length > 0) {
+        try {
+            fs.writeFileSync(artifactPath, codeBlock);
+        } catch (e) {
+            log(`Failed to save artifact: ${e}`, 'error', 'messageHandler.js');
+        }
+    }
+
+    if (response.length <= chunkSize && response.trim().length > 0) {
+        if (codeBlock.trim().length > 0) {
+            await message.reply({
+                content: response,
+                files: [artifactPath]
+            });
+            fs.unlinkSync(artifactPath);
+        } else {
+            message.reply(response);
+        }
+        return true;
     }
 
     let chunks = [];
@@ -104,9 +140,19 @@ async function chunkedMsg(message, response) {
         chunks.push(currChunk);
     }
 
-    await message.reply(chunks[0]);
-    for (let i = 1; i < chunks.length; i++) {
-        await message.channel.send(chunks[i]);
+    if (chunks.length > 0) {
+        await message.reply(chunks[0]);
+        for (let i = 1; i < chunks.length; i++) {
+            await message.channel.send(chunks[i]);
+        }
+    }
+
+    if (codeBlock.trim().length > 0) {
+        await message.channel.send({
+            files: [artifactPath]
+        });
+        // delete artifact
+        fs.unlinkSync(artifactPath);
     }
 
     return true;
