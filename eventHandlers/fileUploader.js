@@ -43,10 +43,10 @@ async function uploadFilesToGemini(message, client) {
     return files;
 }
 
-async function uploadToGemini(path, mimeType) {
-    const uploadResult = await fileManager.uploadFile(path, {
+async function uploadToGemini(fPath, mimeType) {
+    const uploadResult = await fileManager.uploadFile(fPath, {
         mimeType,
-        displayName: path,
+        displayName: path.basename(fPath),
     });
     const file = uploadResult.file;
     log(`Uploaded file: ${file.name}`, 'info', 'fileUploader.js');

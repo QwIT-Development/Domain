@@ -40,7 +40,6 @@ async function messageHandler(message, client, gemini) {
         if (files.length > 0) {
             message.content += '[Attachment]';
         }
-        console.log(JSON.stringify(files, null, 2));
 
         const score = await reputation(message.author.id);
         // TODO: implement memory system
@@ -52,7 +51,7 @@ async function messageHandler(message, client, gemini) {
         } else {
             formattedMessage = `[Memories: ${memories}] [Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
         }
-        console.log(formattedMessage);
+        //console.log(formattedMessage);
 
         if (message.content.includes("forceartifact")) {
             let response = "```\ntestartifact\n```";
