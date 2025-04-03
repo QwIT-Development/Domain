@@ -79,20 +79,61 @@ async function messageHandler(message, client, gemini) {
             }
 
             let response;
+            let responseMsg;
             try {
                 response = await gemini[channelId].sendMessage(msgParts);
-                response = response.response.text().trim();
+                responseMsg = response.response.text().trim();
+
+                let functionFound = false;
+                let toolCall = null;
+                // example tool calling (gemini)
+                for (const candidate of response.response.candidates) {
+                    for (const part of candidate.content.parts) {
+                        if (part.functionCall) {
+                            toolCall = part.functionCall;
+                            functionFound = true;
+                            console.log(JSON.stringify(toolCall, null, 2));
+                            break;
+                        }
+                    }
+                    if (functionFound) break;
+                }
+
+                if (functionFound) {
+                    console.log(`Function called: ${toolCall.name}(${JSON.stringify(toolCall.args)})`);
+
+                    const functionResponsePart = {
+                        role: 'user',
+                        text: '',
+                        parts: [
+                            {
+                                functionResponse: {
+                                    name: toolCall.name,
+                                    response: {"successful": true}
+                                }
+                            }
+                        ]
+                    };
+
+                    console.log(JSON.stringify(functionResponsePart, null, 2));
+
+                    response = await gemini[channelId].sendMessage(functionResponsePart, {
+
+                    });
+                    responseMsg = response.response.text().trim();
+                }
             } catch (e) {
+                console.log(e)
                 return await message.channel.send(await RNGArray(strings.geminiError))
             }
 
-            response = response.replaceAll('@everyone', '[blocked :3]');
-            response = response.replaceAll('@here', '[blocked :3]');
+            responseMsg = responseMsg.replaceAll('@everyone', '[blocked :3]');
+            responseMsg = responseMsg.replaceAll('@here', '[blocked :3]');
 
             // TODO: parse commands from bot
-            response = await parseBotCommands(response, message);
+            responseMsg = await parseBotCommands(responseMsg, message);
 
-            return await chunkedMsg(message, response);
+            return await chunkedMsg(message, responseMsg);
         } else {
             state.msgCount += 1;
 

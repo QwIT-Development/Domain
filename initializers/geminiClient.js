@@ -10,12 +10,14 @@ const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
 const makePrompt = require('../functions/makePrompt');
 const log = require('../utils/betterLogs');
 const {changeSpinnerText} = require('../utils/processInfo');
+const {tool_mute, tool_reputation, tool_search} = require('./geminiTools');
 
 const generationConfig = {
-    temperature: 1.15,
+    temperature: 1,
     topP: 0.95,
-    topK: 40,
+    topK: 64,
     maxOutputTokens: 8192,
+    responseModalities: [],
     responseMimeType: 'text/plain'
 };
 
@@ -26,7 +28,14 @@ async function model(history) {
     for (const channel in history) {
         models[channel] = genAI.getGenerativeModel({
             model: config.GEMINI_MODEL,
-            systemInstruction: await makePrompt(channel)
+            systemInstruction: await makePrompt(channel),
+            /*tools: [{
+                functionDeclarations: [
+                    tool_mute,
+                    tool_reputation,
+                    tool_search
+                ]
+            }]*/
         });
     }
 
