@@ -15,7 +15,7 @@
   "dependencies": {
     "@discordjs/rest": "^2.4.3",
     "@google/generative-ai": "^0.24.0",
-    "axios": "^1.8.3",
+    "axios": "^1.8.4",
     "cheerio": "^1.0.0",
     "discord-api-types": "^0.37.119",
     "discord.js": "^14.18.0",
@@ -23,6 +23,7 @@
     "fuse.js": "^7.1.0",
     "html-to-text": "^9.0.5",
     "http-proxy-agent": "^7.0.2",
-    "https-proxy-agent": "^7.0.6"
+    "https-proxy-agent": "^7.0.6",
+    "ora": "^8.2.0"
   }
 }
