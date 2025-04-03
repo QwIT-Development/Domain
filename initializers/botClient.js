@@ -12,6 +12,9 @@ configot
  */
 const config = require('../config.json');
 const log = require('../utils/betterLogs');
+const {changeSpinnerText} = require('../utils/processInfo');
+
+changeSpinnerText("Waiting for client to be ready...").then();
 
 // noinspection JSUnresolvedReference,JSCheckFunctionSignatures
 const discordClient = new Client({

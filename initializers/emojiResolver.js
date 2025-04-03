@@ -6,9 +6,11 @@
 
 const state = require('./state');
 const config = require('../config.json');
+const {changeSpinnerText} = require('../utils/processInfo');
 const {resolvePartialEmoji} = require("discord.js");
 
 async function emojiResolver() {
+    await changeSpinnerText("Resolving emojis...");
     for (const emoji in config.EMOJIS) {
         const emojiId = config.EMOJIS[emoji];
         const emojiCache = await resolvePartialEmoji(emojiId);

@@ -10,8 +10,10 @@ const config = require('../config.json');
 const {GoogleAIFileManager} = require("@google/generative-ai/server");
 const fileManager = new GoogleAIFileManager(config.GEMINI_API_KEY);
 const log = require('./betterLogs')
+const {changeSpinnerText} = require('../utils/processInfo');
 
 async function deleteArtifacts() {
+    await changeSpinnerText('Deleting Artifacts...');
     const artifactDir = path.join(global.dirname, 'data', 'running', 'tmp');
     const files = fs.readdirSync(artifactDir);
 
@@ -25,6 +27,7 @@ async function deleteArtifacts() {
 }
 
 async function deleteUploadedItems() {
+    await changeSpinnerText('Deleting Uploaded Items...');
     const fileIds = await getFileIds();
     if (!fileIds) {
         log("No fileIds found", 'ignorableErr', 'cleanup.js');

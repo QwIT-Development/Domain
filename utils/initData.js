@@ -8,8 +8,10 @@ const fs = require('fs');
 const path = require('path');
 const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
+const {changeSpinnerText} = require('../utils/processInfo');
 
 async function initData() {
+    await changeSpinnerText('Initializing state...');
     // create memories
     // noinspection JSUnresolvedReference
     const memoriesPath = path.join(global.dirname, 'data', 'running', 'memories.json');

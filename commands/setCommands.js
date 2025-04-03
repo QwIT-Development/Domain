@@ -11,12 +11,14 @@ const fs = require('fs');
 const config = require('../config.json');
 const log = require('../utils/betterLogs');
 const state = require('../initializers/state');
+const {changeSpinnerText} = require('../utils/processInfo');
 
 // add commands here
 const reset = require('./reset');
 
 
 async function announceCommands(client) {
+    await changeSpinnerText("Announcing commands to all servers...");
     // push commands to collection
     // this will set the commands internally
     client.commands = new Collection();

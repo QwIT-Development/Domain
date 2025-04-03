@@ -9,6 +9,7 @@ const config = require('../config.json');
 const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
 const makePrompt = require('../functions/makePrompt');
 const log = require('../utils/betterLogs');
+const {changeSpinnerText} = require('../utils/processInfo');
 
 const generationConfig = {
     temperature: 1.15,
@@ -19,6 +20,7 @@ const generationConfig = {
 };
 
 async function model(history) {
+    await changeSpinnerText("Creating gemini models...");
     const models = {};
 
     for (const channel in history) {
@@ -33,6 +35,7 @@ async function model(history) {
 }
 
 function promptLoader(model, history) {
+    changeSpinnerText("Creating gemini instances...").then();
     const instances = {};
 
     // might look shitty, but it works

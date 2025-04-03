@@ -37,7 +37,7 @@ function log(message, type = "info", thread = "index.js") {
         "error": "X",
         "ignorableErr": "..?"
     }
-    console.log(`${colors[type]}${symbols[type]}[${thread.toUpperCase()}]: ${message}${colors.reset}`);
+    console.log(`\r\x1b[K${colors[type]}${symbols[type]}[${thread.toUpperCase()}]: ${message}${colors.reset}`);
 }
 
 module.exports = log;

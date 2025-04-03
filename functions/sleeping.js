@@ -7,6 +7,7 @@
 const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
 const {botReady, botSleeping} = require('./botReady');
+const {changeSpinnerText} = require('../utils/processInfo');
 
 /**
  * range alapjan elkezdi a sleep beallitasat (ajanlatos configbol szulni)
@@ -15,6 +16,7 @@ const {botReady, botSleeping} = require('./botReady');
  * @returns {boolean} - ha fasza minden truet ad ~~(ha nem akkor nem)~~
  */
 function schedSleep(range, client) {
+    changeSpinnerText("Scheduling sleep...").then();
     //elmeletben asynceles nelkul is mukszik
     try {
         const [start, end] = range.split('-').map(t => t.trim()); // ha netan telebasznad spaceval

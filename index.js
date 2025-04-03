@@ -22,9 +22,11 @@ const state = require('./initializers/state');
 const config = require('./config.json');
 const {botReady, botOffline} = require('./functions/botReady');
 const {deleteArtifacts, deleteUploadedItems} = require('./utils/cleanup');
+const {initializeSpinner, stopSpinner} = require('./utils/processInfo');
 
 // async main thread hell yeah
 async function main() {
+    await initializeSpinner();
     log("Starting Domain-Unchained", 'info');
     global.dirname = __dirname;
     await deleteArtifacts();
@@ -76,6 +78,8 @@ async function main() {
     process.on('beforeExit', () => gracefulShutdown('beforeExit', discordClient));
     process.on('exit', () => gracefulShutdown('exit', discordClient));
 
+    await stopSpinner(true, "Domain-Unchained ready");
+
     discordClient.on(Events.MessageCreate, async message => {
         // ignore messages when "sleeping"
         if (state.isSleeping) return;
@@ -121,6 +125,7 @@ ${error}
 }
 
 async function gracefulShutdown(signal, client) {
+    await initializeSpinner();
     const {saveReps} = require('./utils/reputation');
 
     log(`Received ${signal}`, 'info');
@@ -133,6 +138,7 @@ async function gracefulShutdown(signal, client) {
         await saveReps();
         await deleteArtifacts();
         await deleteUploadedItems();
+        await stopSpinner(true, "Domain-Unchained shutting down");
     } catch (e) {
         log(`Error while doing stuff before shutdown: ${e}`, 'error');
     } finally {
