@@ -83,45 +83,6 @@ async function messageHandler(message, client, gemini) {
             try {
                 response = await gemini[channelId].sendMessage(msgParts);
                 responseMsg = response.response.text().trim();
-
-                let functionFound = false;
-                let toolCall = null;
-                // example tool calling (gemini)
-                for (const candidate of response.response.candidates) {
-                    for (const part of candidate.content.parts) {
-                        if (part.functionCall) {
-                            toolCall = part.functionCall;
-                            functionFound = true;
-                            console.log(JSON.stringify(toolCall, null, 2));
-                            break;
-                        }
-                    }
-                    if (functionFound) break;
-                }
-
-                if (functionFound) {
-                    console.log(`Function called: ${toolCall.name}(${JSON.stringify(toolCall.args)})`);
-
-                    const functionResponsePart = {
-                        role: 'user',
-                        text: '',
-                        parts: [
-                            {
-                                functionResponse: {
-                                    name: toolCall.name,
-                                    response: {"successful": true}
-                                }
-                            }
-                        ]
-                    };
-
-                    console.log(JSON.stringify(functionResponsePart, null, 2));
-
-                    response = await gemini[channelId].sendMessage(functionResponsePart, {
-
-                    });
-                    responseMsg = response.response.text().trim();
-                }
             } catch (e) {
                 console.log(e)
                 return await message.channel.send(await RNGArray(strings.geminiError))
