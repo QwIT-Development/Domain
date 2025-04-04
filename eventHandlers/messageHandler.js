@@ -85,7 +85,14 @@ async function messageHandler(message, client, gemini) {
                 responseMsg = response.response.text().trim();
             } catch (e) {
                 console.log(e)
-                return await message.channel.send(await RNGArray(strings.geminiError))
+                if (e.message.contains("SAFETY") || e.message.contains("PROHIBITED_CONTENT") || e.message.contains("OTHER")) {
+                    return await message.channel.send(await RNGArray(strings.geminiFiltered));
+                } else if (e.message.contains("The model is overloaded") || e.message.contains("Resource has been exhausted")) {
+                    return await message.channel.send("túl vagyok terhelve, probáld meg késöbb. bocsi :(");
+                } else {
+                    log(e, 'error', 'messageHandler.js');
+                    return await message.channel.send("Hiba történt. (Refer to console)");
+                }
             }
 
             responseMsg = responseMsg.replaceAll('@everyone', '[blocked :3]');
