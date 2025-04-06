@@ -43,25 +43,21 @@ async function search(query) {
         // put 15 results to mem
         // idk, we dont really need more
         const results = response.data.results.slice(0, 15);
-        console.log(results);
 
         const result1Context = await getContext(results[0].url);
-        console.log(result1Context);
         const result2Context = await getContext(results[1].url);
-        console.log(result2Context);
 
         const output = results.map((result, index) => {
             let resultOutput = `${index + 1}. ${result.title}\n   ${result.url}\n   ${result.content}\n`;
             if (index === 0 && result1Context !== null) {
-                resultOutput += `\nContext for result:\n${result1Context}\n`;
+                resultOutput += `\n\`\`\`\n${result1Context}\n\`\`\`\n`;
             }
             if (index === 1 && result2Context !== null) {
-                resultOutput += `\nContext for result:\n${result2Context}\n`;
+                resultOutput += `\n\`\`\`\n${result2Context}\n\`\`\`\n`;
             }
             return resultOutput;
         }).join('\n');
 
-        console.log(output);
         return output;
 
     } catch (e) {
@@ -81,23 +77,22 @@ async function getContext(url) {
     }
 
     try {
-        const response = await axios.get(url);
-        const $ = cheerio.load(response.data);
+        let response = await axios.get(url, {responseType: 'arraybuffer'});
+        response = Buffer.from(response.data, 'binary').toString('utf8');
+        const $ = cheerio.load(response);
         // check if page has id=mw-content-text and class=mw-body-content
         let content = $('#mw-content-text.mw-body-content').html();
         if (!content) {
-            return convert(response.data, options);
+            content = convert(response, options);
         } else {
-            log(`We got a wikipedia page...`, 'infoWarn', 'searx.js');
-            // if website is a wikipedia page, we do a lot of stuff
             content = convert(content, options);
-            // remove [edit] links
-            content = content.replaceAll(/\[([^\]]+)]/g, '').trim();
-            // make it prettier
-            content = content.replaceAll('\n\n\n', '').trim();
-            // extra trim for good measure
-            return content.trim()
         }
+        // remove [edit] links
+        content = content.replaceAll(/\[([^\]]+)]/g, '').trim();
+        // make it prettier
+        content = content.replaceAll('\n\n\n', '').trim();
+        content = content.replaceAll('\n\n', '').trim();
+        return content.trim()
 
     } catch (e) {
         log(`Error getting context: ${e}`, 'error', 'searx.js');
