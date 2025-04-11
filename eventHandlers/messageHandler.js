@@ -116,7 +116,7 @@ async function messageHandler(message, client, gemini) {
             responseMsg = responseMsg.replaceAll('@here', '[blocked :3]');
 
             // TODO: parse commands from bot
-            responseMsg = await parseBotCommands(responseMsg, message);
+            responseMsg = await parseBotCommands(responseMsg, message, gemini);
 
             return await chunkedMsg(message, responseMsg);
         } else {
@@ -233,4 +233,4 @@ async function chunkedMsg(message, response) {
     return true;
 }
 
-module.exports = messageHandler;
+module.exports = {messageHandler, addToHistory};

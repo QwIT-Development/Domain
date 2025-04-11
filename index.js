@@ -37,7 +37,7 @@ async function main() {
     require('./utils/webui'); // fire up webui
     // imports
     const {promptLoader, model} = require('./initializers/geminiClient');
-    const messageHandler = require('./eventHandlers/messageHandler');
+    const {messageHandler} = require('./eventHandlers/messageHandler');
     const checkForLegacyCommands = require('./eventHandlers/checkForLegacyCommands');
 
     // initialize stuff inside async thingy
