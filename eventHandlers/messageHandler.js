@@ -105,6 +105,8 @@ async function messageHandler(message, client, gemini) {
                 //check for toomanyrequests
                 } else if (status && (status === "Too Many Requests")) {
                     return await message.channel.send("túl vagyok terhelve, probáld meg késöbb. bocsi :(");
+                } else if (status && (status === "Service Unavailable")) {
+                    return await message.channel.send("nem elérhető a varázs gateway, probáld meg késöbb. bocsi :(");
                 } else {
                     // generic err handler
                     log(e, 'error', 'messageHandler.js');
