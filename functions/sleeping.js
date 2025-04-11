@@ -3,11 +3,10 @@
         Copyright (C) 2025  BalazsManus
 */
 
-
 const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
-const {botReady, botSleeping} = require('./botReady');
-const {changeSpinnerText} = require('../utils/processInfo');
+const { botReady, botSleeping } = require('./botReady');
+const { changeSpinnerText } = require('../utils/processInfo');
 
 /**
  * range alapjan elkezdi a sleep beallitasat (ajanlatos configbol szulni)
@@ -17,25 +16,25 @@ const {changeSpinnerText} = require('../utils/processInfo');
  */
 function schedSleep(range, client) {
     changeSpinnerText("Scheduling sleep...").then();
-    //elmeletben asynceles nelkul is mukszik
+
     try {
-        const [start, end] = range.split('-').map(t => t.trim()); // ha netan telebasznad spaceval
+        const [start, end] = range.split('-').map(t => t.trim());
 
         if (!start || !end) {
-            log(`Invalid range format: ${range}, consider this: 10:00-11:00`, 'error', 'sleeping.js');
+            log(`Invalid range format: ${range}, expected: 10:00-11:00`, 'error', 'sleeping.js');
             return false;
         }
 
-        const startT = parseTime(start);
-        const endT = parseTime(end);
+        const startTime = parseTime(start);
+        const endTime = parseTime(end);
 
-        if (!startT || !endT) {
-            log(`Invalid range format: ${range}, consider this: 10:00-11:00`, 'error', 'sleeping.js');
+        if (!startTime || !endTime) {
+            log(`Invalid time values in range: ${range}`, 'error', 'sleeping.js');
             return false;
         }
 
-        nextSleep(startT, endT, client, end);
-        log(`Schedule set: ${start} - ${end}`, 'info', 'sleeping.js');
+        scheduleSleepCycle(startTime, endTime, client, end);
+        log(`Sleep schedule set: ${start} - ${end}`, 'info', 'sleeping.js');
         return true;
     } catch (error) {
         log(`Error scheduling sleep: ${error.message}`, 'error', 'sleeping.js');
@@ -45,86 +44,122 @@ function schedSleep(range, client) {
 
 /**
  * parseli az idő stringet
- * @param {string} str - format (`10:00`)
+ * @param {string} timeStr - format (`10:00`)
  * @returns {number|null} - millisec éfjéltől számolva
  */
-function parseTime(str) {
+function parseTime(timeStr) {
     try {
-        const timeRegex = /(\d{1,2}):(\d{2})/; // regex my beloved
-        const matches = str.match(timeRegex);
+        const timeRegex = /(\d{1,2}):(\d{2})/;
+        const matches = timeStr.match(timeRegex);
 
         if (!matches) return null;
 
-        let hours = parseInt(matches[1], 10);
+        const hours = parseInt(matches[1], 10);
         const minutes = parseInt(matches[2], 10);
 
         if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-            log(`Invalid time: ${str}, are you sure this right?`, 'error', 'sleeping.js');
+            log(`Invalid time: ${hours}:${minutes}, are you sure this right?`, 'error', 'sleeping.js');
             return null;
         }
 
         return (hours * 60 + minutes) * 60 * 1000;
     } catch (error) {
-        log(`Error parsing time string: ${str}`, 'error', 'sleeping.js');
+        log(`Error parsing time string: ${timeStr}`, 'error', 'sleeping.js');
         return null;
     }
 }
 
 /**
  * Következő "csicsikálási" eventet beállítja
- * @param {number} sleep - start time ms
- * @param {number} wake - end tiem ms
+ * @param {number} sleepTime - start time ms
+ * @param {number} wakeTime - end tiem ms
  * @param {*} client
- * @param {string} wakeStr - ido string
+ * @param {string} wakeTimeStr - ido string
  */
-function nextSleep(sleep, wake, client, wakeStr) {
+function scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr) {
     const now = new Date();
     const midnight = new Date(now).setHours(0, 0, 0, 0);
-    const current = now.getTime() - midnight;
+    const currentTimeMs = now.getTime() - midnight;
+    const dayInMs = 24 * 60 * 60 * 1000;
 
-    let untilSleep = sleep - current;
-    let untilWake = wake - current;
+    const isOvernight = sleepTime > wakeTime;
+    let shouldBeSleeping = false;
 
-    if (untilSleep <= 0) untilSleep += 86400000; // 24 * 60 * 60 * 1000
-    if (untilWake <= 0) untilWake += 86400000;
+    if (isOvernight) {
+        // ejszakai idokre (e.g., 22:00-06:00)
+        shouldBeSleeping = currentTimeMs >= sleepTime || currentTimeMs < wakeTime;
+    } else {
+        // egynapos idore (e.g., 01:00-05:00)
+        shouldBeSleeping = currentTimeMs >= sleepTime && currentTimeMs < wakeTime;
+    }
 
-    const sleepTime = wake > sleep
-        ? wake - sleep
-        : wake + 86400000 - sleep;
+    let msUntilSleep = sleepTime - currentTimeMs;
+    let msUntilWake = wakeTime - currentTimeMs;
+    if (msUntilSleep <= 0) msUntilSleep += dayInMs;
+    if (msUntilWake <= 0) msUntilWake += dayInMs;
 
-    // check if bot should sleep rn
-    // restartoknal jo
-    const inSleepTime =
-        (sleep < wake && current >= sleep && current < wake) ||
-        (sleep > wake && (current >= sleep || current < wake));
+    const sleepDuration = isOvernight
+        ? (dayInMs - sleepTime) + wakeTime
+        : wakeTime - sleepTime;
 
-    if (inSleepTime) {
-        state.isSleeping = true;
-        log('Sent bot to sleep, bc it should sleep', 'warn', 'sleeping.js');
-        botSleeping(client, wakeStr).then();
+    if (shouldBeSleeping) {
+        // domainnak csucsukalnia kene, de valamilyen okon folytan nem alszik (rosz)
+        if (!state.isSleeping) {
+            state.isSleeping = true;
+            botSleeping(client, wakeTimeStr).then();
+            log('Bot is now sleeping', 'info', 'sleeping.js');
+        }
+
+        // sched wake up
+        const wakeupIn = isOvernight && currentTimeMs >= sleepTime
+            ? wakeTime - currentTimeMs
+            : msUntilWake;
+
+        log(`Bot will wake up in ${formatDuration(wakeupIn)}`, 'info', 'sleeping.js');
 
         setTimeout(() => {
             state.isSleeping = false;
-            log('Waked up bot', 'info', 'sleeping.js');
             botReady(client).then();
-            nextSleep(sleep, wake, client, wakeStr);
-        }, untilWake);
+            log('Bot is now awake', 'info', 'sleeping.js');
+
+            scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr);
+        }, wakeupIn);
     } else {
-        state.isSleeping = false;
+        if (state.isSleeping) {
+            state.isSleeping = false;
+            botReady(client).then();
+            log('Bot is now awake', 'info', 'sleeping.js');
+        }
+
+        log(`Bot will sleep in ${formatDuration(msUntilSleep)}`, 'info', 'sleeping.js');
 
         setTimeout(() => {
             state.isSleeping = true;
-            log('Bot is now sleeping (normally)', 'info', 'sleeping.js');
-            botSleeping(client, wakeStr).then();
+            botSleeping(client, wakeTimeStr).then();
+            log('Bot is now sleeping', 'info', 'sleeping.js');
 
             setTimeout(() => {
                 state.isSleeping = false;
-                log('Bot is now awake', 'info', 'sleeping.js');
                 botReady(client).then();
-                nextSleep(sleep, wake, client, wakeStr);
-            }, sleepTime);
-        }, untilSleep);
+                log('Bot is now awake', 'info', 'sleeping.js');
+
+                scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr);
+            }, sleepDuration);
+        }, msUntilSleep);
     }
+}
+
+/**
+ * humánus olvasható formába formázza az időt
+ * @param {number} ms - milisec
+ * @returns {string} - szexi formátum
+ */
+function formatDuration(ms) {
+    const hours = Math.floor(ms / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+
+    return `${hours}h ${minutes}m ${seconds}s`;
 }
 
 module.exports = schedSleep;
