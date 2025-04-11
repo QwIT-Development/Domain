@@ -25,22 +25,26 @@ async function parseBotCommands(string, message, gemini) {
         }
     }
 
-    // handle mem saving mem[message]
-    if (out.includes("mem[")) {
+    // handle mem saving memory[message]
+    if (out.includes("memory[")) {
 
     }
 
     // handle search
     const searchHandler = require("./searchHandler");
-    if (out.includes("s[")) {
-        // example: s[minceraft r34]
+    if (out.includes("search[")) {
+        // example: search[minceraft r34]
         // ^ ez a komment a regi kodbol jon, lehet zypherift irta de nem biztos
-        const regex = /s\[(.+?)]/gmi;
+        const regex = /search\[(.+?)]/gmi;
         const match = regex.exec(out);
         if (match) {
             out = await searchHandler(match[1], message.channel.id, gemini);
             await message.react(state.emojis["search"]);
         }
+    }
+
+    if (out.includes("mute[")) {
+
     }
 
     return out;
