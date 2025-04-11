@@ -7,6 +7,26 @@
     "megakadályozták a crashoutom",
     "https://i.pinimg.com/originals/93/e0/70/93e070dd929400ac52062f0d7645e088.gif",
     "behúzták a cipzárt a számon",
-    "felrobbant a szerver"
+    "felrobbant a szerver",
+    "https://http.cat/204.jpg",
+    "https://http.cat/400.jpg"
+  ],
+  "geminiTooManyReqs": [
+    "túl vagyok terhelve, probáld meg késöbb. bocsi :(",
+    "az agyam le van terhelve",
+    "túl sok a kérdés",
+    "ennyi dologra nem tudok figyelni egyszerre",
+    "egy picit hagyj pihenni",
+    "túl sok a kérdés, próbáld meg később",
+    "https://http.cat/429.jpg",
+    "https://http.cat/102.jpg"
+  ],
+  "geminiGatewayUnavail": [
+    "nem elérhető a varázs gateway, probáld meg késöbb. bocsi :(",
+    "https://http.cat/521.jpg",
+    "https://http.cat/523.jpg",
+    "https://http.cat/522.jpg",
+    "nem elérhető az agyam, várj egy picit",
+    "valami nem jó..."
   ]
 }
