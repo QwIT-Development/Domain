@@ -15,6 +15,7 @@ const {RNGArray} = require('../functions/rng');
 const {getMemories} = require('../functions/memories');
 const strings = require('../data/strings.json');
 const uploadFilesToGemini = require('../eventHandlers/fileUploader');
+const cronReset = require("../cronJobs/cronReset");
 
 async function messageHandler(message, client, gemini) {
     if (await checkAuthors(message, client)) {
@@ -59,6 +60,10 @@ async function messageHandler(message, client, gemini) {
         }
 
         if (await checkForMentions(message, client)) {
+            // this should run, bc it wouldn't be good if the bot randomly resets while getting back the response
+            const cronReset = require('../cronJobs/cronReset');
+            cronReset.reschedule();
+
             // send typing so it looks more realistic
             await message.channel.sendTyping();
 

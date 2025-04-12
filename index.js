@@ -80,6 +80,8 @@ async function main() {
 
     await stopSpinner(true, "Domain-Unchained ready");
 
+    require('./cronJobs/cronReset'); // this should be run after bot is ready
+
     discordClient.on(Events.MessageCreate, async message => {
         // ignore messages when "sleeping"
         if (state.isSleeping) return;
