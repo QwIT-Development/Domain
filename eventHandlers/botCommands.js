@@ -48,6 +48,8 @@ async function parseBotCommands(string, message, gemini) {
             out = out.replaceAll(match[0], "").trim();
             if (match) {
                 out = await searchHandler(match[1], message.channel.id, gemini);
+                // rerun regex filter, idk
+                out = out.replaceAll(regex.exec(out)[0], "").trim();
                 await message.react(state.emojis["search"]);
             }
         } catch (e) {
