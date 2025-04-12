@@ -5,16 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Domain WebUI</title>
     <link rel="stylesheet" href="/kit.css">
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0"/>
-    <style>
-        .material-symbols-rounded {
-            font-variation-settings: 'FILL' 1,
-            'wght' 400,
-            'GRAD' 0,
-            'opsz' 24
-        }
-    </style>
 </head>
 <body>
 <nav class="navbar">
@@ -64,6 +54,14 @@
                 </div>
             </div>
         </div>
+        <div class="col col-md col-lg-8">
+            <div class="card" style="max-height: 300px; overflow-y: scroll; overflow-x: hidden;">
+                <p class="card-header"><span class="material-symbols-rounded">bug_report</span> Logs</p>
+                <div class="card-body">
+                    <pre id="logs"></pre>
+                </div>
+            </div>
+        </div>
     </div>
 
 </main>
@@ -92,6 +90,11 @@
                 if (stats.botStats) {
                     document.getElementById('msgReceived').textContent = stats.botStats.msgCount;
                     document.getElementById('resetCount').textContent = stats.botStats.historyClears;
+                }
+
+                if (stats.logs) {
+                    const logsElement = document.getElementById('logs');
+                    logsElement.textContent = stats.logs.join('\n');
                 }
             }
         } catch (e) {

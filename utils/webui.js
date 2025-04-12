@@ -41,7 +41,8 @@ function getCurrentStats() {
         botStats: {
             msgCount: state.msgCount,
             historyClears: state.resetCounts
-        }
+        },
+        logs: state.logs.toReversed(),
     }
 }
 

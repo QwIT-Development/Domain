@@ -14,5 +14,6 @@ module.exports = {
     commandIds: {},
     isSleeping: false,
     emojis: {},
-    bannedSites: []
+    bannedSites: [],
+    logs: [],
 };

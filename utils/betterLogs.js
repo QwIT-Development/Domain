@@ -3,6 +3,7 @@
         Copyright (C) 2025  BalazsManus
 */
 
+const state = require('../initializers/state');
 
 // köszönöm szépen gemini a segítséget, hogy hogy kell intellij function kommentet írni
 /**
@@ -38,6 +39,10 @@ function log(message, type = "info", thread = "index.js") {
         "ignorableErr": "..?"
     }
     console.log(`\r\x1b[K${colors[type]}${symbols[type]}[${thread.toUpperCase()}]: ${message}${colors.reset}`);
+    state.logs.push(`${symbols[type]}[${thread.toUpperCase()}]: ${message}`);
+    if (state.logs.length > 100) {
+        state.logs.shift();
+    }
 }
 
 module.exports = log;
