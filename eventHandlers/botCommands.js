@@ -8,8 +8,6 @@
 const state = require("../initializers/state");
 const log = require("../utils/betterLogs");
 const config = require("../config.json");
-const searchHandler = require("./searchHandler");
-const {reputation} = require("../utils/reputation");
 
 async function parseBotCommands(string, message, gemini) {
     let out = string;
