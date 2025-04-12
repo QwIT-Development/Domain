@@ -5,6 +5,8 @@
 
 
 const { ActivityType: {Custom} } = require("discord.js");
+const state = require("../initializers/state");
+const {resetPrompt} = require("../initializers/geminiClient");
 
 async function botReady(client) {
     await client.user.setPresence({
@@ -24,6 +26,13 @@ async function botSleeping(client, time) {
         }],
         status: 'dnd'
     })
+
+    // reset history, like nothing happened yesterday
+    for (const channel in state.history) {
+        state.history[channel] = [];
+        global.geminiSession = resetPrompt(global.geminiModel, state.history, channel);
+        state.resetCounts += 1;
+    }
 }
 
 async function botOffline(client) {
