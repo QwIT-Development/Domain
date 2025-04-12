@@ -83,7 +83,13 @@ async function getContext(url) {
         // check if page has id=mw-content-text and class=mw-body-content
         let content = $('#mw-content-text.mw-body-content').html();
         if (!content) {
-            content = convert(response, options);
+            // try the other styles (otterwiki compatible)
+            content = $('.content').html();
+            if (!content) {
+                content = convert(response, options);
+            } else {
+                content = convert(content, options);
+            }
         } else {
             content = convert(content, options);
         }

@@ -62,12 +62,13 @@ async function makePrompt(channelId) {
     }
 
     // load wiki contents, if possible
-    if (config.WIKI_URLS.length > 0) {
+    if (config.WIKI_URLS[channelId].length > 0) {
         if (prompt.includes("${WIKI_CONTENT}")) {
             let content = "";
-            for (const url of config.WIKI_URLS) {
+            for (const url of config.WIKI_URLS[channelId]) {
                 content += `\n${await getContext(url)}`
             }
+            log(`Loaded ${config.WIKI_URLS[channelId].length} wiki pages`, 'info', 'makeprompt.js');
             prompt = prompt.replace("${WIKI_CONTENT}", content);
         }
     }
@@ -89,7 +90,6 @@ async function makePrompt(channelId) {
         prompt = prompt.replace("${MUTE_WORDS}", muteWords.join(', '));
     }
 
-    log(`Prompt ready to go`, 'info', 'makeprompt.js');
     return prompt;
 }
 
