@@ -42,8 +42,10 @@ async function parseBotCommands(string, message, gemini) {
         try {
             // example: search[minceraft r34]
             // ^ ez a komment a regi kodbol jon, lehet zypherift irta de nem biztos
-            const regex = /search\[(.+?)]/gmi;
+            const regex = /search\[(.*)]/gmi;
             const match = regex.exec(out);
+            // remove search command in case it doesn't get executed or it errors out
+            out = out.replaceAll(match[0], "").trim();
             if (match) {
                 out = await searchHandler(match[1], message.channel.id, gemini);
                 await message.react(state.emojis["search"]);
@@ -56,7 +58,7 @@ async function parseBotCommands(string, message, gemini) {
     if (out.includes("mute[")) {
         try {
             // example: mute[user_id,time,reason]
-            const regex = /mute\[(\S+), ?(\S+), ?(\S+)]/gmi;
+            const regex = /mute\[(.*), ?(.*), ?(.*)]/gmi;
             const match = regex.exec(out);
             if (match) {
                 const userId = match[1];
