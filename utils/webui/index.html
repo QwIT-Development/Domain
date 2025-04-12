@@ -1,18 +1,30 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <!--suppress JSUnresolvedLibraryURL -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css"
-          integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
-    <!--suppress HtmlUnknownTarget -->
-    <link rel="stylesheet" href="/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Domain WebUI</title>
+    <link rel="stylesheet" href="/kit.css">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0"/>
+    <style>
+        .material-symbols-rounded {
+            font-variation-settings: 'FILL' 1,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+    </style>
 </head>
 <body>
+<nav class="navbar">
+    <a class="navbar-brand" href="/">Domain WebUI</a>
+    <ul class="navbar-nav">
+        <li class="nav-item">
+            <a onclick="lobotomize()" href="javascript:void();">Lobotomize</a>
+        </li>
+    </ul>
+</nav>
 
 <script>
     function lobotomize() {
@@ -34,40 +46,23 @@
     }
 </script>
 
-<div id="layout">
-    <a href="#menu" id="menuLink" class="menu-link">
-        <span></span>
-    </a>
+<main class="container mt-4">
+    <div class="row">
+        <div class="col col-md col-lg">
+            <div class="card">
+                <p class="card-header"><span class="material-symbols-rounded">monitoring</span> Statistics</p>
 
-    <div id="menu">
-        <div class="pure-menu">
-            <a class="pure-menu-heading">Domain WebUI</a>
-
-            <ul class="pure-menu-list">
-                <li class="pure-menu-item menu-item-divided pure-menu-selected">
-                    <a href="/" class="pure-menu-link">Statistics</a></li>
-                <li class="pure-menu-item" style="cursor: pointer;">
-                    <a onclick="lobotomize()" class="pure-menu-link">Lobotomize</a></li>
-            </ul>
+                <div class="card-body">
+                    <p class="card-text">Ram usage: <span id="heapused"></span>/<span id="heaptotal"></span><br>
+                        Messages received: <span id="msgReceived"></span><br>
+                        Reset count: <span id="resetCount"></span></p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="main">
-        <div class="header">
-            <h1>Statistics</h1>
-        </div>
+</main>
 
-        <div class="content">
-            <h2>Ram usage: <i id="heapused"></i>/<i id="heaptotal"></i></h2>
-            <h2>Messages received: <i id="msgReceived"></i></h2>
-            <h2>Reset count: <i id="resetCount"></i></h2>
-        </div>
-
-    </div>
-</div>
-
-<!--suppress HtmlUnknownTarget -->
-<script src="/ui.js"></script>
 <script>
     function updateRamUsage() {
         fetch('/api/usagestats/ram')
