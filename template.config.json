@@ -14,6 +14,7 @@
     "resetPrompt": 0
   },
   "SEARX_BASE_URL": "",
+  "MAX_MESSAGES": 0,
   "SLEEPINGRANGE": "00:00-00:00",
   "PROXIES": [
     {

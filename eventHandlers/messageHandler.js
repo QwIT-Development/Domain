@@ -15,7 +15,7 @@ const {RNGArray} = require('../functions/rng');
 const {getMemories} = require('../functions/memories');
 const strings = require('../data/strings.json');
 const uploadFilesToGemini = require('../eventHandlers/fileUploader');
-const cronReset = require("../cronJobs/cronReset");
+const config = require('../config.json');
 
 async function messageHandler(message, client, gemini) {
     if (await checkAuthors(message, client)) {
@@ -125,6 +125,8 @@ async function messageHandler(message, client, gemini) {
             // TODO: parse commands from bot
             responseMsg = await parseBotCommands(responseMsg, message, gemini);
 
+            // clean history before sending message
+            await trimHistory(channelId)
             return await chunkedMsg(message, responseMsg);
         } else {
             state.msgCount += 1;
@@ -141,6 +143,7 @@ async function messageHandler(message, client, gemini) {
  * @param channelId - channel id (history management miatt)
  */
 async function addToHistory(role, content, channelId) {
+    await trimHistory(channelId)
     if (role && content) {
         if (role !== 'user' && role !== 'model') {
             log(`Got invalid role to be pushed to history: ${role}`, 'warn', 'messageHandler.js');
@@ -238,6 +241,20 @@ async function chunkedMsg(message, response) {
     }
 
     return true;
+}
+
+async function trimHistory(channelId) {
+    while (state.history[channelId].length > config.MAX_MESSAGES) {
+        state.history[channelId].shift();
+    }
+
+    if (state.history[channelId].length > 0 && state.history[channelId][0].role !== 'user') {
+        // Remove messages until the first message is a user
+        // ez akadalyozza meg, hogy ne szarja ossze magat a gemini sdk
+        while (state.history[channelId].length > 0 && state.history[channelId][0].role !== 'user') {
+            state.history[channelId].shift();
+        }
+    }
 }
 
 module.exports = {messageHandler, addToHistory};
