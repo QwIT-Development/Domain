@@ -731,6 +731,16 @@ label {
     margin-bottom: 0.75rem;
 }
 
+.card-text {
+    text-align: center;
+    vertical-align: middle;
+    display: inline-flex;
+    align-items: center;
+    font-size: 1rem;
+    line-height: 1.5;
+    gap: 0.4em;
+}
+
 .card-text:last-child {
     margin-bottom: 0;
 }

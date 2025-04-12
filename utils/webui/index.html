@@ -21,7 +21,12 @@
     <a class="navbar-brand" href="/">Domain WebUI</a>
     <ul class="navbar-nav">
         <li class="nav-item">
-            <a onclick="lobotomize()" href="javascript:void();">Lobotomize</a>
+            <a onclick="lobotomize()" href="javascript:void(0)">
+                <button class="btn btn-primary">
+                    <span class="material-symbols-rounded">restart_alt</span>
+                    Reset History
+                </button>
+            </a>
         </li>
     </ul>
 </nav>
@@ -53,9 +58,9 @@
                 <p class="card-header"><span class="material-symbols-rounded">monitoring</span> Statistics</p>
 
                 <div class="card-body">
-                    <p class="card-text">Ram usage: <span id="heapused"></span>/<span id="heaptotal"></span><br>
-                        Messages received: <span id="msgReceived"></span><br>
-                        Reset count: <span id="resetCount"></span></p>
+                    <p class="card-text"><span class="material-symbols-rounded">memory</span> Ram usage: <span id="heapused"></span>/<span id="heaptotal"></span></p><br>
+                    <p class="card-text"><span class="material-symbols-rounded">chat_bubble</span> Messages received: <span id="msgReceived"></span></p><br>
+                    <p class="card-text"><span class="material-symbols-rounded">restart_alt</span> Reset count: <span id="resetCount"></span></p>
                 </div>
             </div>
         </div>
