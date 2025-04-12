@@ -45,7 +45,7 @@
                 }
             })
             .catch(error => {
-                console.error('Error lobotomizing bot:', error);
+                console.error('Error resetting history:', error);
                 alert('Failed to clear message history.');
             })
     }
@@ -69,39 +69,44 @@
 </main>
 
 <script>
-    function updateRamUsage() {
-        fetch('/api/usagestats/ram')
-            .then(response => response.json())
-            .then(data => {
-                const heapUsedElement = document.getElementById('heapused');
-                const heapTotalElement = document.getElementById('heaptotal');
+    const socket = new WebSocket(`ws://${window.location.host}`);
 
-                const usedMB = (data.used / (1000 * 1000)).toFixed(2);
-                const totalMB = (data.total / (1000 * 1000)).toFixed(2);
+    socket.onopen = () => {
+        console.info('socket connected');
+    };
 
-                heapUsedElement.textContent = `${usedMB} MiB`;
-                heapTotalElement.textContent = `${totalMB} MiB`;
-            })
-            .catch(error => {
-                console.error('Error fetching RAM usage:', error);
-            });
-    }
+    socket.onmessage = (event) => {
+        try {
+            const message = JSON.parse(event.data);
 
-    function updateMsgs() {
-        fetch('/api/usagestats/botstats')
-            .then(response => response.json())
-            .then(data => {
-                const msgReceivedElement = document.getElementById('msgReceived');
-                const historyResetCount = document.getElementById('resetCount')
-                msgReceivedElement.textContent = data.count;
-                historyResetCount.textContent = data.historyClears;
-            })
-    }
+            if (message.type === 'statsUpdate' && message.payload) {
+                const stats = message.payload;
 
-    updateMsgs();
-    updateRamUsage();
-    setInterval(updateRamUsage, 500);
-    setInterval(updateMsgs, 500);
+                if (stats.ram) {
+                    const ramUsed = (stats.ram.used / 1024 / 1024).toFixed(2);
+                    const ramTotal = (stats.ram.total / 1024 / 1024).toFixed(2);
+                    document.getElementById('heapused').textContent = `${ramUsed} MB`;
+                    document.getElementById('heaptotal').textContent = `${ramTotal} MB`;
+                }
+
+                if (stats.botStats) {
+                    document.getElementById('msgReceived').textContent = stats.botStats.msgCount;
+                    document.getElementById('resetCount').textContent = stats.botStats.historyClears;
+                }
+            }
+        } catch (e) {
+            console.error('socket parsing error:', e);
+            console.error('we got:', event.data);
+        }
+    };
+
+    socket.onclose = (event) => {
+        console.info('socket closed:', event);
+    };
+
+    socket.onerror = (error) => {
+        console.error('socket error:', error);
+    };
 </script>
 </body>
 </html>
