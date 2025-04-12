@@ -13,10 +13,11 @@ const task = async () => {
     await changeSpinnerText('Running prompt reset task...');
     let count = 0;
     try {
+        // rebuild models (so prompt updates too)
+        global.geminiModel = await model(state.history);
+
         // this won't reset history, instead it just refreshes the models
         for (const channel in state.history) {
-            // rebuild models (so prompt updates too)
-            global.geminiModel = await model(state.history);
             global.geminiSession = resetPrompt(global.geminiModel, state.history, channel);
             // this shouldn't add up to the global reset count
             count += 1;
