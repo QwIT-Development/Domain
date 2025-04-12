@@ -7,7 +7,7 @@
 const express = require('express');
 const app = express();
 const state = require('../initializers/state');
-const {promptLoader, model} = require('../initializers/geminiClient');
+const {promptLoader, model, resetPrompt} = require('../initializers/geminiClient');
 const log = require('./betterLogs');
 const config = require('../config.json');
 
@@ -32,10 +32,11 @@ app.get('/api/usagestats/:id', async (req, res) => {
 })
 
 app.put('/api/lobotomize', async (req, res) => {
-    const geminiModel = await model();
-    state.history = [];
-    global.geminiSession = promptLoader(geminiModel, state.history);
-    state.resetCounts += 1;
+    for (const channel in state.history) {
+        state.history[channel] = [];
+        global.geminiSession = resetPrompt(global.geminiModel, state.history, channel);
+        state.resetCounts += 1;
+    }
 
     res.json({
         success: true
