@@ -3,6 +3,3 @@
 Epicest Intelligent Assistant for Discord
 
 [for more information, refer to wiki](https://github.com/QwIT-Development/Domain/wiki)
-
-## Disclaimer:
-- Olvasd át a kódot, mert prompt íráshoz kelleni fog pár dolog majd (példa: `./eventHandlers/messageHandler.js`)
