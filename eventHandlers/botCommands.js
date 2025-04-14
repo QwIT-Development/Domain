@@ -8,6 +8,7 @@
 const state = require("../initializers/state");
 const log = require("../utils/betterLogs");
 const config = require("../config.json");
+const {appendMemory} = require("../functions/memories");
 
 async function parseBotCommands(string, message, gemini) {
     let out = string;
@@ -33,7 +34,20 @@ async function parseBotCommands(string, message, gemini) {
 
     // handle mem saving memory[message]
     if (out.includes("memory[")) {
+        try {
+            const regex = /memory\["(.*?)"]/gmi;
+            const matches = out.matchAll(regex);
 
+            if (matches.length >= 1) {
+                for (const match of matches) {
+                    const memStr = match[1];
+                    out = out.replaceAll(match[0], "").trim();
+                    await appendMemory(memStr);
+                }
+            }
+        } catch (e) {
+            log(`Failed to execute memory command: ${e}`, 'error', 'botCommands.js');
+        }
     }
 
     // handle search
@@ -42,7 +56,7 @@ async function parseBotCommands(string, message, gemini) {
         try {
             // example: search[minceraft r34]
             // ^ ez a komment a regi kodbol jon, lehet zypherift irta de nem biztos
-            const regex = /search\[(.*)]/gmi;
+            const regex = /search\[(.*?)]/gmi;
             const match = regex.exec(out);
             // remove search command in case it doesn't get executed or it errors out
             out = out.replaceAll(match[0], "").trim();
@@ -60,24 +74,27 @@ async function parseBotCommands(string, message, gemini) {
     if (out.includes("mute[")) {
         try {
             // example: mute[user_id,time,reason]
-            const regex = /mute\[(.*), ?(.*), ?(.*)]/gmi;
-            const match = regex.exec(out);
-            if (match) {
-                const userId = match[1];
-                if (userId !== message.author.id && !config.OWNERS.includes(message.author.id)) {
-                    out = out.replaceAll(match[0], '[Nem némíthatsz el mást]').trim();
-                }
-                const time = parseInt(match[2]) * 1000;
-                const reason = match[3];
-                const guild = message.guild;
-                out = out.replaceAll(match[0], "").trim();
-                if (guild) {
-                    try {
-                        const member = await guild.members.fetch(userId);
-                        await member.timeout(time, reason);
-                        await message.react(state.emojis["mute"]);
-                    } catch (e) {
-                        log(`Failed to mute user: ${e}`, 'error', 'botCommands.js');
+            const regex = /mute\[(.*?), ?(.*?), ?(.*?)]/gmi;
+            const matches = out.matchAll(regex);
+
+            if (matches.length >= 1) {
+                for (const match of matches) {
+                    const userId = match[1];
+                    if (userId !== message.author.id && !config.OWNERS.includes(message.author.id)) {
+                        out = out.replaceAll(match[0], '[Nem némíthatsz el mást]').trim();
+                    }
+                    const time = parseInt(match[2]) * 1000;
+                    const reason = match[3];
+                    const guild = message.guild;
+                    out = out.replaceAll(match[0], "").trim();
+                    if (guild) {
+                        try {
+                            const member = await guild.members.fetch(userId);
+                            await member.timeout(time, reason);
+                            await message.react(state.emojis["mute"]);
+                        } catch (e) {
+                            log(`Failed to mute user: ${e}`, 'error', 'botCommands.js');
+                        }
                     }
                 }
             }
