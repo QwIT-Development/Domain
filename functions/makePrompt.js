@@ -94,4 +94,4 @@ async function makePrompt(channelId) {
 }
 
 
-module.exports = makePrompt;
+module.exports = {makePrompt, formatDate};

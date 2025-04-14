@@ -16,6 +16,7 @@ const {getMemories} = require('../functions/memories');
 const strings = require('../data/strings.json');
 const uploadFilesToGemini = require('../eventHandlers/fileUploader');
 const config = require('../config.json');
+const {formatDate} = require('../functions/makePrompt');
 
 async function messageHandler(message, client, gemini) {
     if (await checkAuthors(message, client)) {
@@ -45,11 +46,14 @@ async function messageHandler(message, client, gemini) {
         // TODO: implement memory system
         const memories = await getMemories(message.author.id);
         let formattedMessage;
+        const date = formatDate(new Date());
         if (repliedTo) {
-            formattedMessage = `Replied to [${repliedTo.author.username} (ID: ${repliedTo.author.id})] ${repliedTo.member.displayName}: ${repliedTo.content}
-            [Memories: ${memories}] [Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
+            formattedMessage = `[Memories: ${memories}]
+            Replied to [${repliedTo.author.username} (ID: ${repliedTo.author.id})] ${repliedTo.member.displayName}: ${repliedTo.content}
+            ${date} - [Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
         } else {
-            formattedMessage = `[Memories: ${memories}] [Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
+            formattedMessage = `[Memories: ${memories}]
+            ${date} - [Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
         }
         //console.log(formattedMessage);
 

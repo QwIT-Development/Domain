@@ -7,7 +7,7 @@
 const {GoogleGenerativeAI} = require("@google/generative-ai");
 const config = require('../config.json');
 const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
-const makePrompt = require('../functions/makePrompt');
+const {makePrompt} = require('../functions/makePrompt');
 const log = require('../utils/betterLogs');
 const {changeSpinnerText} = require('../utils/processInfo');
 
