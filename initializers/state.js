@@ -8,7 +8,7 @@ module.exports = {
     msgCount: 0,
     resetCounts: 0,
     history: {},
-    memories: {},
+    memories: [],
     reputation: {},
     banlist: {},
     commandIds: {},

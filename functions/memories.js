@@ -6,19 +6,32 @@
 
 
 const state = require('../initializers/state');
+const fs = require('fs');
+const path = require('path');
 
-async function getMemories(userId) {
-    const memories = await state.memories[userId];
+async function getMemories() {
+    const memories = state.memories;
     if (!memories) {
         return "";
     }
-    let memoryString = "";
+    return memories.join("\n");
+
+    // what the fuck did i do
+    /*let memoryString = "";
     memoryString += '```\n';
     for (const memory of memories) {
         memoryString += `${memory}\n`;
     }
     memoryString += '```';
-    return memoryString;
+    return memoryString;*/
 }
 
-module.exports = {getMemories};
+async function appendMemory(str) {
+    const memories = state.memories;
+    memories.push(str);
+
+    const fpath = path.join(global.dirname, 'data', 'running', 'memories.json');
+    fs.writeFileSync(fpath, JSON.stringify(memories, null, 2));
+}
+
+module.exports = {getMemories, appendMemory};
