@@ -14,16 +14,16 @@ async function parseBotCommands(string, message, gemini) {
 
     // rep handling
     const {reputation} = require("../utils/reputation");
-    if (out.includes("[+rep]" || out.includes("[-rep]"))) {
+    if (out.includes("+rep") || out.includes("-rep")) {
         try {
             const user = message.author.id
-            if (out.includes("[+rep]")) {
+            if (out.includes("+rep")) {
                 await reputation(user, "increase");
-                out = out.replaceAll("[+rep]", "");
+                out = out.replaceAll(/\[?\+rep]?/gmi, "");
                 await message.react(state.emojis["upvote"]);
-            } else if (out.includes("[-rep]")) {
+            } else if (out.includes("-rep")) {
                 await reputation(user, "decrease");
-                out = out.replaceAll("[-rep]", "");
+                out = out.replaceAll(/\[?-rep]?/gmi, "");
                 await message.react(state.emojis["downvote"]);
             }
         } catch (e) {
