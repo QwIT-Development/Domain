@@ -132,8 +132,10 @@ async function messageHandler(message, client, gemini) {
             // i really hope this works
             responseMsg = responseMsg.replaceAll(/replied to \[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
             responseMsg = responseMsg.replaceAll(/\[reputation score: ?\S*] ?\[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
-            responseMsg = responseMsg.replaceAll(`${repliedTo.author.username}:`, "").trim();
-            responseMsg = responseMsg.replaceAll(`${repliedTo.member.displayName}:`, "").trim();
+            if (repliedTo) {
+                responseMsg = responseMsg.replaceAll(`${repliedTo.author.username}:`, "").trim();
+                responseMsg = responseMsg.replaceAll(`${repliedTo.member.displayName}:`, "").trim();
+            }
             responseMsg = responseMsg.replaceAll(`${message.author.username}:`, "").trim();
             responseMsg = responseMsg.replaceAll(`${message.member.displayName}:`, "").trim();
             responseMsg = responseMsg.replaceAll(/\[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
