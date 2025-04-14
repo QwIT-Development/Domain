@@ -20,18 +20,20 @@ const generationConfig = {
     responseMimeType: 'text/plain'
 };
 
-async function model(history) {
+async function model(history, showLog = true) {
     await changeSpinnerText("Creating gemini models...");
     const models = {};
 
     for (const channel in history) {
         models[channel] = genAI.getGenerativeModel({
             model: config.GEMINI_MODEL,
-            systemInstruction: await makePrompt(channel)
+            systemInstruction: await makePrompt(channel, showLog)
         });
     }
 
-    log(`Created ${Object.keys(models).length} gemini models`, 'info', 'geminiClient.js');
+    if (showLog) {
+        log(`Created ${Object.keys(models).length} gemini models`, 'info', 'geminiClient.js');
+    }
     return models;
 }
 
@@ -57,9 +59,10 @@ function promptLoader(model, history) {
  * @param model
  * @param history
  * @param channelId - csatorna id
+ * @param showLog
  * @returns {*}
  */
-function resetPrompt(model, history, channelId) {
+function resetPrompt(model, history, channelId, showLog = true) {
     const instances = global.geminiSession;
 
     instances[channelId] = model[channelId].startChat({
@@ -67,7 +70,9 @@ function resetPrompt(model, history, channelId) {
         history: history[channelId],
     });
 
-    log(`Reset ${channelId} gemini instance`, 'info', 'geminiClient.js');
+    if (showLog) {
+        log(`Reset ${channelId} gemini instance`, 'info', 'geminiClient.js');
+    }
     return instances;
 }
 

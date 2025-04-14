@@ -31,7 +31,7 @@ function formatDate(date) {
  * fontos, promptot cisnal
  * @returns {Promise<string>}
  */
-async function makePrompt(channelId) {
+async function makePrompt(channelId, showLog = true) {
     const promptPath = config.PROMPT_PATHS[channelId];
     // noinspection JSUnresolvedReference
     const aliases = config.ALIASES;
@@ -43,7 +43,9 @@ async function makePrompt(channelId) {
         // path: ./prompts/<PROMPT_PATH>
         // noinspection JSUnresolvedReference
         prompt = fs.readFileSync(path.join(global.dirname, 'prompts', promptPath), 'utf8');
-        log(`Loaded prompt: ${promptPath}`, 'info', 'makeprompt.js');
+        if (showLog) {
+            log(`Loaded prompt: ${promptPath}`, 'info', 'makeprompt.js');
+        }
     } catch (e) {
         log(`Failed to load prompt: ${e}`, 'error', 'makeprompt.js');
         log('Defaulting to nothing', 'error', 'makeprompt.js');
@@ -68,7 +70,9 @@ async function makePrompt(channelId) {
             for (const url of config.WIKI_URLS[channelId]) {
                 content += `\n${await getContext(url)}`
             }
-            log(`Loaded ${config.WIKI_URLS[channelId].length} wiki pages`, 'info', 'makeprompt.js');
+            if (showLog) {
+                log(`Loaded ${config.WIKI_URLS[channelId].length} wiki pages`, 'info', 'makeprompt.js');
+            }
             prompt = prompt.replace("${WIKI_CONTENT}", content);
         }
     }
