@@ -22,9 +22,8 @@ async function messageHandler(message, client, gemini) {
         const channelId = message.channel.id;
         /*
             A bot ezt a formatot kapja meg:
-            [Reputation Score: 1000] [balazsmanus (ID: 710839743222513715)] Balazs: szia dave
-            masneven
-            [Reputation Score: int] [username (ID: userId)] DisplayName: MessageContent
+            Replied to [username (ID: id)] name: message
+            [Reputation Score: score] [username (ID: id)] name: message
         */
 
         let repliedTo;
@@ -124,6 +123,16 @@ async function messageHandler(message, client, gemini) {
 
             // TODO: parse commands from bot
             responseMsg = await parseBotCommands(responseMsg, message, gemini);
+
+            // try to remove schizophrenic context repeations
+            // i really hope this works
+            responseMsg = responseMsg.replaceAll(/replied to \[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
+            responseMsg = responseMsg.replaceAll(/\[reputation score: ?\S*] ?\[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
+            responseMsg = responseMsg.replaceAll(`${repliedTo.author.username}:`, "").trim();
+            responseMsg = responseMsg.replaceAll(`${repliedTo.member.displayName}:`, "").trim();
+            responseMsg = responseMsg.replaceAll(`${message.author.username}:`, "").trim();
+            responseMsg = responseMsg.replaceAll(`${message.member.displayName}:`, "").trim();
+            responseMsg = responseMsg.replaceAll(/\[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
 
             // clean history before sending message
             await trimHistory(channelId)
