@@ -1,12 +1,12 @@
 # https://hub.docker.com/r/oven/bun/tags
-FROM oven/bun:latest AS deps
+FROM oven/bun:alpine AS deps
 WORKDIR /app
 COPY package.json bun.lock ./
 # don't add dev deps
 RUN --mount=type=cache,target=/root/.bun/install/cache \
     bun install --frozen-lockfile --production
 
-FROM oven/bun:latest AS final
+FROM oven/bun:alpine AS final
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
