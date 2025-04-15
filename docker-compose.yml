@@ -3,13 +3,14 @@ version: "3.7"
 services:
   Domain-Unchained:
     container_name: Domain-Unchained
-    working_dir: /app
-    image: oven/bun:latest
+    image: balazsmanus/domain:latest
     ports:
       - 4500:4500
     volumes:
-      # pass the whole thing, like we don't need to build the whole thing
-      # this is faster (also it reacts to file changes in realtime :cold-face:)
-      - .:/app
-    command: bun run index.js
+      # you may want to change the configuration
+      - ./config.json:/app/config.json:ro
+      # this should stay modifiable
+      - ./data:/app/data/running
+      # path to u r prompts
+      - ./prompts:/app/prompts:ro
     restart: unless-stopped
