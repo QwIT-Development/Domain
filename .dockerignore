@@ -1,0 +1,15 @@
+.git
+.gitignore
+node_modules
+.idea
+.vscode
+*.iml
+config.json
+.DS_Store
+Thumbs.db
+Dockerfile
+.dockerignore
+npm-debug.log*
+bun-debug.log*
+data/running
+prompts

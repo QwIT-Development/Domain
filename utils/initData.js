@@ -12,9 +12,15 @@ const {changeSpinnerText} = require('../utils/processInfo');
 
 async function initData() {
     await changeSpinnerText('Initializing state...');
+    // check if data directory exists
+    const dataDir = path.join(global.dirname, 'data', 'running');
+    if (!fs.existsSync(dataDir)) {
+        log('Creating data directory', 'info', 'initData.js');
+        fs.mkdirSync(dataDir, {recursive: true});
+    }
     // create memories
     // noinspection JSUnresolvedReference
-    const memoriesPath = path.join(global.dirname, 'data', 'running', 'memories.json');
+    const memoriesPath = path.join(dataDir, 'memories.json');
     let memories = [];
     if (!fs.existsSync(memoriesPath)) {
         log('Creating memories "db"', 'info', 'initData.js');
@@ -44,7 +50,7 @@ async function initData() {
 
     // create reputation table
     // noinspection JSUnresolvedReference
-    const reputationPath = path.join(global.dirname, 'data', 'running', 'reputation.json');
+    const reputationPath = path.join(dataDir, 'reputation.json');
     let reputation = {};
     if (!fs.existsSync(reputationPath)) {
         log('Creating reputation "db"', 'info', 'initData.js');
@@ -70,7 +76,7 @@ async function initData() {
 
     // create banlist
     // noinspection JSUnresolvedReference
-    const banlistPath = path.join(global.dirname, 'data', 'running', 'banlist.json');
+    const banlistPath = path.join(dataDir, 'banlist.json');
     let banlist = {};
     if (!fs.existsSync(banlistPath)) {
         console.info('Creating banlist');

@@ -15,6 +15,12 @@ const {changeSpinnerText} = require('../utils/processInfo');
 async function deleteArtifacts() {
     await changeSpinnerText('Deleting Artifacts...');
     const artifactDir = path.join(global.dirname, 'data', 'running', 'tmp');
+    // check if it exists (in docker it does not)
+    if (!fs.existsSync(artifactDir)) {
+        fs.mkdirSync(artifactDir, { recursive: true });
+        // return cus we don't have anything to delete
+        return;
+    }
     const files = fs.readdirSync(artifactDir);
 
     for (const file of files) {
