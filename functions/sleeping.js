@@ -111,11 +111,12 @@ function scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr) {
         }
 
         // sched wake up
-        const wakeupIn = isOvernight && currentTimeMs >= sleepTime
-            ? wakeTime - currentTimeMs
-            : msUntilWake;
-
+        const wakeupIn = msUntilWake;
         log(`Bot will wake up in ${formatDuration(wakeupIn)}`, 'info', 'sleeping.js');
+
+        // clear duplicate states
+        if (state.sleepTimer) clearTimeout(state.sleepTimer);
+        if (state.wakeTimer) clearTimeout(state.wakeTimer);
 
         setTimeout(() => {
             state.isSleeping = false;
@@ -132,6 +133,9 @@ function scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr) {
         }
 
         log(`Bot will sleep in ${formatDuration(msUntilSleep)}`, 'info', 'sleeping.js');
+
+        if (state.sleepTimer) clearTimeout(state.sleepTimer);
+        if (state.wakeTimer) clearTimeout(state.wakeTimer);
 
         setTimeout(() => {
             state.isSleeping = true;
@@ -155,9 +159,12 @@ function scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr) {
  * @returns {string} - szexi formátum
  */
 function formatDuration(ms) {
-    const hours = Math.floor(ms / (1000 * 60 * 60));
-    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+    if (ms < 0) ms = 0; // handle rollowers
+    const totalSeconds = Math.floor(ms / 1000);
+    const seconds = totalSeconds % 60;
+    const totalMinutes = Math.floor(totalSeconds / 60);
+    const minutes = totalMinutes % 60;
+    const hours = Math.floor(totalMinutes / 60);
 
     return `${hours}h ${minutes}m ${seconds}s`;
 }
