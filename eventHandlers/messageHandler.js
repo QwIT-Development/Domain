@@ -134,10 +134,14 @@ async function messageHandler(message, client, gemini) {
             responseMsg = responseMsg.replaceAll(/\[reputation score: ?\S*] ?\[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
             if (repliedTo) {
                 responseMsg = responseMsg.replaceAll(`${repliedTo.author.username}:`, "").trim();
+                responseMsg = responseMsg.replaceAll(`${repliedTo.author.username.toLowerCase()}:`, "").trim();
                 responseMsg = responseMsg.replaceAll(`${repliedTo.member.displayName}:`, "").trim();
+                responseMsg = responseMsg.replaceAll(`${repliedTo.member.displayName.toLowerCase()}:`, "").trim();
             }
             responseMsg = responseMsg.replaceAll(`${message.author.username}:`, "").trim();
+            responseMsg = responseMsg.replaceAll(`${message.author.username.toLowerCase()}:`, "").trim();
             responseMsg = responseMsg.replaceAll(`${message.member.displayName}:`, "").trim();
+            responseMsg = responseMsg.replaceAll(`${message.member.displayName.toLowerCase()}:`, "").trim();
             responseMsg = responseMsg.replaceAll(/\[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
 
             // clean history before sending message

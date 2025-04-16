@@ -42,7 +42,7 @@ async function parseBotCommands(string, message, gemini) {
             if (matches.length >= 1) {
                 for (const match of matches) {
                     const memStr = match[1];
-                    out = out.replaceAll(match[0], "").trim();
+                    out = out.replace(match[0], "").trim();
                     await appendMemory(memStr);
                 }
             }
@@ -61,7 +61,6 @@ async function parseBotCommands(string, message, gemini) {
             const regex = /search\[(.*?)]/gmi;
             const match = regex.exec(out);
             // remove search command in case it doesn't get executed or it errors out
-            out = out.replaceAll(match[0], "").trim();
             if (match) {
                 out = await searchHandler(match[1], message.channel.id, gemini);
                 // rerun regex filter, idk
