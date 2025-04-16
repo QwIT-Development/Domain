@@ -6,7 +6,7 @@
   "scripts": {
     "start": "bun run index.js"
   },
-  "version": "1.0.0",
+  "version": "v0.0.3",
   "description": "Domain-Unchained, the discord bot that uses gemini api to generate messages",
   "main": "index.js",
   "license": "AGPL-3.0-or-later",
