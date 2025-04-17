@@ -5,6 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Domain WebUI</title>
     <link rel="stylesheet" href="/kit.css">
+    <style>
+        .log-entry {
+            font-family: monospace;
+            white-space: pre;
+            margin-bottom: 2px;
+        }
+        .log-info { color: #29ABE2; }
+        .log-info-warn { color: black; background-color: #eeeeee; font-weight: bold; }
+        .log-warn { color: #FFD700; font-weight: bold; }
+        .log-error { color: white; background-color: #E74C3C; font-weight: bold; }
+        .log-ignorable-err { color: #7f8c8d; background-color: #eeeeee; }
+
+        #logs-container {
+            max-height: 300px;
+            overflow-y: auto;
+            overflow-x: auto;
+            background-color: #2b2b2b;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+    </style>
 </head>
 <body>
 <nav class="navbar">
@@ -58,11 +80,11 @@
             <div class="card" style="max-height: 300px; overflow-y: scroll; overflow-x: scroll;">
                 <p class="card-header"><span class="material-symbols-rounded">bug_report</span> Logs</p>
                 <div class="card-body">
-                    <pre id="logs"></pre>
+                    <div id="logs"></div>
+                </div>
                 </div>
             </div>
         </div>
-    </div>
 
 </main>
 
@@ -72,6 +94,9 @@
 
 <script>
     const socket = new WebSocket(`ws://${window.location.host}`);
+    const logsElement = document.getElementById('logs');
+    const logsContainer = document.getElementById('logs-container');
+
 
     socket.onopen = () => {
         console.info('socket connected');
@@ -96,11 +121,19 @@
                     document.getElementById('resetCount').textContent = stats.botStats.historyClears;
                 }
 
-                if (stats.logs) {
-                    const logsElement = document.getElementById('logs');
-                    logsElement.textContent = stats.logs.join('\n');
+                if (stats.logs && Array.isArray(stats.logs)) {
+                    logsElement.innerHTML = '';
+                    stats.logs.forEach(logEntry => {
+                        const logLine = document.createElement('div');
+                        logLine.classList.add('log-entry');
+                        if (logEntry.cssClass) {
+                            logLine.classList.add(logEntry.cssClass);
+                        }
+                        logLine.textContent = `${logEntry.timestamp} ${logEntry.symbol}[${logEntry.thread}]: ${logEntry.message}`;
+                        logsElement.appendChild(logLine);
+                    });
                 }
-            } else if (message.type === 'version' && message.payload) {
+                } else if (message.type === 'version' && message.payload) {
                 const stats = message.payload;
                 if (stats.version) {
                     document.getElementById('version').textContent = `${stats.version}`;

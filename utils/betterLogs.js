@@ -5,6 +5,33 @@
 
 const state = require('../initializers/state');
 
+const logMeta = {
+    "info": { symbol: "", cssClass: "log-info" },
+    "infoWarn": { symbol: "⚠", cssClass: "log-info-warn" },
+    "warn": { symbol: "⚠", cssClass: "log-warn" },
+    "error": { symbol: "X", cssClass: "log-error" },
+    "ignorableErr": { symbol: "..?", cssClass: "log-ignorable-err" }
+};
+
+// https://colors.sh/
+const colors = {
+    "info": "\033[38;5;33m",
+    "infoWarn": "\033[38;5;16m\033[48;5;7m",
+    "warn": "\033[38;5;208m",
+    "error": "\033[38;5;15m\033[48;5;160m",
+    "ignorableErr": "\033[38;5;16m\033[48;5;7m",
+    // reserved
+    "reset": "\033[0m"
+};
+
+const symbols = {
+    "info": "",
+    "infoWarn": "⚠",
+    "warn": "⚠",
+    "error": "X",
+    "ignorableErr": "..?"
+}
+
 // köszönöm szépen gemini a segítséget, hogy hogy kell intellij function kommentet írni
 /**
  * Szexin loggol konzolra.\
@@ -20,26 +47,18 @@ const state = require('../initializers/state');
  * log("rósz hiba", "error", "kettospontharom.js"); // hiba specifikus forrásból
  */
 function log(message, type = "info", thread = "index.js") {
-    // https://colors.sh/
-    const colors = {
-        "info": "\033[38;5;33m",
-        "infoWarn": "\033[38;5;16m\033[48;5;7m",
-        "warn": "\033[38;5;208m",
-        "error": "\033[38;5;15m\033[48;5;160m",
-        "ignorableErr": "\033[38;5;16m\033[48;5;7m",
-        // reserved
-        "reset": "\033[0m"
-    };
-
-    const symbols = {
-        "info": "",
-        "infoWarn": "⚠",
-        "warn": "⚠",
-        "error": "X",
-        "ignorableErr": "..?"
-    }
     console.log(`\r\x1b[K${colors[type]}${symbols[type]}[${thread.toUpperCase()}]: ${message}${colors.reset}`);
-    state.logs.push(`${formatHour(new Date())} ${symbols[type]}[${thread.toUpperCase()}]: ${message}`);
+
+    const timestamp = formatHour(new Date());
+    const logEntry = {
+        timestamp: timestamp,
+        type: type,
+        thread: thread.toUpperCase(),
+        message: message,
+        symbol: logMeta[type]?.symbol || '',
+        cssClass: logMeta[type]?.cssClass || 'log-info'
+    }
+    state.logs.push(logEntry);
     if (state.logs.length > 100) {
         state.logs.shift();
     }
