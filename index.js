@@ -27,7 +27,7 @@ const {initializeSpinner, stopSpinner} = require('./utils/processInfo');
 // async main thread hell yeah
 async function main() {
     await initializeSpinner();
-    log("Starting Domain-Unchained", 'info');
+    log(`Starting Domain-Unchained ${state.version}`, 'info');
     global.dirname = __dirname;
     await deleteArtifacts();
     await deleteUploadedItems();

@@ -55,7 +55,7 @@
             </div>
         </div>
         <div class="col col-md col-lg-8">
-            <div class="card" style="max-height: 300px; overflow-y: scroll; overflow-x: hidden;">
+            <div class="card" style="max-height: 300px; overflow-y: scroll; overflow-x: scroll;">
                 <p class="card-header"><span class="material-symbols-rounded">bug_report</span> Logs</p>
                 <div class="card-body">
                     <pre id="logs"></pre>
@@ -65,6 +65,10 @@
     </div>
 
 </main>
+
+<footer class="text-center text-muted p-3" style="flex-shrink: 0;">
+    <small><a href="https://github.com/QwIT-Development/Domain">Domain-Unchained</a> <span id="version"></span></small>
+</footer>
 
 <script>
     const socket = new WebSocket(`ws://${window.location.host}`);
@@ -95,6 +99,11 @@
                 if (stats.logs) {
                     const logsElement = document.getElementById('logs');
                     logsElement.textContent = stats.logs.join('\n');
+                }
+            } else if (message.type === 'version' && message.payload) {
+                const stats = message.payload;
+                if (stats.version) {
+                    document.getElementById('version').textContent = `${stats.version}`;
                 }
             }
         } catch (e) {

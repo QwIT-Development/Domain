@@ -74,6 +74,13 @@ wss.on('connection', (ws, req) => {
         }
     });
 
+    ws.send(JSON.stringify({type: 'version', payload: {version: state.version, updateAvailable: false}}), (err) => {
+        if (err) {
+            log(`Error sending stats to client: ${err}`, 'error', 'webui.js (WebSocket)');
+            ws.close();
+        }
+    })
+
     ws.on('message', (message) => {
         try {
             const parsedMessage = JSON.parse(message);
