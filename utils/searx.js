@@ -98,6 +98,11 @@ async function getContext(url) {
         // make it prettier
         content = content.replaceAll('\n\n\n', '').trim();
         content = content.replaceAll('\n\n', '').trim();
+
+        if (content.length > 10000) {
+            content = content.substring(0, 10000) + "...";
+        }
+
         return content.trim()
 
     } catch (e) {
