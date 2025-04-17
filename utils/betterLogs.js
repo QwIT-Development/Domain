@@ -39,10 +39,17 @@ function log(message, type = "info", thread = "index.js") {
         "ignorableErr": "..?"
     }
     console.log(`\r\x1b[K${colors[type]}${symbols[type]}[${thread.toUpperCase()}]: ${message}${colors.reset}`);
-    state.logs.push(`${symbols[type]}[${thread.toUpperCase()}]: ${message}`);
+    state.logs.push(`${formatHour(new Date())} ${symbols[type]}[${thread.toUpperCase()}]: ${message}`);
     if (state.logs.length > 100) {
         state.logs.shift();
     }
+}
+
+function formatHour(date) {
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+
+    return `${hour}:${minute}`;
 }
 
 module.exports = log;
