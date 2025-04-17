@@ -60,7 +60,6 @@ async function saveReps() {
         log(`Failed to save reputation file: ${e}`, 'error', 'reputation.js');
         return false;
     }
-    log('Reputation saved', 'info', 'reputation.js');
     return true;
 }
 
