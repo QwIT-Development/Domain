@@ -103,6 +103,34 @@ wss.on('connection', (ws, req) => {
 
 const statsInterval = setInterval(broadcastStats, 2000);
 
+const v8 = require('node:v8');
+const path = require('path');
+app.get('/api/heap/dump.heapsnapshot', (req, res) => {
+    // Heap-${yyyymmdd}-${hhmmss}-${pid}-${thread_id}.heapsnapshot
+    const heapFileName = `Heap-${new Date().toISOString().replace(/:/g, '-')}-${process.pid}-${process.threadId}.heapsnapshot`;
+    const heapPath = path.join(global.dirname, 'data', 'running', 'tmp', heapFileName);
+    const snapshotPath = v8.writeHeapSnapshot(heapPath);
+    res.sendFile(path.join(global.dirname, snapshotPath));
+})
+
+app.get('/api/gc', (req, res) => {
+    const before = getCurrentStats();
+
+    if (Bun.gc) {
+        Bun.gc(true);
+    } else if (global.gc) {
+        global.gc();
+    } else {
+        res.status(500).json({error: 'Garbage collection is unsupported'});
+    }
+
+    const after = getCurrentStats();
+    res.json({
+        usedDiff: (after.ram.used - before.ram.used / 1024 / 1024).toFixed(2),
+        totalDiff: (after.ram.total - before.ram.total / 1024 / 1024).toFixed(2),
+    })
+})
+
 server.listen(config.WEBUI_PORT, () => {
     log(`WebUI listening at http://localhost:${config.WEBUI_PORT}`, 'info', 'webui.js');
     log("WebUI is not secured, do not expose the port.", 'infoWarn', 'webui.js');
