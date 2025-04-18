@@ -33,6 +33,10 @@ async function main() {
     await deleteUploadedItems();
     const initData = require('./utils/initData');
     await initData(); // init stuff that will be used by the bot
+    const getBannedSites = require('./utils/bannedSiteGen');
+    // we don't need to wait for this, bc it might take a long time
+    // noinspection ES6MissingAwait
+    getBannedSites();
 
     require('./utils/webui'); // fire up webui
     // imports

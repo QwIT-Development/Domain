@@ -14,7 +14,8 @@ module.exports = {
     commandIds: {},
     isSleeping: false,
     emojis: {},
-    bannedSites: [],
+    bannedSitesExact: new Set(),
+    bannedSitesWildcard: [],
     logs: [],
     version: packageJson.version,
 };
