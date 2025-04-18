@@ -39,6 +39,12 @@
                     Reset History
                 </button>
             </a>
+            <a href="javascript:void(0)" onclick="garbageCollect()">
+                <button class="btn btn-outline-primary">
+                    <span class="material-symbols-rounded">recycling</span>
+                    Garbage Collect
+                </button>
+            </a>
         </li>
     </ul>
 </nav>
@@ -60,6 +66,18 @@
                 console.error('Error resetting history:', error);
                 alert('Failed to clear message history.');
             })
+    }
+
+    function garbageCollect() {
+        fetch('/api/gc', {
+            method: 'GET'
+        })
+        .then(response => response.json())
+        .then(data => {
+            const usedDiff = data.usedDiff;
+            const totalDiff = data.totalDiff;
+            alert(`Garbage collection completed. Diff:\nused: ${usedDiff} MB, total: ${totalDiff} MB`);
+        })
     }
 </script>
 
