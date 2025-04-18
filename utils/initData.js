@@ -21,7 +21,7 @@ async function initData() {
     // create memories
     // noinspection JSUnresolvedReference
     const memoriesPath = path.join(dataDir, 'memories.json');
-    let memories = [];
+    let memories = {};
     if (!fs.existsSync(memoriesPath)) {
         log('Creating memories "db"', 'info', 'initData.js');
         await fs.writeFileSync(memoriesPath, JSON.stringify(memories));

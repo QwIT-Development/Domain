@@ -9,9 +9,11 @@ const state = require('../initializers/state');
 const fs = require('fs');
 const path = require('path');
 
-async function getMemories() {
-    const memories = state.memories;
+async function getMemories(channelId) {
+    const memories = state.memories[channelId];
     if (!memories) {
+        // this should create a new memories array
+        state.memories[channelId] = [];
         return "";
     }
     return memories.join("\n");
@@ -26,8 +28,8 @@ async function getMemories() {
     return memoryString;*/
 }
 
-async function appendMemory(str) {
-    const memories = state.memories;
+async function appendMemory(str, channelId) {
+    const memories = state.memories[channelId];
     memories.push(str);
 
     const fpath = path.join(global.dirname, 'data', 'running', 'memories.json');
