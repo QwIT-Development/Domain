@@ -74,19 +74,12 @@ async function getContext(url) {
         return "Invalid website";
     }
 
-    if (state.bannedSites.some((bannedDomain) => {
-        if (bannedDomain.startsWith('*')) {
-            const suffix = bannedDomain.substring(1);
-            if (extract.endsWith(suffix)) {
-                return true;
-            }
-        } else {
-            if (extract.endsWith('.' + bannedDomain) || extract === bannedDomain) {
-                return true;
-            }
-        }
-        return false;
-    })) {
+    if (state.bannedSitesExact.has(extract)) {
+        log(`Skipping banned site: ${url}`, 'warn', 'searx.js');
+        return "Blocked website";
+    }
+
+    if (state.bannedSitesWildcard.some(suffix => extract.endsWith(suffix))) {
         log(`Skipping banned site: ${url}`, 'warn', 'searx.js');
         return "Blocked website";
     }
@@ -128,8 +121,7 @@ async function getContext(url) {
 
 function extractDomain(url) {
     try {
-        const urlObj = new URL(url);
-        return urlObj.hostname;
+        return new URL(url).hostname;
     } catch {
         return "invalid";
     }
