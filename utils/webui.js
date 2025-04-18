@@ -115,7 +115,8 @@ app.get('/api/heap/dump.heapsnapshot', (req, res) => {
 
 app.get('/api/gc', (req, res) => {
     const before = getCurrentStats();
-
+    const beforeUsed = before.ram.used;
+    const beforeTotal = before.ram.total;
     if (Bun.gc) {
         Bun.gc(true);
     } else if (global.gc) {
@@ -123,11 +124,13 @@ app.get('/api/gc', (req, res) => {
     } else {
         res.status(500).json({error: 'Garbage collection is unsupported'});
     }
-
     const after = getCurrentStats();
+    const diffUsed = after.ram.used - beforeUsed;
+    const diffTotal = after.ram.total - beforeTotal;
+
     res.json({
-        usedDiff: (after.ram.used - before.ram.used / 1024 / 1024).toFixed(2),
-        totalDiff: (after.ram.total - before.ram.total / 1024 / 1024).toFixed(2),
+        usedDiff: (diffUsed / 1024 / 1024).toFixed(2),
+        totalDiff: (diffTotal / 1024 / 1024).toFixed(2),
     })
 })
 
