@@ -67,10 +67,25 @@ async function search(query) {
 }
 
 async function getContext(url) {
+    const extract = extractDomain(url);
+
+    if (extract === "invalid") {
+        log(`Skipping invalid url: ${url}`, 'warn', 'searx.js');
+        return "Invalid website";
+    }
+
     if (state.bannedSites.some((bannedDomain) => {
-       const extract = extractDomain(url);
-       // return true if its banned or invalid
-       return bannedDomain === extract && extract === "invalid";
+        if (bannedDomain.startsWith('*')) {
+            const suffix = bannedDomain.substring(1);
+            if (extract.endsWith(suffix)) {
+                return true;
+            }
+        } else {
+            if (extract.endsWith('.' + bannedDomain) || extract === bannedDomain) {
+                return true;
+            }
+        }
+        return false;
     })) {
         log(`Skipping banned site: ${url}`, 'warn', 'searx.js');
         return "Blocked website";
