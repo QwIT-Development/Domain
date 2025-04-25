@@ -8,6 +8,10 @@ const log = require('../utils/betterLogs');
 const { botReady, botSleeping } = require('./botReady');
 const { changeSpinnerText } = require('../utils/processInfo');
 
+// kibasszuk a sleeptimert ha meg nem null
+if (state.sleepCycleTimer === undefined) state.sleepCycleTimer = null;
+if (state.isSleeping === undefined) state.isSleeping = false;
+
 /**
  * range alapjan elkezdi a sleep beallitasat (ajanlatos configbol szulni)
  * @param {string} range - formatum: `10:00-11:00` (ennyit alszok en is)
@@ -18,26 +22,37 @@ function schedSleep(range, client) {
     changeSpinnerText("Scheduling sleep...").then();
 
     try {
-        const [start, end] = range.split('-').map(t => t.trim());
-
-        if (!start || !end) {
+        if (!range || typeof range !== 'string') {
             log(`Invalid range format: ${range}, expected: 10:00-11:00`, 'error', 'sleeping.js');
             return false;
         }
+        const parts = range.split('-').map(t => t.trim());
 
-        const startTime = parseTime(start);
-        const endTime = parseTime(end);
+        if (parts.length !== 2 || !parts[0] || !parts[1]) {
+            log(`Invalid range format: ${range}, expected: 10:00-11:00`, 'error', 'sleeping.js');
+            return false;
+        }
+        const [startStr, endStr] = parts;
 
-        if (!startTime || !endTime) {
-            log(`Invalid time values in range: ${range}`, 'error', 'sleeping.js');
+        const startTimeMs = parseTime(startStr);
+        const endTimeMs = parseTime(endStr);
+
+        if (startTimeMs === null || endTimeMs === null) {
+            log(`Invalid values in range: "${range}". Are you sure you used the format?`, 'error', 'sleeping.js');
             return false;
         }
 
-        scheduleSleepCycle(startTime, endTime, client, end);
-        log(`Sleep schedule set: ${start} - ${end}`, 'info', 'sleeping.js');
+        scheduleSleepCycle(startTimeMs, endTimeMs, client, endStr);
+
+        log(`Sleep schedule set: ${startStr} - ${endStr}`, 'info', 'sleeping.js');
         return true;
+
     } catch (error) {
         log(`Error scheduling sleep: ${error.message}`, 'error', 'sleeping.js');
+        if (state.sleepCycleTimer) {
+            clearTimeout(state.sleepCycleTimer);
+            state.sleepCycleTimer = null;
+        }
         return false;
     }
 }
@@ -77,14 +92,17 @@ function parseTime(timeStr) {
  * @param {string} wakeTimeStr - ido string
  */
 function scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr) {
+    if (state.sleepCycleTimer) clearTimeout(state.sleepCycleTimer);
+    state.sleepCycleTimer = null;
+
     const now = new Date();
     const midnight = new Date(now).setHours(0, 0, 0, 0);
     const currentTimeMs = now.getTime() - midnight;
     const dayInMs = 24 * 60 * 60 * 1000;
 
     const isOvernight = sleepTime > wakeTime;
-    let shouldBeSleeping = false;
 
+    let shouldBeSleeping;
     if (isOvernight) {
         // ejszakai idokre (e.g., 22:00-06:00)
         shouldBeSleeping = currentTimeMs >= sleepTime || currentTimeMs < wakeTime;
@@ -93,64 +111,51 @@ function scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr) {
         shouldBeSleeping = currentTimeMs >= sleepTime && currentTimeMs < wakeTime;
     }
 
-    let msUntilSleep = sleepTime - currentTimeMs;
-    let msUntilWake = wakeTime - currentTimeMs;
-    if (msUntilSleep <= 0) msUntilSleep += dayInMs;
-    if (msUntilWake <= 0) msUntilWake += dayInMs;
-
-    const sleepDuration = isOvernight
-        ? (dayInMs - sleepTime) + wakeTime
-        : wakeTime - sleepTime;
-
-    if (shouldBeSleeping) {
-        // domainnak csucsukalnia kene, de valamilyen okon folytan nem alszik (rosz)
-        if (!state.isSleeping) {
-            state.isSleeping = true;
-            botSleeping(client, wakeTimeStr).then();
-            log('Bot is now sleeping', 'info', 'sleeping.js');
-        }
-
-        // sched wake up
-        const wakeupIn = msUntilWake;
-        log(`Bot will wake up in ${formatDuration(wakeupIn)}`, 'info', 'sleeping.js');
-
-        // clear duplicate states
-        if (state.sleepTimer) clearTimeout(state.sleepTimer);
-        if (state.wakeTimer) clearTimeout(state.wakeTimer);
-
-        setTimeout(() => {
-            state.isSleeping = false;
-            botReady(client).then();
-            log('Bot is now awake', 'info', 'sleeping.js');
-
-            scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr);
-        }, wakeupIn);
-    } else {
-        if (state.isSleeping) {
-            state.isSleeping = false;
-            botReady(client).then();
-            log('Bot is now awake', 'info', 'sleeping.js');
-        }
-
-        log(`Bot will sleep in ${formatDuration(msUntilSleep)}`, 'info', 'sleeping.js');
-
-        if (state.sleepTimer) clearTimeout(state.sleepTimer);
-        if (state.wakeTimer) clearTimeout(state.wakeTimer);
-
-        setTimeout(() => {
-            state.isSleeping = true;
-            botSleeping(client, wakeTimeStr).then();
-            log('Bot is now sleeping', 'info', 'sleeping.js');
-
-            setTimeout(() => {
-                state.isSleeping = false;
-                botReady(client).then();
-                log('Bot is now awake', 'info', 'sleeping.js');
-
-                scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr);
-            }, sleepDuration);
-        }, msUntilSleep);
+    if (shouldBeSleeping && !state.isSleeping) {
+        state.isSleeping = true;
+        botSleeping(client, wakeTimeStr).catch(err => log(`Error setting sleeping status: ${err}`, 'error', 'sleeping.js'));
+    } else if (!shouldBeSleeping && state.isSleeping) {
+        state.isSleeping = false;
+        botReady(client).catch(err => log(`Error setting ready status: ${err}`, 'error', 'sleeping.js'));
     }
+
+    let msUntilNextEvent;
+    let nextAction;
+
+    if (state.isSleeping) {
+        msUntilNextEvent = wakeTime - currentTimeMs;
+        if (msUntilNextEvent <= 0) {
+            msUntilNextEvent += dayInMs;
+        }
+        log(`Bot is sleeping, waking up at: ${formatDuration(msUntilNextEvent)}`, 'info', 'sleeping.js');
+
+        nextAction = () => {
+            log('Bot is now awake', 'info', 'sleeping.js');
+            state.isSleeping = false;
+            state.sleepCycleTimer = null;
+            botReady(client).catch(err => log(`Error setting ready status on wake: ${err}`, 'error', 'sleeping.js'));
+            scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr);
+        };
+
+    } else {
+        msUntilNextEvent = sleepTime - currentTimeMs;
+        if (msUntilNextEvent <= 0) {
+            msUntilNextEvent += dayInMs;
+        }
+        log(`Bot is awake, sleeping at: ${formatDuration(msUntilNextEvent)}`, 'info', 'sleeping.js');
+
+        nextAction = () => {
+            log('Bot is now sleeping', 'info', 'sleeping.js');
+            state.isSleeping = true;
+            state.sleepCycleTimer = null;
+            botSleeping(client, wakeTimeStr).catch(err => log(`Error setting sleeping status on sleep: ${err}`, 'error', 'sleeping.js'));
+            scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr);
+        };
+    }
+
+    if (msUntilNextEvent < 0) msUntilNextEvent = 0;
+
+    state.sleepCycleTimer = setTimeout(nextAction, msUntilNextEvent);
 }
 
 /**

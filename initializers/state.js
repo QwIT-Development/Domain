@@ -18,4 +18,5 @@ module.exports = {
     bannedSitesWildcard: [],
     logs: [],
     version: packageJson.version,
+    sleepCycleTimer: null
 };
