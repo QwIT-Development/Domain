@@ -44,7 +44,7 @@ async function messageHandler(message, client, gemini) {
 
         const score = await reputation(message.author.id);
         // TODO: implement memory system
-        const memories = await getMemories(message.author.id);
+        const memories = await getMemories(channelId);
         let formattedMessage;
         const date = formatDate(new Date());
         if (repliedTo) {
