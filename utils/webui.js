@@ -27,6 +27,10 @@ app.get('/', (req, res) => {
     res.render('index');
 })
 
+app.get('/reputation', (req, res) => {
+    res.render('reputation');
+})
+
 app.put('/api/lobotomize', async (req, res) => {
     for (const channel in state.history) {
         state.history[channel] = [];
@@ -42,22 +46,92 @@ app.put('/api/lobotomize', async (req, res) => {
 
 const clients = new Set();
 
-function getCurrentStats() {
+const discordClient = global.discordClient;
+const usersCache = {};
+async function getUserInfo(userId) {
+    // client should be already initialized when webui is fired up
+    try {
+        const user = await discordClient.users.fetch(userId);
+        if (!user) {
+            return null;
+        }
+        const username = user.username;
+        const avatarUrl = user.displayAvatarURL({ dynamic: true, size: 256 });
+
+        return {username, avatarUrl};
+    } catch (e) {
+        log(`Error fetching user data: ${e}`, 'error', 'webui.js (getUserStats)');
+        return null;
+    }
+}
+
+async function getEntry(userId) {
+    const now = Date.now();
+    let entry = usersCache[userId];
+    let needsRefresh = false;
+
+    if (!entry || (now - entry.lastUpdated > config.TIMINGS.userCacheDuration)) {
+        needsRefresh = true;
+    }
+
+    let userInfo = null;
+    if (needsRefresh) {
+        userInfo = await getUserInfo(userId);
+        if (userInfo) {
+            entry = {
+                id: userId,
+                username: userInfo.username,
+                avatarUrl: userInfo.avatarUrl,
+                lastUpdated: now,
+                // this shouldn't fail, but if it does fail we just return 0
+                score: state.reputation[userId] || 0
+            };
+            usersCache[userId] = entry;
+        } else {
+            if (entry) {
+                entry.lastUpdated = now;
+            } else {
+                entry = {
+                    id: userId,
+                    username: 'Unknown',
+                    avatarUrl: null,
+                    lastUpdated: now,
+                    score: state.reputation[userId] || 0
+                };
+                usersCache[userId] = entry;
+            }
+        }
+    }
+    return entry;
+}
+
+async function getCurrentStats() {
+    const userIds = Object.keys(state.reputation || {});
+    const entryPromises = userIds.map(async userId => getEntry(userId));
+    const userEntries = (await Promise.all(entryPromises)).filter(entry => entry !== null);
+
+    const mem = process.memoryUsage();
     return {
         ram: {
-            total: process.memoryUsage().heapTotal,
-            used: process.memoryUsage().heapUsed
+            total: mem.heapTotal,
+            used: mem.heapUsed
         },
         botStats: {
             msgCount: state.msgCount,
             historyClears: state.resetCounts
         },
-        logs: state.logs.toReversed(),
+        users: userEntries.map(entry => ({
+            id: entry.id,
+            username: entry.username,
+            avatarUrl: entry.avatarUrl,
+            score: entry.score
+        })),
+        logs: state.logs.toReversed() || [],
     }
 }
 
-function broadcastStats() {
-    const stats = getCurrentStats();
+async function broadcastStats() {
+    const stats = await getCurrentStats();
     const data = JSON.stringify({type: 'statsUpdate', payload: stats});
 
     clients.forEach(client => {
@@ -72,11 +146,11 @@ function broadcastStats() {
     })
 }
 
-wss.on('connection', (ws, req) => {
+wss.on('connection', async (ws) => {
     log(`Socket connection`, 'info', 'webui.js (WebSocket)');
     clients.add(ws);
 
-    const initialStats = getCurrentStats();
+    const initialStats = await getCurrentStats();
     ws.send(JSON.stringify({type: 'statsUpdate', payload: initialStats}), (err) => {
         if (err) {
             log(`Error sending stats to client: ${err}`, 'error', 'webui.js (WebSocket)');
