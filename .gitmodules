@@ -1,3 +1,3 @@
-[submodule "utils/webui/css"]
-	path = utils/webui/css
+[submodule "webui/css"]
+	path = webui/css
 	url = https://git.mnus.moe/balazsmanus/kitten.git

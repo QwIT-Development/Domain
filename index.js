@@ -59,7 +59,7 @@ async function main() {
     }
     global.discordClient = discordClient;
 
-    require('./utils/webui'); // fire up webui
+    require('./webui/index'); // fire up webui
 
     const emojiResolver = require('./initializers/emojiResolver');
     await emojiResolver();
