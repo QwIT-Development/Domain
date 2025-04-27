@@ -13,4 +13,8 @@ services:
       - ./data:/app/data/running
       # path to u r prompts
       - ./prompts:/app/prompts:ro
+      # pass timezone and localtime to container
+      # mar felfogom magam kotni ha nem jo
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
