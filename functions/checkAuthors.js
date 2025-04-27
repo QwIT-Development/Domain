@@ -9,6 +9,7 @@ const jailbreaks = require('../data/jailbreaks.json');
 const strings = require('../data/strings.json');
 const log = require('../utils/betterLogs');
 const {splitFuzzySearch} = require('../utils/fuzzySearch');
+const state = require('../initializers/state');
 
 
 /**
@@ -38,6 +39,11 @@ async function checkAuthors(message, client) {
 
     // if message start with //, it ignor
     if (message.content.startsWith('//')) return false;
+
+    // don't allow banned users
+    if (state.banlist[message.author.id]) {
+        return false;
+    }
 
     // anti-jailbreak thing
     if (jailbreaks.some(jailbreak => message.content.toLowerCase().includes(jailbreak.toLowerCase()))) {
