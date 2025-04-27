@@ -8,13 +8,6 @@ const wsConn = async (ws) => {
     state.wsClients.add(ws);
 
     try {
-        await new Promise((resolve, reject) => {
-            ws.send(JSON.stringify({type: 'meow'}), (err) => {
-                if (err) reject(err);
-                else resolve();
-            });
-        })
-
         const initialStats = await getCurrentStats();
         await new Promise((resolve, reject) => {
             ws.send(JSON.stringify({type: 'statsUpdate', payload: initialStats}), (err) => {
