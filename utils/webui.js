@@ -83,7 +83,7 @@ app.put('/api/lobotomize', async (req, res) => {
         state.resetCounts += 1;
     }
 
-    broadcastStats();
+    await broadcastStats();
     res.json({
         success: true
     });
@@ -209,7 +209,6 @@ async function broadcastStats() {
 }
 
 wss.on('connection', async (ws) => {
-    log(`Socket connection`, 'info', 'webui.js (WebSocket)');
     ws.isAlive = false;
 
     clients.add(ws);
@@ -252,7 +251,6 @@ wss.on('connection', async (ws) => {
     });
 
     ws.on('close', () => {
-        log(`Socket disconnected`, 'info', 'webui.js (WebSocket)');
         clients.delete(ws);
     });
 
