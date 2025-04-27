@@ -13,17 +13,11 @@ const log = require('../utils/betterLogs');
 const state = require('../initializers/state');
 const {changeSpinnerText} = require('../utils/processInfo');
 
-// add commands here
-const reset = require('./reset');
-
-
 async function announceCommands(client) {
     await changeSpinnerText("Announcing commands to all servers...");
     // push commands to collection
     // this will set the commands internally
     client.commands = new Collection();
-    // put new commands here (very easy 2 add)
-    client.commands.set(reset.data.name, reset);
 
 
     // this will announce the commands to all servers with the bot in it
@@ -36,7 +30,14 @@ async function announceCommands(client) {
 
         const filePath = path.join(commandsPath, f);
         const command = require(filePath);
-        commands.push(command.data.toJSON());
+
+        // register commands dynamically
+        if (command.data && command.data.name) {
+            client.commands.set(command.data.name, command);
+            commands.push(command.data.toJSON());
+        } else {
+            log(`Command ${f} won't be registered.`, 'warn', 'setCommands.js');
+        }
     }
 
     const rest = new REST({version: '10'}).setToken(config.DISCORD_TOKEN);
