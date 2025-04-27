@@ -1,0 +1,25 @@
+<%- include('partials/head') %>
+<main class="container mt-4">
+    <div class="row">
+        <div class="col col-md col-lg">
+            <div class="card">
+                <p class="card-header"><span class="material-symbols-rounded">monitoring</span> Statistics</p>
+
+                <div class="card-body">
+                    <p class="card-text"><span class="material-symbols-rounded">memory</span> Ram usage: <span id="heapused"></span>/<span id="heaptotal"></span></p><br>
+                    <p class="card-text"><span class="material-symbols-rounded">chat_bubble</span> Messages received: <span id="msgReceived"></span></p><br>
+                    <p class="card-text"><span class="material-symbols-rounded">restart_alt</span> Reset count: <span id="resetCount"></span></p>
+                </div>
+            </div>
+        </div>
+        <div class="col col-md col-lg-8">
+            <div class="card" style="max-height: 300px; overflow-y: scroll; overflow-x: scroll;">
+                <p class="card-header"><span class="material-symbols-rounded">bug_report</span> Logs</p>
+                <div class="card-body">
+                    <div id="logs"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<%- include('partials/footer') %>

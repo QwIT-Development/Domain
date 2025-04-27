@@ -14,8 +14,18 @@ const state = require('../initializers/state');
 const {resetPrompt} = require('../initializers/geminiClient');
 const log = require('./betterLogs');
 const config = require('../config.json');
+const path = require('path');
 
-app.use(express.static('./utils/webui'));
+// ejs, cus i don't want to reuse every single thing for a html
+app.set('view engine', 'ejs');
+app.set('views', path.join(global.dirname, 'utils', 'webui', 'views'));
+
+app.use('/css', express.static(path.join(global.dirname, 'utils', 'webui', 'css')));
+app.use('/js', express.static(path.join(global.dirname, 'utils', 'webui', 'js')));
+
+app.get('/', (req, res) => {
+    res.render('index');
+})
 
 app.put('/api/lobotomize', async (req, res) => {
     for (const channel in state.history) {
@@ -104,7 +114,6 @@ wss.on('connection', (ws, req) => {
 const statsInterval = setInterval(broadcastStats, 2000);
 
 const v8 = require('node:v8');
-const path = require('path');
 app.get('/api/heap/dump.heapsnapshot', (req, res) => {
     // Heap-${yyyymmdd}-${hhmmss}-${pid}-${thread_id}.heapsnapshot
     const heapFileName = `Heap-${new Date().toISOString().replace(/:/g, '-')}-${process.pid}-${process.threadId}.heapsnapshot`;
