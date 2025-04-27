@@ -14,6 +14,14 @@
     "resetPrompt": 0
   },
   "SEARX_BASE_URL": "",
+  "EMOJIS": {
+    "uploaded": "",
+    "upvote": "",
+    "downvote": "",
+    "search": "",
+    "mute": "",
+    "uploading": ""
+  },
   "MAX_MESSAGES": 0,
   "SLEEPINGRANGE": "00:00-00:00",
   "PROXIES": [
@@ -26,5 +34,7 @@
         "password": ""
       }
     }
-  ]
+  ],
+  "REMOTE_LISTS": [],
+  "TOS_URL": ""
 }
