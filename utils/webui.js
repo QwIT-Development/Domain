@@ -9,13 +9,15 @@ const WebSocket = require('ws');
 const http = require('http');
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({server, clientTracking: true});
 const state = require('../initializers/state');
 const {resetPrompt} = require('../initializers/geminiClient');
 const log = require('./betterLogs');
 const config = require('../config.json');
 const path = require('path');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
+const dataDir = path.join(global.dirname, 'data', 'running');
+const fs = require('fs');
 
 // ejs, cus i don't want to reuse every single thing for a html
 app.set('view engine', 'ejs');
@@ -32,6 +34,46 @@ app.get('/', (req, res) => {
 
 app.get('/reputation', (req, res) => {
     res.render('reputation');
+})
+
+app.get('/bans', (req, res) => {
+    res.render('bans');
+})
+
+app.delete('/api/unban/:id', async (req, res) => {
+    const id = req.params.id;
+    if (!id) {
+        return res.status(400).json({error: 'Invalid request'});
+    }
+
+    if (state.banlist[id]) {
+        delete state.banlist[id];
+        if (usersCache[id]) {
+            delete usersCache[id];
+        }
+        const banlistPath = path.join(dataDir, 'banlist.json');
+        fs.writeFileSync(banlistPath, JSON.stringify(state.banlist, null, 2));
+        res.json({success: true});
+    } else {
+        res.status(404).json({error: 'User not found'});
+    }
+})
+
+app.put('/api/ban', async (req, res) => {
+    const id = req.body.id;
+    const reason = req.body.reason;
+    if (!id || !reason) {
+        return res.status(400).json({error: 'Invalid request'});
+    }
+    if (state.banlist[id]) {
+        return res.status(400).json({error: 'User already banned'});
+    }
+    state.banlist[id] = reason;
+    if (usersCache[id]) {
+        delete usersCache[id];
+    }
+    const banlistPath = path.join(dataDir, 'banlist.json');
+    fs.writeFileSync(banlistPath, JSON.stringify(state.banlist, null, 2));
 })
 
 app.put('/api/lobotomize', async (req, res) => {
@@ -51,6 +93,7 @@ const clients = new Set();
 
 const discordClient = global.discordClient;
 const usersCache = {};
+
 async function getUserInfo(userId) {
     // client should be already initialized when webui is fired up
     try {
@@ -59,7 +102,7 @@ async function getUserInfo(userId) {
             return null;
         }
         const username = user.username;
-        const avatarUrl = user.displayAvatarURL({ dynamic: true, size: 256 });
+        const avatarUrl = user.displayAvatarURL({dynamic: true, size: 256});
 
         return {username, avatarUrl};
     } catch (e) {
@@ -87,7 +130,8 @@ async function getEntry(userId) {
                 avatarUrl: userInfo.avatarUrl,
                 lastUpdated: now,
                 // this shouldn't fail, but if it does fail we just return 0
-                score: state.reputation[userId] || 0
+                score: state.reputation[userId] || 0,
+                banReason: state.banlist[userId] || null,
             };
             usersCache[userId] = entry;
         } else {
@@ -99,7 +143,8 @@ async function getEntry(userId) {
                     username: 'Unknown',
                     avatarUrl: null,
                     lastUpdated: now,
-                    score: state.reputation[userId] || 0
+                    score: state.reputation[userId] || 0,
+                    banReason: state.banlist[userId] || null,
                 };
                 usersCache[userId] = entry;
             }
@@ -127,39 +172,63 @@ async function getCurrentStats() {
             id: entry.id,
             username: entry.username,
             avatarUrl: entry.avatarUrl,
-            score: entry.score
+            score: entry.score,
+            banReason: entry.banReason,
         })),
         logs: state.logs.toReversed() || [],
     }
 }
 
 async function broadcastStats() {
-    const stats = await getCurrentStats();
-    const data = JSON.stringify({type: 'statsUpdate', payload: stats});
+    try {
+        const stats = await getCurrentStats();
+        const data = JSON.stringify({type: 'statsUpdate', payload: stats});
 
-    clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(data, (err) => {
-                if (err) {
-                    log(`Error sending stats to client: ${err}`, 'error', 'webui.js (WebSocket)');
-                    client.close();
-                }
-            })
-        }
-    })
+        const deadClients = new Set();
+
+        clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN && client.isAlive) {
+                client.send(data, (err) => {
+                    if (err) {
+                        log(`Error sending stats to client: ${err}`, 'error', 'webui.js (WebSocket)');
+                        deadClients.add(client);
+                        client.terminate();
+                    }
+                });
+            } else if (client.readyState === WebSocket.CLOSED || client.readyState === WebSocket.CLOSING) {
+                deadClients.add(client);
+            }
+        });
+
+        deadClients.forEach(client => {
+            clients.delete(client);
+        })
+    } catch (e) {
+        log(`Error broadcasting stats: ${e}`, 'error', 'webui.js (WebSocket)');
+    }
 }
 
 wss.on('connection', async (ws) => {
     log(`Socket connection`, 'info', 'webui.js (WebSocket)');
+    ws.isAlive = false;
+
     clients.add(ws);
 
-    const initialStats = await getCurrentStats();
-    ws.send(JSON.stringify({type: 'statsUpdate', payload: initialStats}), (err) => {
-        if (err) {
-            log(`Error sending stats to client: ${err}`, 'error', 'webui.js (WebSocket)');
-            ws.close();
+    try {
+        const initialStats = await getCurrentStats();
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({type: 'statsUpdate', payload: initialStats}), (err) => {
+                if (err) {
+                    log(`Error sending stats to client: ${err}`, 'error', 'webui.js (WebSocket)');
+                    ws.close();
+                }
+            });
         }
-    });
+    } catch (e) {
+        log(`Error sending initial stats to client: ${e}`, 'error', 'webui.js (WebSocket)');
+        ws.close();
+    }
+
 
     ws.send(JSON.stringify({type: 'version', payload: {version: state.version, updateAvailable: false}}), (err) => {
         if (err) {
@@ -171,6 +240,11 @@ wss.on('connection', async (ws) => {
     ws.on('message', (message) => {
         try {
             const parsedMessage = JSON.parse(message);
+            if (parsedMessage.type === 'ping') {
+                ws.isAlive = true;
+                ws.send(JSON.stringify({type: 'pong'}))
+                return;
+            }
             log(`Received message from client (This shouldn't happen): ${JSON.stringify(parsedMessage)}`, 'warn', 'webui.js (WebSocket)');
         } catch (e) {
             log(`Received message from client (This shouldn't happen): ${message}`, 'warn', 'webui.js (WebSocket)');
@@ -199,8 +273,8 @@ app.get('/api/heap/dump.heapsnapshot', (req, res) => {
     res.sendFile(path.join(global.dirname, snapshotPath));
 })
 
-app.get('/api/gc', (req, res) => {
-    const before = getCurrentStats();
+app.get('/api/gc', async (req, res) => {
+    const before = await getCurrentStats();
     const beforeUsed = before.ram.used;
     const beforeTotal = before.ram.total;
     if (Bun.gc) {
@@ -210,7 +284,7 @@ app.get('/api/gc', (req, res) => {
     } else {
         res.status(500).json({error: 'Garbage collection is unsupported'});
     }
-    const after = getCurrentStats();
+    const after = await getCurrentStats();
     const diffUsed = after.ram.used - beforeUsed;
     const diffTotal = after.ram.total - beforeTotal;
 

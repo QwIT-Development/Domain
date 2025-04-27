@@ -2,8 +2,9 @@ const socket = new WebSocket(`ws://${window.location.host}`);
 
 const rootPath = (window.location.pathname === '/');
 const reputationPath = (window.location.pathname === '/reputation');
+const bansPath = (window.location.pathname === '/bans');
 
-function createUserCard(user) {
+function createCard(user, cardType) {
     const colDiv = document.createElement('div');
     colDiv.className = 'col-12 col-md-12 col-lg';
 
@@ -12,11 +13,11 @@ function createUserCard(user) {
     cardDiv.dataset.userId = user.id;
 
     const cardHeader = document.createElement('div');
-    cardHeader.className = 'card-header d-flex align-items-center';
+    cardHeader.className = 'card-header';
 
     const avatarImg = document.createElement('img');
     avatarImg.src = user.avatarUrl || 'data:,';
-    avatarImg.alt; // blank alt
+    avatarImg.alt = ''; // blank alt
     avatarImg.width = 32;
     avatarImg.height = 32;
     avatarImg.className = 'me-2 rounded-circle';
@@ -31,64 +32,101 @@ function createUserCard(user) {
     const cardBody = document.createElement('div');
     cardBody.className = 'card-body';
 
-    const scoreDiv = document.createElement('div');
-    scoreDiv.className = 'mb-3';
+    if (cardType === 'reputation') {
+        // Reputation-specific content
+        const scoreDiv = document.createElement('div');
+        scoreDiv.className = 'mb-3';
 
-    const scoreLabel = document.createElement('label');
-    const inputId = `scoreInput_${user.id}`;
-    scoreLabel.htmlFor = inputId;
-    scoreLabel.textContent = 'Score:';
+        const scoreLabel = document.createElement('label');
+        const inputId = `scoreInput_${user.id}`;
+        scoreLabel.htmlFor = inputId;
+        scoreLabel.textContent = 'Score:';
 
-    const scoreInput = document.createElement('input');
-    scoreInput.type = 'number';
-    scoreInput.className = 'form-control';
-    scoreInput.id = inputId;
-    scoreInput.name = 'scoreInput';
-    scoreInput.value = user.score;
-    scoreInput.max = 1000;
-    scoreInput.min = -1000;
+        const scoreInput = document.createElement('input');
+        scoreInput.type = 'number';
+        scoreInput.className = 'form-control';
+        scoreInput.id = inputId;
+        scoreInput.name = 'scoreInput';
+        scoreInput.value = user.score;
+        scoreInput.max = 1000;
+        scoreInput.min = -1000;
 
-    scoreDiv.appendChild(scoreLabel);
-    scoreDiv.appendChild(scoreInput);
+        scoreDiv.appendChild(scoreLabel);
+        scoreDiv.appendChild(scoreInput);
 
-    const saveButton = document.createElement('button');
-    saveButton.type = 'button';
-    saveButton.className = 'btn btn-outline-primary';
-    saveButton.textContent = 'Save Score';
-    saveButton.style.width = '100%';
-    saveButton.onclick = () => {
-        const newScore = parseInt(scoreInput.value, 10);
-        if (isNaN(newScore)) {
-            alert('Invalid score');
-            return;
-        }
-        const data = {
-            id: user.id,
-            score: newScore
-        };
-        fetch('/api/reputation/save', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Score saved successfully');
-                } else {
-                    alert('Failed to save score');
-                }
+        const saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.className = 'btn btn-outline-primary';
+        saveButton.textContent = 'Save Score';
+        saveButton.style.width = '100%';
+        saveButton.onclick = () => {
+            const newScore = parseInt(scoreInput.value, 10);
+            if (isNaN(newScore)) {
+                alert('Invalid score');
+                return;
+            }
+            const data = {
+                id: user.id,
+                score: newScore
+            };
+            fetch('/api/reputation/save', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
             })
-            .catch(error => {
-                console.error('Error saving score:', error);
-                alert('Failed to save score');
-        })
-    };
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Score saved successfully');
+                    } else {
+                        alert('Failed to save score');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving score:', error);
+                    alert('Failed to save score');
+                });
+        };
 
-    cardBody.appendChild(scoreDiv);
-    cardBody.appendChild(saveButton);
+        cardBody.appendChild(scoreDiv);
+        cardBody.appendChild(saveButton);
+    } else if (cardType === 'ban') {
+        const reasonDiv = document.createElement('div');
+        reasonDiv.className = 'mb-3';
+
+        const reason = document.createElement('p');
+        reason.innerText = "Reason: " + user.banReason;
+
+        reasonDiv.appendChild(reason);
+
+        const liftButton = document.createElement('button');
+        liftButton.type = 'button';
+        liftButton.className = 'btn btn-outline-primary';
+        liftButton.textContent = 'Lift Ban';
+        liftButton.style.width = '100%';
+        liftButton.onclick = () => {
+            fetch(`/api/unban/${user.id}`, {
+                method: 'DELETE'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Ban lifted.');
+                    } else {
+                        alert('Failed to lift ban.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to lift ban: ', error);
+                    alert('Failed to lift ban.');
+                });
+        };
+
+        cardBody.appendChild(reasonDiv);
+        cardBody.appendChild(liftButton);
+    }
 
     cardDiv.appendChild(cardHeader);
     cardDiv.appendChild(cardBody);
@@ -97,16 +135,31 @@ function createUserCard(user) {
     return colDiv;
 }
 
-
+let pingTimeout = null;
 socket.onopen = () => {
     console.info('socket connected');
+    // wait 5 seconds, then send ping to check if connection is alive
+    setTimeout(() => {
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({type: 'ping'}));
+
+            pingTimeout = setTimeout(() => {
+                alert('No response from server. If it was started a few minutes ago, be patient.');
+            }, 5000);
+        }
+    }, 5000);
 };
 
 socket.onmessage = (event) => {
     try {
         const message = JSON.parse(event.data);
 
-        if (message.type === 'statsUpdate' && message.payload) {
+        if (message.type === 'pong') {
+            if (pingTimeout) {
+                clearTimeout(pingTimeout);
+                pingTimeout = null;
+            }
+        } else if (message.type === 'statsUpdate' && message.payload) {
             const stats = message.payload;
 
             if (rootPath) {
@@ -174,10 +227,28 @@ socket.onmessage = (event) => {
                         }
 
                     } else {
-                        const userCardElement = createUserCard(user);
+                        const userCardElement = createCard(user, 'reputation');
                         userCont.appendChild(userCardElement);
                     }
                 });
+            }
+            if (bansPath) {
+                const banCont = document.getElementById('ban-cards-container');
+                const users = stats.users || [];
+
+                const filter = users.filter(user => user.banReason && typeof user.banReason === 'string');
+
+                const bans = filter.map(user => ({
+                    id: user.id,
+                    reason: user.banReason
+                })
+                )
+
+                banCont.innerHTML = '';
+                filter.forEach(ban => {
+                    const banCardElement = createCard(ban, 'ban');
+                    banCont.appendChild(banCardElement);
+                })
             }
         } else if (message.type === 'version' && message.payload) {
             const stats = message.payload;
@@ -193,8 +264,16 @@ socket.onmessage = (event) => {
 
 socket.onclose = (event) => {
     console.info('socket closed:', event);
+    if (pingTimeout) {
+        clearTimeout(pingTimeout);
+        pingTimeout = null;
+    }
 };
 
 socket.onerror = (error) => {
     console.error('socket error:', error);
+    if (pingTimeout) {
+        clearTimeout(pingTimeout);
+        pingTimeout = null;
+    }
 };
