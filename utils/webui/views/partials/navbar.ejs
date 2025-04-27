@@ -1,20 +1,43 @@
 <nav class="navbar">
     <a class="navbar-brand" href="/">Domain WebUI</a>
-    <ul class="navbar-nav">
-        <li class="nav-item">
-            <a onclick="lobotomize()" href="javascript:void(0)">
-                <button class="btn btn-primary">
-                    <span class="material-symbols-rounded">restart_alt</span>
-                    Reset History
-                </button>
-            </a>
-            <a href="javascript:void(0)" onclick="garbageCollect()">
-                <button class="btn btn-outline-primary">
-                    <span class="material-symbols-rounded">recycling</span>
-                    Garbage Collect
-                </button>
-            </a>
-        </li>
-    </ul>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a onclick="lobotomize()" href="javascript:void(0)">
+                    <button class="btn btn-primary">
+                        <span class="material-symbols-rounded">restart_alt</span>
+                        Reset History
+                    </button>
+                </a>
+                <a href="javascript:void(0)" onclick="garbageCollect()">
+                    <button class="btn btn-outline-primary">
+                        <span class="material-symbols-rounded">recycling</span>
+                        Garbage Collect
+                    </button>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const navbarToggler = document.querySelector('.navbar-toggler');
+            const navbarCollapse = document.querySelector('.collapse.navbar-collapse');
+
+            if (navbarToggler) {
+                navbarToggler.addEventListener('click', function () {
+                    if (navbarCollapse) {
+                        navbarCollapse.classList.toggle('show');
+                    }
+                });
+            }
+        });
+    </script>
 </nav>
 <script src="/js/navjs.js"></script>
