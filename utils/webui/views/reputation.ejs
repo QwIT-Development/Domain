@@ -1,7 +1,8 @@
 <%- include('partials/head') %>
 <main class="container mt-4">
     <p>We encourage fair game, but yes, you can cheat.</p>
-    <div class="row">
+    <div class="row" id="user-cards-container">
+        <%#
         <div class="col col-md col-lg">
             <div class="card">
                 <div class="card-header">
@@ -13,9 +14,11 @@
                         <label for="numberInput">Score:</label>
                         <input type="number" class="form-control" id="numberInput" name="numberInput" value="0" max="1000" min="-1000">
                     </div>
+                    <button type="button" class="btn btn-outline-primary">Save Score</button>
                 </div>
             </div>
         </div>
+        %>
     </div>
 </main>
 <%- include('partials/footer') %>
