@@ -3,7 +3,7 @@ const WebSocket = require("ws");
 const log = require("../../utils/betterLogs");
 const state = require("../../initializers/state");
 const wsConn = async (ws) => {
-    ws.isAlive = true;
+    ws.isAlive = false;
 
     state.wsClients.add(ws);
 
