@@ -55,7 +55,8 @@ async function saveReps() {
     const filePath = path.join(global.dirname, 'data', 'running', 'reputation.json');
 
     try {
-        fs.writeFileSync(filePath, JSON.stringify(db));
+        // legyszives, legalabb olvashato legyen a -4-es szememnek
+        fs.writeFileSync(filePath, JSON.stringify(db, null, 4), 'utf8');
     } catch (e) {
         log(`Failed to save reputation file: ${e}`, 'error', 'reputation.js');
         return false;
