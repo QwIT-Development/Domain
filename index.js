@@ -59,8 +59,6 @@ async function main() {
     }
     global.discordClient = discordClient;
 
-    require('./webui/index'); // fire up webui
-
     const emojiResolver = require('./initializers/emojiResolver');
     await emojiResolver();
 
@@ -91,6 +89,7 @@ async function main() {
     await stopSpinner(true, "Domain-Unchained ready");
 
     require('./cronJobs/cronReset'); // this should be run after bot is ready
+    require('./webui/index'); // fire up webui
 
     discordClient.on(Events.MessageCreate, async message => {
         if (!allowInteraction) return;

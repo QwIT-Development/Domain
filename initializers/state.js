@@ -18,5 +18,7 @@ module.exports = {
     bannedSitesWildcard: [],
     logs: [],
     version: packageJson.version,
-    sleepCycleTimer: null
+    sleepCycleTimer: null,
+    usersCache: {},
+    wsClients: new Set()
 };
