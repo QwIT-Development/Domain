@@ -1,6 +1,72 @@
 const socket = new WebSocket(`ws://${window.location.host}`);
 
 const rootPath = (window.location.pathname === '/');
+const reputationPath = (window.location.pathname === '/reputation');
+
+function createUserCard(user) {
+    const colDiv = document.createElement('div');
+    colDiv.className = 'col-12 col-md-12 col-lg';
+
+    const cardDiv = document.createElement('div');
+    cardDiv.className = 'card';
+    cardDiv.dataset.userId = user.id;
+
+    const cardHeader = document.createElement('div');
+    cardHeader.className = 'card-header d-flex align-items-center';
+
+    const avatarImg = document.createElement('img');
+    avatarImg.src = user.avatarUrl || 'data:,';
+    avatarImg.alt; // blank alt
+    avatarImg.width = 32;
+    avatarImg.height = 32;
+    avatarImg.className = 'me-2 rounded-circle';
+
+    const usernameP = document.createElement('p');
+    usernameP.style.marginBottom = '0';
+    usernameP.textContent = user.username;
+
+    cardHeader.appendChild(avatarImg);
+    cardHeader.appendChild(usernameP);
+
+    const cardBody = document.createElement('div');
+    cardBody.className = 'card-body';
+
+    const scoreDiv = document.createElement('div');
+    scoreDiv.className = 'mb-3';
+
+    const scoreLabel = document.createElement('label');
+    const inputId = `scoreInput_${user.id}`;
+    scoreLabel.htmlFor = inputId;
+    scoreLabel.textContent = 'Score:';
+
+    const scoreInput = document.createElement('input');
+    scoreInput.type = 'number';
+    scoreInput.className = 'form-control';
+    scoreInput.id = inputId;
+    scoreInput.name = 'scoreInput';
+    scoreInput.value = user.score;
+    scoreInput.max = 1000;
+    scoreInput.min = -1000;
+
+    scoreDiv.appendChild(scoreLabel);
+    scoreDiv.appendChild(scoreInput);
+
+    const saveButton = document.createElement('button');
+    saveButton.type = 'button';
+    saveButton.className = 'btn btn-outline-primary';
+    saveButton.textContent = 'Save Score';
+    // TODO: create save functionality
+
+    cardBody.appendChild(scoreDiv);
+    cardBody.appendChild(saveButton);
+
+    cardDiv.appendChild(cardHeader);
+    cardDiv.appendChild(cardBody);
+    colDiv.appendChild(cardDiv);
+
+    return colDiv;
+}
+
 
 socket.onopen = () => {
     console.info('socket connected');
@@ -39,6 +105,49 @@ socket.onmessage = (event) => {
                         logsElement.appendChild(logLine);
                     });
                 }
+            }
+            if (reputationPath) {
+                const userCont = document.getElementById('user-cards-container');
+                const users = stats.users || [];
+                const userIds = new Set(users.map(u => u.id));
+                const existingUserCards = userCont.querySelectorAll('.card[data-user-id]');
+
+                existingUserCards.forEach(cardElement => {
+                    const userId = cardElement.dataset.userId;
+                    if (!userIds.has(userId)) {
+                        const colDiv = cardElement.closest('.col-12');
+                        if (colDiv) {
+                            userCont.removeChild(colDiv);
+                        }
+                    }
+                });
+
+                users.forEach(user => {
+                    let card = userCont.querySelector(`.card[data-user-id="${user.id}"]`);
+
+                    if (card) {
+                        const scoreInput = card.querySelector('input[name="scoreInput"]');
+                        const avatarImg = card.querySelector('img');
+                        const usernameP = card.querySelector('.card-header p');
+
+                        if (scoreInput && document.activeElement !== scoreInput && String(scoreInput.value) !== String(user.score)) {
+                            scoreInput.value = user.score;
+                        }
+
+                        const newAvatarUrl = user.avatarUrl || 'data:,';
+                        if (avatarImg && avatarImg.src !== newAvatarUrl) {
+                            avatarImg.src = newAvatarUrl;
+                        }
+
+                        if (usernameP && usernameP.textContent !== user.username) {
+                            usernameP.textContent = user.username;
+                        }
+
+                    } else {
+                        const userCardElement = createUserCard(user);
+                        userCont.appendChild(userCardElement);
+                    }
+                });
             }
         } else if (message.type === 'version' && message.payload) {
             const stats = message.payload;
