@@ -28,7 +28,7 @@ function splitFuzzySearch(pattern, strings, options = {"includeScore": true}) {
     let allWordsMatch = false;
 
     for (const word of words) {
-        if (word.length < 2) {
+        if (word.length < 3) {
             continue;
         }
 
