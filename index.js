@@ -26,8 +26,13 @@ const {initializeSpinner, stopSpinner} = require('./utils/processInfo');
 
 // async main thread hell yeah
 async function main() {
+    const allowInteraction = !process.argv.includes('--no-interaction');
+
     await initializeSpinner();
     log(`Starting Domain-Unchained ${state.version}`, 'info');
+    if (!allowInteraction) {
+        log('Interaction is disabled via --no-interaction flag.', 'warn');
+    }
     global.dirname = __dirname;
     await deleteArtifacts();
     await deleteUploadedItems();
@@ -37,8 +42,6 @@ async function main() {
     // we don't need to wait for this, bc it might take a long time
     // noinspection ES6MissingAwait
     getBannedSites();
-
-    require('./utils/webui'); // fire up webui
     // imports
     const {promptLoader, model} = require('./initializers/geminiClient');
     const {messageHandler} = require('./eventHandlers/messageHandler');
@@ -54,6 +57,9 @@ async function main() {
     while (!discordClientReady) {
         await new Promise(resolve => setTimeout(resolve, 100));
     }
+    global.discordClient = discordClient;
+
+    require('./utils/webui'); // fire up webui
 
     const emojiResolver = require('./initializers/emojiResolver');
     await emojiResolver();
@@ -87,6 +93,7 @@ async function main() {
     require('./cronJobs/cronReset'); // this should be run after bot is ready
 
     discordClient.on(Events.MessageCreate, async message => {
+        if (!allowInteraction) return;
         // ignore messages when "sleeping"
         if (state.isSleeping) return;
 
