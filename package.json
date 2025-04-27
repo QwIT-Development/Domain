@@ -16,6 +16,7 @@
     "@discordjs/rest": "^2.5.0",
     "@google/generative-ai": "^0.24.0",
     "axios": "^1.9.0",
+    "body-parser": "^2.2.0",
     "cheerio": "^1.0.0",
     "discord-api-types": "^0.37.120",
     "discord.js": "^14.19.1",

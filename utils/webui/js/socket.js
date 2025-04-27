@@ -55,7 +55,37 @@ function createUserCard(user) {
     saveButton.type = 'button';
     saveButton.className = 'btn btn-outline-primary';
     saveButton.textContent = 'Save Score';
-    // TODO: create save functionality
+    saveButton.style.width = '100%';
+    saveButton.onclick = () => {
+        const newScore = parseInt(scoreInput.value, 10);
+        if (isNaN(newScore)) {
+            alert('Invalid score');
+            return;
+        }
+        const data = {
+            id: user.id,
+            score: newScore
+        };
+        fetch('/api/reputation/save', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Score saved successfully');
+                } else {
+                    alert('Failed to save score');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving score:', error);
+                alert('Failed to save score');
+        })
+    };
 
     cardBody.appendChild(scoreDiv);
     cardBody.appendChild(saveButton);

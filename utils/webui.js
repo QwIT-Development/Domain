@@ -15,10 +15,13 @@ const {resetPrompt} = require('../initializers/geminiClient');
 const log = require('./betterLogs');
 const config = require('../config.json');
 const path = require('path');
+const bodyParser = require('body-parser')
 
 // ejs, cus i don't want to reuse every single thing for a html
 app.set('view engine', 'ejs');
 app.set('views', path.join(global.dirname, 'utils', 'webui', 'views'));
+
+app.use(bodyParser.json())
 
 app.use('/css', express.static(path.join(global.dirname, 'utils', 'webui', 'css')));
 app.use('/js', express.static(path.join(global.dirname, 'utils', 'webui', 'js')));
@@ -215,6 +218,30 @@ app.get('/api/gc', (req, res) => {
         usedDiff: (diffUsed / 1024 / 1024).toFixed(2),
         totalDiff: (diffTotal / 1024 / 1024).toFixed(2),
     })
+})
+
+app.put('/api/reputation/save', async (req, res) => {
+    const id = req.body.id;
+    const score = req.body.score;
+
+    if (!id || isNaN(score)) {
+        return res.status(400).json({error: 'Invalid request'});
+    }
+    if (score > 1000) {
+        return res.status(400).json({error: 'Score too high'});
+    }
+    if (score < -1000) {
+        return res.status(400).json({error: 'Score too low'});
+    }
+
+    state.reputation[id] = score;
+
+    // remove cached user
+    if (usersCache[id]) {
+        delete usersCache[id];
+    }
+
+    res.json({success: true});
 })
 
 server.listen(config.WEBUI_PORT, () => {
