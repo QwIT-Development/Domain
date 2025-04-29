@@ -58,7 +58,7 @@ async function parseBotCommands(string, message, gemini) {
                 const memStr = match[1]?.trim();
                 out = out.replace(match[0], "");
                 if (memStr) {
-                    appendMemory(memStr).catch(e => log(`Failed to save memory: "${memStr}" - ${e}`, 'error', 'botCommands.js'));
+                    appendMemory(memStr, message.channel.id).catch(e => log(`Failed to save memory: "${memStr}" - ${e}`, 'error', 'botCommands.js'));
                 } else {
                     log(`Skipped empty memory command.`, 'warn', 'botCommands.js');
                 }
