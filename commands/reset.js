@@ -24,7 +24,6 @@ module.exports = {
             const channel = interaction.channel.id;
 
             state.history[channel] = [];
-            global.geminiSession = resetPrompt(global.geminiModel, state.history, channel);
             // add +1 to lobotomization count
             state.resetCounts += 1;
 

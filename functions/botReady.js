@@ -30,7 +30,6 @@ async function botSleeping(client, time) {
     // reset history, like nothing happened yesterday
     for (const channel in state.history) {
         state.history[channel] = [];
-        global.geminiSession = resetPrompt(global.geminiModel, state.history, channel);
         state.resetCounts += 1;
     }
 }

@@ -18,7 +18,6 @@ const task = async () => {
 
         // this won't reset history, instead it just refreshes the models
         for (const channel in state.history) {
-            global.geminiSession = resetPrompt(global.geminiModel, state.history, channel, false);
             // this shouldn't add up to the global reset count
             count += 1;
         }

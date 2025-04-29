@@ -71,7 +71,6 @@ async function main() {
     await generateHistory();
 
     global.geminiModel = await model(state.history);
-    global.geminiSession = promptLoader(global.geminiModel, state.history);
 
     await botReady(discordClient);
 

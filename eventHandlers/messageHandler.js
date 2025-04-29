@@ -17,6 +17,7 @@ const strings = require('../data/strings.json');
 const uploadFilesToGemini = require('../eventHandlers/fileUploader');
 const config = require('../config.json');
 const {formatDate} = require('../functions/makePrompt');
+const {genAI} = require('../initializers/geminiClient');
 
 async function messageHandler(message, client, gemini) {
     if (await checkAuthors(message, client)) {
@@ -86,11 +87,24 @@ async function messageHandler(message, client, gemini) {
                 });
             }
 
+            state.history[channelId].push(msgParts)
+
             let response;
-            let responseMsg;
+            let responseMsg = '';
             try {
-                response = await gemini[channelId].sendMessage(msgParts);
-                responseMsg = response.response.text().trim();
+                // response = await gemini[channelId].sendMessage(msgParts);
+                response = await genAI.models.generateContentStream({
+                    model: config.GEMINI_MODEL,
+                    config: gemini[channelId],
+                    // i really hope this will work
+                    contents: state.history[channelId],
+                });
+                // responseMsg = response.response.text().trim();
+                for (const chunk of response) {
+                    if (chunk.text) {
+                        responseMsg += chunk.text.trim();
+                    }
+                }
             } catch (e) {
                 let msg;
                 try {

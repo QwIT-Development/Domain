@@ -17,7 +17,6 @@ async function checkForLegacyCommands(message) {
         const channel = message.channel.id;
 
         state.history[channel] = [];
-        global.geminiSession = resetPrompt(global.geminiModel, state.history, channel);
         state.resetCounts += 1;
 
         await message.reactions.removeAll();

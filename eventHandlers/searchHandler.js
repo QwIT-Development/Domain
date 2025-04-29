@@ -7,14 +7,24 @@ const {search} = require("../utils/searx");
 const log = require("../utils/betterLogs");
 const state = require("../initializers/state");
 const config = require("../config.json");
+const {genAI} = require("../initializers/geminiClient");
 
 async function searchHandler(str, channelId, gemini) {
     const results = await search(str);
     await addToHistory('user', results, channelId);
-    const continuation = await gemini[channelId].sendMessage(
-        "Please analyze these search results and continue our conversation."
-    );
-    return continuation.response.text();
+    await addToHistory('user', "Please analyze these search results and continue our conversation.", channelId);
+    const continuation = await genAI.models.generateContentStream({
+        model: config.GEMINI_MODEL,
+        config: gemini[channelId],
+        prompt: state.history[channelId],
+    });
+    let output = "";
+    for (const chunk of response) {
+        if (chunk.text) {
+            output += chunk.text.trim();
+        }
+    }
+    return output;
 }
 
 
