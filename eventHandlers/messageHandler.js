@@ -76,19 +76,20 @@ async function messageHandler(message, client, gemini) {
             state.msgCount += 1;
 
             let msgParts = [];
-            msgParts.push({
-                text: formattedMessage
-            });
+            // should add files first, then the text, bc gemini handles it this way too???
             if (files.length > 0) {
                 files.forEach(file => {
                     msgParts.push({
-                        file_data: {
-                            file_uri: file.uri,
-                            mime_type: file.mimeType,
+                        fileData: {
+                            fileUri: file.uri,
+                            mimeType: file.mimeType,
                         }
                     });
                 });
             }
+            msgParts.push({
+                text: formattedMessage
+            });
 
             await trimHistory(channelId); // trim history before we add the new stuff into
             state.history[channelId].push({
@@ -123,7 +124,7 @@ async function messageHandler(message, client, gemini) {
                 let status;
                 try {
                     if (e.error) {
-                        status = e.error;
+                        status = e.error.code;
                     }
                 } catch {}
 
