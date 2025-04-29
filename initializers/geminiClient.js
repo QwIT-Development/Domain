@@ -4,9 +4,9 @@
 */
 
 
-const {GoogleGenerativeAI} = require("@google/generative-ai");
+const {GoogleGenAI} = require("@google/genai");
 const config = require('../config.json');
-const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
+const genAI = new GoogleGenAI({apiKey: config.GEMINI_API_KEY});
 const {makePrompt} = require('../functions/makePrompt');
 const log = require('../utils/betterLogs');
 const {changeSpinnerText} = require('../utils/processInfo');
@@ -17,7 +17,8 @@ const generationConfig = {
     topK: 64,
     maxOutputTokens: 8192,
     responseModalities: [],
-    responseMimeType: 'text/plain'
+    responseMimeType: 'text/plain',
+    systemInstruction: '' // new genAI thing
 };
 
 async function model(history, showLog = true) {
@@ -36,6 +37,19 @@ async function model(history, showLog = true) {
     }
     return models;
 }
+
+/*
+const response = genAI.models.generateContentStream({
+    model,
+    config: generationConfig,
+    contents: 'asd'
+}).then(response => {
+    for (const chunk of response) {
+        console.log(chunk.text);
+    }
+})
+*/
+// ^ will be used in the future
 
 function promptLoader(model, history) {
     changeSpinnerText("Creating gemini instances...").then();
