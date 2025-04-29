@@ -19,7 +19,7 @@ async function searchHandler(str, channelId, gemini) {
         prompt: state.history[channelId],
     });
     let output = "";
-    for (const chunk of response) {
+    for await (const chunk of continuation) {
         if (chunk.text) {
             output += chunk.text.trim();
         }

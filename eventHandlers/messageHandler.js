@@ -58,10 +58,11 @@ async function messageHandler(message, client, gemini) {
         }
         //console.log(formattedMessage);
 
-        if (message.content.includes("forceartifact")) {
+        // debug artifact command, shouldn't be used
+        /*if (message.content.includes("forceartifact")) {
             let response = "```\ntestartifact\n```";
             return await chunkedMsg(message, response);
-        }
+        }*/
 
         if (await checkForMentions(message, client)) {
             // this should run, bc it wouldn't be good if the bot randomly resets while getting back the response
@@ -75,7 +76,9 @@ async function messageHandler(message, client, gemini) {
             state.msgCount += 1;
 
             let msgParts = [];
-            msgParts.push({text: formattedMessage});
+            msgParts.push({
+                text: formattedMessage
+            });
             if (files.length > 0) {
                 files.forEach(file => {
                     msgParts.push({
@@ -87,7 +90,11 @@ async function messageHandler(message, client, gemini) {
                 });
             }
 
-            state.history[channelId].push(msgParts)
+            await trimHistory(channelId); // trim history before we add the new stuff into
+            state.history[channelId].push({
+                role: 'user',
+                parts: msgParts
+            })
 
             let response;
             let responseMsg = '';
@@ -100,7 +107,7 @@ async function messageHandler(message, client, gemini) {
                     contents: state.history[channelId],
                 });
                 // responseMsg = response.response.text().trim();
-                for (const chunk of response) {
+                for await (const chunk of response) {
                     if (chunk.text) {
                         responseMsg += chunk.text.trim();
                     }
@@ -115,8 +122,8 @@ async function messageHandler(message, client, gemini) {
 
                 let status;
                 try {
-                    if (e.statusText) {
-                        status = e.statusText;
+                    if (e.error) {
+                        status = e.error;
                     }
                 } catch {}
 
@@ -125,13 +132,14 @@ async function messageHandler(message, client, gemini) {
                     return await message.channel.send(await RNGArray(strings.geminiFiltered));
 
                 //check for toomanyrequests
-                } else if (status && (status === "Too Many Requests")) {
+                } else if (status && (status === 429)) {
                     return await message.channel.send(await RNGArray(strings.geminiTooManyReqs));
-                } else if (status && (status === "Service Unavailable")) {
+                } else if (status && (status === 503)) {
                     return await message.channel.send(await RNGArray(strings.geminiGatewayUnavail));
                 } else {
                     // generic err handler
                     log(e, 'error', 'messageHandler.js');
+                    console.log(e.stack);
                     return await message.channel.send("Hiba történt. (Refer to console)");
                 }
             }
@@ -176,7 +184,7 @@ async function messageHandler(message, client, gemini) {
  * @param channelId - channel id (history management miatt)
  */
 async function addToHistory(role, content, channelId) {
-    await trimHistory(channelId)
+    await trimHistory(channelId);
     if (role && content) {
         if (role !== 'user' && role !== 'model') {
             log(`Got invalid role to be pushed to history: ${role}`, 'warn', 'messageHandler.js');

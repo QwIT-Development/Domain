@@ -99,7 +99,7 @@ async function main() {
         await messageHandler(
             message,
             discordClient,
-            global.geminiSession
+            global.geminiModel
         )
 
         await checkForLegacyCommands(
