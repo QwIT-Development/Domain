@@ -7,12 +7,12 @@
             <div class="card-body">
                 <form action="/bans" method="POST">
                     <div class="mb-3">
-                        <label for="ban-userid" class="form-label">userID</label>
-                        <input type="text" class="form-control" id="ban-userid" name="userId" required>
+                        <label for="ban-userid" class="form-label">user ID</label>
+                        <input type="text" class="form-control" id="ban-userid" name="userId" placeholder="000000000000000000" required>
                     </div>
                     <div class="mb-3">
                         <label for="ban-reason" class="form-label">Reason</label>
-                        <input type="text" class="form-control" id="ban-reason" name="reason" required>
+                        <input type="text" class="form-control" id="ban-reason" name="reason" placeholder="Lorem ipsum dolor sit." required>
                     </div>
                 </form>
                 <button onclick="ban()" class="btn btn-primary">Ban user</button>
