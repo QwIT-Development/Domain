@@ -182,6 +182,8 @@ socket.onmessage = (event) => {
                 if (stats.users) {
                     const users = stats.users || [];
                     document.getElementById('userNumber').textContent = users.length.toString();
+                    const bans = users.filter(user => user.banReason && typeof user.banReason === 'string');
+                    document.getElementById('banCount').textContent = bans.length.toString();
                 }
 
                 const logsElement = document.getElementById('logs');
