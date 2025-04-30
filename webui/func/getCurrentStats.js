@@ -3,7 +3,10 @@ const state = require("../../initializers/state");
 const getEntry = require("./getEntry");
 async function getCurrentStats() {
     const userIds = Object.keys(state.reputation || {});
-    const entryPromises = userIds.map(async userId => getEntry(userId));
+    const banIds = Object.keys(state.banlist || {}); // this should fix issue, that doesn't show banned users if they didn't interacted with the bot
+
+    const ids = [... new Set([...userIds, ...banIds])];
+    const entryPromises = ids.map(async userId => getEntry(userId));
     const userEntries = (await Promise.all(entryPromises)).filter(entry => entry !== null);
 
     const mem = process.memoryUsage();
