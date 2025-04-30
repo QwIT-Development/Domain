@@ -98,6 +98,7 @@ async function parseBotCommands(string, message, gemini) {
                                 reactionsToAdd.add(state.emojis["mute"]);
                                 out = out.replace(commandText, "");
                                 log(`User ${userIdToMute} muted for ${time/1000}s. Reason: ${reason}`, 'info', 'botCommands.js');
+                                state.muteCount += 1;
                             } else {
                                 log(`Mute failed: Member ${userIdToMute} not found after fetch.`, 'warn', 'botCommands.js');
                                 out = out.replace(commandText, `[Felhasználó nem található]`);

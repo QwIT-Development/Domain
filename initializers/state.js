@@ -20,5 +20,6 @@ module.exports = {
     version: packageJson.version,
     sleepCycleTimer: null,
     usersCache: {},
-    wsClients: new Set()
+    wsClients: new Set(),
+    muteCount: 0
 };

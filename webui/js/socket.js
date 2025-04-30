@@ -171,8 +171,17 @@ socket.onmessage = (event) => {
                 }
 
                 if (stats.botStats) {
-                    document.getElementById('msgReceived').textContent = stats.botStats.msgCount;
-                    document.getElementById('resetCount').textContent = stats.botStats.historyClears;
+                    document.getElementById('msgReceived').textContent = stats.botStats.msgCount.toString();
+                    document.getElementById('resetCount').textContent = stats.botStats.historyClears.toString();
+                }
+
+                if (stats.muteCount != null) {
+                    document.getElementById('muteCount').textContent = stats.muteCount.toString();
+                }
+
+                if (stats.users) {
+                    const users = stats.users || [];
+                    document.getElementById('userNumber').textContent = users.length.toString();
                 }
 
                 const logsElement = document.getElementById('logs');
@@ -237,12 +246,6 @@ socket.onmessage = (event) => {
                 const users = stats.users || [];
 
                 const filter = users.filter(user => user.banReason && typeof user.banReason === 'string');
-
-                const bans = filter.map(user => ({
-                    id: user.id,
-                    reason: user.banReason
-                })
-                )
 
                 banCont.innerHTML = '';
                 filter.forEach(ban => {

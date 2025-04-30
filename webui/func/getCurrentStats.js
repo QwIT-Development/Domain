@@ -26,6 +26,7 @@ async function getCurrentStats() {
             score: entry.score,
             banReason: entry.banReason,
         })) || [],
+        muteCount: state.muteCount,
         logs: state.logs.toReversed() || [],
     }
 }
