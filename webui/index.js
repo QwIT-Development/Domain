@@ -112,7 +112,6 @@ const server = Bun.serve({
         },
         close(ws, code, reason) {
             state.wsClients.delete(ws);
-            log(`WebSocket closed: code ${code}, reason: ${reason}`, 'info', 'webui.js (WebSocket)');
         },
         error(ws, error) {
             state.wsClients.delete(ws);
