@@ -1,8 +1,7 @@
-const WebSocket = require("ws");
 const log = require("../../utils/betterLogs");
 const state = require("../../initializers/state");
-
 const getCurrentStats = require("./getCurrentStats");
+
 async function broadcastStats() {
     try {
         const currentStats = await getCurrentStats();
@@ -10,13 +9,29 @@ async function broadcastStats() {
 
         state.wsClients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
+
+                if (client.isAlive === false) {
+                    log('Client failed to respond to ping, terminating connection.', 'warn', 'webui.js (WebSocket)');
+                    client.terminate();
+                    deadClients.add(client);
+                    return;
+                }
                 client.isAlive = false;
+                try {
+                    client.ping();
+                } catch (e) {
+                    log(`Error sending ping to client: ${e.message}`, 'error', 'webui.js (WebSocket)');
+                    deadClients.add(client);
+                    return;
+                }
             }
         });
 
+        deadClients.forEach(client => state.wsClients.delete(client));
+
         const sendPromises = Array.from(state.wsClients).map(client => {
             return new Promise(resolve => {
-                if (client.readyState === WebSocket.OPEN) {
+                if (client.readyState === WebSocket.OPEN && !deadClients.has(client)) {
                     let payloadToSend;
                     let isDelta = false;
 
@@ -45,29 +60,18 @@ async function broadcastStats() {
 
                     const data = JSON.stringify({ type: 'statsUpdate', payload: payloadToSend, isDelta });
 
-                    client.send(data, (err) => {
-                        if (err) {
-                            log(`Error sending stats to client: ${err}`, 'error', 'webui.js (WebSocket)');
-                            deadClients.add(client);
-                        }
-                        resolve();
-                    });
-                } else {
-                    deadClients.add(client);
-                    resolve();
+                    try {
+                        client.send(data);
+                    } catch (err) {
+                        log(`Error sending stats to client: ${err.message}`, 'error', 'webui.js (WebSocket)');
+                        deadClients.add(client);
+                    }
                 }
+                resolve();
             });
         });
 
         await Promise.all(sendPromises);
-
-        state.wsClients.forEach(client => {
-            if (!client.isAlive && client.readyState === WebSocket.OPEN) {
-                log('Client failed to respond to ping, terminating connection.', 'warn', 'webui.js (WebSocket)');
-                client.terminate();
-                deadClients.add(client);
-            }
-        });
 
         deadClients.forEach(client => {
             try {
@@ -76,11 +80,12 @@ async function broadcastStats() {
                     client.close();
                 }
             } catch (err) {
-                log(`Error cleaning up client: ${err}`, 'error', 'webui.js (WebSocket)');
+                log(`Error cleaning up client: ${err.message}`, 'error', 'webui.js (WebSocket)');
             }
         });
+
     } catch (e) {
-        log(`Error broadcasting stats: ${e}`, 'error', 'webui.js (WebSocket)');
+        log(`Error broadcasting stats: ${e.message}`, 'error', 'webui.js (WebSocket)');
     }
 }
 
