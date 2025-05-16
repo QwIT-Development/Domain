@@ -16,7 +16,7 @@ async function searchHandler(str, channelId, gemini) {
     const continuation = await genAI.models.generateContentStream({
         model: config.GEMINI_MODEL,
         config: gemini[channelId],
-        prompt: state.history[channelId],
+        contents: state.history[channelId], // Changed 'prompt' to 'contents'
     });
     let output = "";
     for await (const chunk of continuation) {
