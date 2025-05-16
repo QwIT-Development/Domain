@@ -1,38 +1,78 @@
-const WebSocket = require("ws");
 const log = require("../../utils/betterLogs");
 const state = require("../../initializers/state");
-
 const getCurrentStats = require("./getCurrentStats");
+
 async function broadcastStats() {
     try {
-        const stats = await getCurrentStats();
-        const data = JSON.stringify({type: 'statsUpdate', payload: stats});
-
+        const currentStats = await getCurrentStats();
         const deadClients = new Set();
+
+        state.wsClients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+
+                if (client.isAlive === false) {
+                    log('Client failed to respond to ping, terminating connection.', 'warn', 'webui.js (WebSocket)');
+                    client.terminate();
+                    deadClients.add(client);
+                    return;
+                }
+                client.isAlive = false;
+                try {
+                    client.ping();
+                } catch (e) {
+                    log(`Error sending ping to client: ${e.message}`, 'error', 'webui.js (WebSocket)');
+                    deadClients.add(client);
+                    return;
+                }
+            }
+        });
+
+        deadClients.forEach(client => state.wsClients.delete(client));
 
         const sendPromises = Array.from(state.wsClients).map(client => {
             return new Promise(resolve => {
-                if (client.readyState === WebSocket.OPEN && client.isAlive) {
-                    client.send(data, (err) => {
-                        if (err) {
-                            log(`Error sending stats to client: ${err}`, 'error', 'webui.js (WebSocket)');
-                            deadClients.add(client);
-                            client.close();
+                if (client.readyState === WebSocket.OPEN && !deadClients.has(client)) {
+                    let payloadToSend;
+                    let isDelta = false;
+
+                    if (!client.lastSentStats) {
+                        payloadToSend = currentStats;
+                        client.lastSentStats = JSON.parse(JSON.stringify(currentStats));
+                    } else {
+                        const diff = {};
+                        let hasChanges = false;
+                        for (const key in currentStats) {
+                            if (JSON.stringify(currentStats[key]) !== JSON.stringify(client.lastSentStats[key])) {
+                                diff[key] = currentStats[key];
+                                hasChanges = true;
+                            }
                         }
-                        resolve();
-                    });
-                } else if (client.readyState === WebSocket.CLOSED || client.readyState === WebSocket.CLOSING) {
-                    deadClients.add(client);
-                    resolve();
-                } else {
-                    resolve();
+
+                        if (hasChanges) {
+                            payloadToSend = diff;
+                            isDelta = true;
+                            client.lastSentStats = JSON.parse(JSON.stringify(currentStats));
+                        } else {
+                            resolve();
+                            return;
+                        }
+                    }
+
+                    const data = JSON.stringify({ type: 'statsUpdate', payload: payloadToSend, isDelta });
+
+                    try {
+                        client.send(data);
+                    } catch (err) {
+                        log(`Error sending stats to client: ${err.message}`, 'error', 'webui.js (WebSocket)');
+                        deadClients.add(client);
+                    }
                 }
+                resolve();
             });
         });
 
         await Promise.all(sendPromises);
 
-        // clean up dead clients
         deadClients.forEach(client => {
             try {
                 state.wsClients.delete(client);
@@ -40,11 +80,12 @@ async function broadcastStats() {
                     client.close();
                 }
             } catch (err) {
-                log(`Error cleaning up client: ${err}`, 'error', 'webui.js (WebSocket)');
+                log(`Error cleaning up client: ${err.message}`, 'error', 'webui.js (WebSocket)');
             }
         });
+
     } catch (e) {
-        log(`Error broadcasting stats: ${e}`, 'error', 'webui.js (WebSocket)');
+        log(`Error broadcasting stats: ${e.message}`, 'error', 'webui.js (WebSocket)');
     }
 }
 

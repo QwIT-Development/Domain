@@ -135,19 +135,27 @@ function createCard(user, cardType) {
     return colDiv;
 }
 
+let pingIntervalId = null;
 let pingTimeout = null;
+let currentStats = {};
+
 socket.onopen = () => {
     console.info('socket connected');
-    // wait 5 seconds, then send ping to check if connection is alive
-    setTimeout(() => {
+
+    const sendPing = () => {
         if (socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({type: 'ping'}));
-
+            if (pingTimeout) clearTimeout(pingTimeout);
             pingTimeout = setTimeout(() => {
-                alert('No response from server. If it was started a few minutes ago, be patient.');
+                console.warn('No pong received from server. Connection might be stale.');
             }, 5000);
         }
-    }, 5000);
+    };
+
+    sendPing();
+
+    if (pingIntervalId) clearInterval(pingIntervalId);
+    pingIntervalId = setInterval(sendPing, 25000);
 };
 
 socket.onmessage = (event) => {
@@ -160,7 +168,13 @@ socket.onmessage = (event) => {
                 pingTimeout = null;
             }
         } else if (message.type === 'statsUpdate' && message.payload) {
-            const stats = message.payload;
+            if (message.isDelta) {
+                Object.assign(currentStats, message.payload);
+            } else {
+                currentStats = message.payload;
+            }
+
+            const stats = currentStats;
 
             if (rootPath) {
                 if (stats.ram) {
@@ -273,6 +287,10 @@ socket.onclose = (event) => {
         clearTimeout(pingTimeout);
         pingTimeout = null;
     }
+    if (pingIntervalId) {
+        clearInterval(pingIntervalId);
+        pingIntervalId = null;
+    }
 };
 
 socket.onerror = (error) => {
@@ -280,5 +298,9 @@ socket.onerror = (error) => {
     if (pingTimeout) {
         clearTimeout(pingTimeout);
         pingTimeout = null;
+    }
+    if (pingIntervalId) {
+        clearInterval(pingIntervalId);
+        pingIntervalId = null;
     }
 };

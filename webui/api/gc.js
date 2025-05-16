@@ -1,24 +1,30 @@
 const getCurrentStats = require('../func/getCurrentStats');
 
-const gc = async (req, res) => {
+const gc = async (req) => {
     const before = await getCurrentStats();
     const beforeUsed = before.ram.used;
     const beforeTotal = before.ram.total;
-    if (Bun.gc) {
+
+    let gcPerformed = false;
+    if (typeof Bun !== 'undefined' && Bun.gc) {
         Bun.gc(true);
-    } else if (global.gc) {
+        gcPerformed = true;
+    } else if (typeof global !== 'undefined' && global.gc) {
         global.gc();
+        gcPerformed = true;
     } else {
-        res.status(500).json({error: 'Garbage collection is unsupported'});
+        return new Response(JSON.stringify({ error: 'Garbage collection is unsupported' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
+
     const after = await getCurrentStats();
     const diffUsed = after.ram.used - beforeUsed;
     const diffTotal = after.ram.total - beforeTotal;
 
-    res.json({
+    return new Response(JSON.stringify({
         usedDiff: (diffUsed / 1024 / 1024).toFixed(2),
         totalDiff: (diffTotal / 1024 / 1024).toFixed(2),
-    })
+        gcPerformed: gcPerformed
+    }), { headers: { 'Content-Type': 'application/json' } });
 }
 
 module.exports = gc;

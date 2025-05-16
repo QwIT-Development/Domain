@@ -1,16 +1,16 @@
 const state = require("../../initializers/state");
-const {resetPrompt} = require("../../initializers/geminiClient");
 const broadcastStats = require("../func/broadcastStats");
-const lobotomize = async (req, res) => {
+
+const lobotomize = async (req) => {
     for (const channel in state.history) {
         state.history[channel] = [];
         state.resetCounts += 1;
     }
 
     await broadcastStats();
-    res.json({
+    return new Response(JSON.stringify({
         success: true
-    });
+    }), { headers: { 'Content-Type': 'application/json' } });
 }
 
 module.exports = lobotomize;
