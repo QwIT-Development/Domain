@@ -1,20 +1,27 @@
 const state = require("../../initializers/state");
 const broadcastStats = require("../func/broadcastStats");
-const repSave = async (req, res) => {
-    const id = req.body.id;
-    const score = req.body.score;
+
+const repSave = async (req) => {
+    let id, score;
+    try {
+        const body = await req.json();
+        id = body.id;
+        score = body.score;
+    } catch (e) {
+        return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    }
 
     if (!id || isNaN(score)) {
-        return res.status(400).json({error: 'Invalid request'});
+        return new Response(JSON.stringify({ error: 'Invalid request, missing id or score is not a number' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
     if (score > 1000) {
-        return res.status(400).json({error: 'Score too high'});
+        return new Response(JSON.stringify({ error: 'Score too high' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
     if (score < -1000) {
-        return res.status(400).json({error: 'Score too low'});
+        return new Response(JSON.stringify({ error: 'Score too low' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
-    state.reputation[id] = score;
+    state.reputation[id] = Number(score);
 
     // remove cached user
     if (state.usersCache[id]) {
@@ -23,7 +30,7 @@ const repSave = async (req, res) => {
 
     await broadcastStats();
 
-    res.json({success: true});
+    return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
 }
 
 module.exports = repSave;

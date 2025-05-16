@@ -4,92 +4,135 @@
 */
 
 
-const express = require('express');
-const WebSocket = require('ws');
-const http = require('http');
-const app = express();
-const server = http.createServer(app);
-const wss = new WebSocket.Server({server, autoPong: true});
 const log = require('../utils/betterLogs');
 const config = require('../config.json');
 const path = require('path');
-const bodyParser = require('body-parser');
+const ejs = require('ejs');
+const fs = require('fs');
 
-// ejs, cus i don't want to reuse every single thing for a html
-app.set('view engine', 'ejs');
-app.set('views', path.join(global.dirname, 'webui', 'views'));
+const unbanHandler = require('./api/unban');
+const banHandler = require('./api/ban');
+const lobotomizeHandler = require('./api/lobotomize');
+const repSaveHandler = require('./api/repSave');
+const gcHandler = require('./api/gc.js');
+const heapdumpHandler = require('./api/heapdump');
 
-app.use(bodyParser.json())
+const wsConn = require('./func/wsConn');
+const broadcastStats = require('./func/broadcastStats');
+const state = require('../initializers/state');
 
-app.use('/css', express.static(path.join(global.dirname, 'webui', 'css')));
-app.use('/js', express.static(path.join(global.dirname, 'webui', 'js')));
+const viewsPath = path.join(global.dirname, 'webui', 'views');
+const staticCSSPath = path.join(global.dirname, 'webui', 'css');
+const staticJSPath = path.join(global.dirname, 'webui', 'js');
 
-app.get('/', (req, res) => {
-    res.render('index');
-})
-app.get('/reputation', (req, res) => {
-    res.render('reputation');
-})
-app.get('/bans', (req, res) => {
-    res.render('bans');
-})
-
-const unban = require('./api/unban');
-app.delete('/api/unban/:id', unban);
-const ban = require('./api/ban');
-app.put('/api/ban', ban);
-const lobotomize = require('./api/lobotomize');
-app.put('/api/lobotomize', lobotomize);
-const repSave = require('./api/repSave');
-app.put('/api/reputation/save', repSave);
-const gc = require('./api/gc.js');
-app.get('/api/gc', gc);
-const heapdump = require('./api/heapdump');
-app.get('/api/heap/dump.heapsnapshot', heapdump);
-
-
-let wsInitialized = false;
 let statsInterval = null;
 
-const initializeWebSocket = () => {
-    if (wsInitialized) return;
+const server = Bun.serve({
+    port: config.WEBUI_PORT,
+    async fetch(req, server) {
+        const url = new URL(req.url);
+        const pathname = url.pathname;
 
-    log('Initializing WebSocket server...', 'info', 'webui.js');
-    const wsConn = require('./func/wsConn');
-    wss.on('connection', wsConn);
+        if (server.upgrade(req)) {
+            return;
+        }
 
-    const broadcastStats = require('./func/broadcastStats');
-    statsInterval = setInterval(broadcastStats, 2000);
+        try {
+            if (pathname.startsWith('/css/')) {
+                const filePath = path.join(staticCSSPath, pathname.substring('/css/'.length));
+                const file = Bun.file(filePath);
+                if (await file.exists()) {
+                    return new Response(file);
+                }
+            } else if (pathname.startsWith('/js/')) {
+                const filePath = path.join(staticJSPath, pathname.substring('/js/'.length));
+                const file = Bun.file(filePath);
+                if (await file.exists()) {
+                    return new Response(file);
+                }
+            }
 
-    process.on('SIGINT', () => {
-        log('Shutting down WebUI', 'info', 'webui.js');
-        clearInterval(statsInterval);
-        wss.close();
-    });
+            // ejs
+            else if (pathname === '/') {
+                const filePath = path.join(viewsPath, 'index.ejs');
+                const html = await ejs.renderFile(filePath);
+                return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+            } else if (pathname === '/reputation') {
+                const filePath = path.join(viewsPath, 'reputation.ejs');
+                const html = await ejs.renderFile(filePath);
+                return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+            } else if (pathname === '/bans') {
+                const filePath = path.join(viewsPath, 'bans.ejs');
+                const html = await ejs.renderFile(filePath);
+                return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+            }
 
-    wsInitialized = true;
-    log('WebSocket server initialized', 'info', 'webui.js');
-};
+            // API Routes
+            else if (pathname.startsWith('/api/')) {
+                if (req.method === 'DELETE' && pathname.startsWith('/api/unban/')) {
+                    return await unbanHandler(req);
+                } else if (req.method === 'PUT' && pathname === '/api/ban') {
+                    return await banHandler(req);
+                } else if (req.method === 'PUT' && pathname === '/api/lobotomize') {
+                    return await lobotomizeHandler(req);
+                } else if (req.method === 'PUT' && pathname === '/api/reputation/save') {
+                    return await repSaveHandler(req);
+                } else if (req.method === 'GET' && pathname === '/api/gc') {
+                    return await gcHandler(req);
+                } else if (req.method === 'GET' && pathname === '/api/heap/dump.heapsnapshot') {
+                    return await heapdumpHandler(req);
+                }
+            }
 
-server.listen(config.WEBUI_PORT, () => {
-    log(`WebUI listening at http://localhost:${config.WEBUI_PORT}`, 'info', 'webui.js');
-    log("WebUI is not secured, do not expose the port.", 'infoWarn', 'webui.js');
+            return new Response("Not Found", { status: 404 });
+        } catch (error) {
+            log(`Error processing request: ${error}`, 'error', 'webui.js');
+            return new Response("Internal Server Error", { status: 500 });
+        }
+    },
+    websocket: {
+        open(ws) {
+            wsConn(ws);
+        },
+        message(ws, message) {
+            try {
+                const parsedMessage = JSON.parse(message);
+                if (parsedMessage.type === 'ping') {
+                    ws.isAlive = true;
+                    ws.send(JSON.stringify({ type: 'pong' }));
+                } else {
+                    log(`Received message from client (This shouldn't happen): ${JSON.stringify(parsedMessage)}`, 'warn', 'webui.js (WebSocket)');
+                }
+            } catch (e) {
+                 log(`Received message from client (This shouldn't happen): ${message}`, 'warn', 'webui.js (WebSocket)');
+            }
+        },
+        close(ws, code, reason) {
+            state.wsClients.delete(ws);
+            log(`WebSocket closed: code ${code}, reason: ${reason}`, 'info', 'webui.js (WebSocket)');
+        },
+        error(ws, error) {
+            state.wsClients.delete(ws);
+            log(`WebSocket error: ${error}`, 'error', 'webui.js (WebSocket)');
+        },
+        perMessageDeflate: true,
+    },
 });
+
+log(`WebUI listening at http://localhost:${config.WEBUI_PORT}`, 'info', 'webui.js');
+log("WebUI is not secured, do not expose the port.", 'infoWarn', 'webui.js');
+
+if (!statsInterval) {
+    log('Initializing WebSocket broadcast...', 'info', 'webui.js');
+    statsInterval = setInterval(() => broadcastStats(server), 2000);
+    log('WebSocket broadcast initialized', 'info', 'webui.js');
+}
 
 process.on('SIGINT', () => {
     log('Shutting down WebUI', 'info', 'webui.js');
-    clearInterval(statsInterval);
-    wss.close();
+    if (statsInterval) {
+        clearInterval(statsInterval);
+    }
+    server.stop(true);
+    process.exit(0);
 });
-
-initializeWebSocket();
-setInterval(() => {
-    wss.clients.forEach(ws => {
-        if (!ws.isAlive) {
-            ws.close();
-            return;
-        }
-        ws.isAlive = false;
-        ws.ping();
-    });
-}, 30000);

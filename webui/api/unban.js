@@ -4,10 +4,12 @@ const fs = require("fs");
 const usersCache = state.usersCache;
 const dataDir = path.join(global.dirname, 'data', 'running');
 
-const unban = async (req, res) => {
-    const id = req.params.id;
+const unban = async (req) => {
+    const url = new URL(req.url);
+    const id = url.pathname.split('/').pop();
+
     if (!id) {
-        return res.status(400).json({error: 'Invalid request'});
+        return new Response(JSON.stringify({ error: 'Invalid request' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
     if (state.banlist[id]) {
@@ -17,9 +19,9 @@ const unban = async (req, res) => {
         }
         const banlistPath = path.join(dataDir, 'banlist.json');
         fs.writeFileSync(banlistPath, JSON.stringify(state.banlist, null, 2));
-        res.json({success: true});
+        return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
     } else {
-        res.status(404).json({error: 'User not found'});
+        return new Response(JSON.stringify({ error: 'User not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
     }
 }
 
