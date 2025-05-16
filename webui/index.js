@@ -95,10 +95,10 @@ const server = Bun.serve({
             wsConn(ws);
         },
         message(ws, message) {
+            ws.isAlive = true;
             try {
                 const parsedMessage = JSON.parse(message);
                 if (parsedMessage.type === 'ping') {
-                    ws.isAlive = true;
                     ws.send(JSON.stringify({ type: 'pong' }));
                 } else {
                     log(`Received message from client (This shouldn't happen): ${JSON.stringify(parsedMessage)}`, 'warn', 'webui.js (WebSocket)');
@@ -106,6 +106,9 @@ const server = Bun.serve({
             } catch (e) {
                  log(`Received message from client (This shouldn't happen): ${message}`, 'warn', 'webui.js (WebSocket)');
             }
+        },
+        pong(ws, data) {
+            ws.isAlive = true;
         },
         close(ws, code, reason) {
             state.wsClients.delete(ws);
