@@ -3,14 +3,16 @@ const WebSocket = require("ws");
 const log = require("../../utils/betterLogs");
 const state = require("../../initializers/state");
 const wsConn = async (ws) => {
-    ws.isAlive = false;
+    ws.isAlive = true;
 
     state.wsClients.add(ws);
 
     try {
         const initialStats = await getCurrentStats();
+        ws.lastSentStats = JSON.parse(JSON.stringify(initialStats));
+
         await new Promise((resolve, reject) => {
-            ws.send(JSON.stringify({type: 'statsUpdate', payload: initialStats}), (err) => {
+            ws.send(JSON.stringify({type: 'statsUpdate', payload: initialStats, isDelta: false}), (err) => {
                 if (err) reject(err);
                 else resolve();
             })
