@@ -14,7 +14,7 @@
   "private": true,
   "dependencies": {
     "@discordjs/rest": "^2.5.0",
-    "@google/genai": "^0.15.0",
+    "@google/genai": "^1.0.1",
     "@google/generative-ai": "^0.24.1",
     "axios": "^1.9.0",
     "body-parser": "^2.2.0",
