@@ -45,7 +45,6 @@ async function main() {
     // imports
     const {promptLoader, model} = require('./initializers/geminiClient');
     const {messageHandler} = require('./eventHandlers/messageHandler');
-    const checkForLegacyCommands = require('./eventHandlers/checkForLegacyCommands');
 
     // initialize stuff inside async thingy
     let discordClientReady = false;
@@ -100,11 +99,6 @@ async function main() {
             message,
             discordClient,
             global.geminiModel
-        )
-
-        await checkForLegacyCommands(
-            message,
-            discordClient
         )
     });
 

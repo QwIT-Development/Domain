@@ -28,5 +28,8 @@
     "https://http.cat/522.jpg",
     "nem elérhető az agyam, várj egy picit",
     "valami nem jó..."
-  ]
+  ],
+  "automatedMessage": "-# this is an automated message, do not reply",
+  "muteMessage": "You got muted with the reason: [REASON], for [TIME]s.",
+  "cantFindUser": ""
 }

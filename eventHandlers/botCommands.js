@@ -16,6 +16,7 @@ const { unlink } = require("fs/promises");
 const { reputation } = require("../utils/reputation");
 const searchHandler = require("./searchHandler");
 const { svgToPng } = require("../utils/svg2png");
+const strings = require("../data/strings.json");
 
 function getUserIdFromMuteMatch(match) {
     return match[1] || match[2];
@@ -99,6 +100,16 @@ async function parseBotCommands(string, message, gemini) {
                                 out = out.replace(commandText, "");
                                 log(`User ${userIdToMute} muted for ${time/1000}s. Reason: ${reason}`, 'info', 'botCommands.js');
                                 state.muteCount += 1;
+                                // mute penalty
+                                reputation(userIdToMute, "decrease").catch(e => log(`Reputation decrease failed: ${e}`, 'error', 'botCommands.js'));
+
+                                // dm user
+                                const user = await message.client.users.fetch(userIdToMute);
+                                await user.send({
+                                    content: `${strings.muteMessage.replace("[REASON]", `"${reason}"`).replace("[TIME]", time / 1000)}
+${strings.automatedMessage}`
+                                });
+
                             } else {
                                 log(`Mute failed: Member ${userIdToMute} not found after fetch.`, 'warn', 'botCommands.js');
                                 out = out.replace(commandText, `[Felhasználó nem található]`);
