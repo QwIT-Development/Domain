@@ -1,9 +1,7 @@
 # https://hub.docker.com/r/oven/bun/tags
 FROM oven/bun:alpine AS deps
 WORKDIR /app
-COPY package.json bun.lock ./
-COPY prisma ./prisma
-# don't add dev deps
+COPY ./package.json bun.lock ./
 RUN --mount=type=cache,target=/root/.bun/install/cache \
     bun install --frozen-lockfile
 
@@ -13,8 +11,8 @@ WORKDIR /app
 ENV DATABASE_URL="file:/app/data/running/db.sqlite"
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY prisma /app/prisma
-RUN bunx prisma migrate dev --name init
+COPY ./prisma /app/prisma
+RUN bunx prisma migrate dev --name buildtime
 
 RUN rm /app/data/running/db.sqlite
 RUN rm /app/data/running/db.sqlite-journal

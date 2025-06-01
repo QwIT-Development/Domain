@@ -5,6 +5,7 @@
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const state = require('../initializers/state');
 const usersCache = state.usersCache;
 const {reputationSet, reputation} = require('../utils/reputation');
 

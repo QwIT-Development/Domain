@@ -5,4 +5,3 @@ config.json
 pnpm-lock.yaml
 .idea
 .vscode
-prisma/migrations

@@ -14,4 +14,3 @@ bun-debug.log*
 data/running
 prompts
 prisma/*.sqlite*
-prisma/migrations
