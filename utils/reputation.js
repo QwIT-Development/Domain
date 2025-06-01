@@ -47,4 +47,27 @@ async function reputation(id, type = "") {
     }
 }
 
-module.exports = {reputation};
+// precise reputation setter
+async function reputationSet(id, value) {
+    if (!id) {
+        log(`Missing argument`, 'error', 'reputation.js');
+        return false;
+    }
+
+    const maxValue = 1000;
+
+    let user = await prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+        user = await prisma.user.create({ data: { id, repPoint: 0 } });
+    }
+
+    let newRep = value;
+    if (newRep > maxValue) {
+        newRep = maxValue;
+    }
+    await prisma.user.update({ where: { id }, data: { repPoint: newRep } });
+    return newRep;
+}
+
+module.exports = { reputation, reputationSet };

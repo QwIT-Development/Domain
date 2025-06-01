@@ -12,4 +12,7 @@ model User {
   repPoint Int @default(0)
   banned Boolean @default(false)
   banMessage String?
+  msgCount Int @default(0)
+  totalMsgCount Int @default(0)
+  bondLvl Int @default(0)
 }

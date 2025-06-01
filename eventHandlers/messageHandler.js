@@ -18,6 +18,7 @@ const uploadFilesToGemini = require('../eventHandlers/fileUploader');
 const config = require('../config.json');
 const {formatDate} = require('../functions/makePrompt');
 const {genAI} = require('../initializers/geminiClient');
+const {bondUpdater} = require('../functions/usageRep');
 
 async function messageHandler(message, client, gemini) {
     if (await checkAuthors(message, client)) {
@@ -169,6 +170,7 @@ async function messageHandler(message, client, gemini) {
 
             // clean history before sending message
             await trimHistory(channelId)
+            bondUpdater(message.author.id); // async should be ignored
             return await chunkedMsg(message, responseMsg);
         } else {
             state.msgCount += 1;
