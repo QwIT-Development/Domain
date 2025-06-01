@@ -1,21 +1,24 @@
 #!/bin/sh
 set -e
 
-echo "Bootstrapping, ignore the messages below"
-
-DB_FILE_PATH_IN_CONTAINER_FROM_ENV="$DATABASE_URL"
-DB_FILE_PATH_NO_PREFIX=$(echo "$DB_FILE_PATH_IN_CONTAINER_FROM_ENV" | sed 's/^file://')
-
-if [ "$(echo "$DB_FILE_PATH_NO_PREFIX" | cut -c1)" = "/" ]; then
-    DB_ABSOLUTE_FILE_PATH="$DB_FILE_PATH_NO_PREFIX"
-else
-    DB_ABSOLUTE_FILE_PATH="/app/$DB_FILE_PATH_NO_PREFIX"
+envpath="$DATABASE_URL"
+if [ -z "$envpath" ]; then
+    echo "Error: DATABASE_URL environment variable is not set."
+    exit 1
 fi
 
-DB_DIR=$(dirname "$DB_ABSOLUTE_FILE_PATH")
+normalized=$(echo "$envpath" | sed 's/^file://')
 
+if [ "$(echo "$normalized" | cut -c1)" = "/" ]; then
+    dbpath="$normalized"
+else
+    dbpath="/app/$normalized"
+fi
+
+DB_DIR=$(dirname "$dbpath")
 mkdir -p "$DB_DIR"
 bunx prisma migrate deploy
-echo "starting now."
 
+cd /app
+export CWD=/app
 exec "$@"
