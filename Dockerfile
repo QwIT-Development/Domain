@@ -12,20 +12,23 @@ RUN bunx prisma generate
 FROM oven/bun:alpine AS final
 WORKDIR /app
 
-ENV DATABASE_URL="file:./data/running/db.sqlite"
+ENV DATABASE_URL="file:/app/data/running/db.sqlite"
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/prisma ./prisma
 COPY . .
 
 RUN mkdir -p /app/data/running && \
-    chown -R bun:bun /app/data/running
-
-USER bun
-EXPOSE 4500/tcp
+    chown -R bun:bun /app/data/running && \
+    chmod a+rw /app/data/running
 
 COPY ./entry.sh /usr/local/bin/entry.sh
+COPY ./wrapper.sh /usr/local/bin/wrapper.sh
 RUN chmod +x /usr/local/bin/entry.sh
-ENTRYPOINT ["/usr/local/bin/entry.sh"]
+RUN chmod +x /usr/local/bin/wrapper.sh
 
+EXPOSE 4500/tcp
+
+USER root
+ENTRYPOINT ["/usr/local/bin/wrapper.sh"]
 CMD ["bun", "run", "index.js"]
