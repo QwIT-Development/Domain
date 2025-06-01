@@ -6,7 +6,7 @@
   "scripts": {
     "start": "bun run index.js"
   },
-  "version": "v0.0.5",
+  "version": "v0.1.0",
   "description": "Domain-Unchained, the discord bot that uses gemini api to generate messages",
   "main": "index.js",
   "license": "AGPL-3.0-or-later",
@@ -14,7 +14,7 @@
   "private": true,
   "dependencies": {
     "@discordjs/rest": "^2.5.0",
-    "@google/genai": "^0.15.0",
+    "@google/genai": "^1.0.1",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.8.2",
     "axios": "^1.9.0",
