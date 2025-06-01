@@ -16,8 +16,8 @@ async function model(history, showLog = true) {
 
     for (const channel in history) {
         models[channel] = {
-            temperature: config.ENABLE_THINKING ? 1.55 : 1,
-            topP: config.ENABLE_THINKING ? 1 : 0.9,
+            temperature: 1,
+            topP: 0.95,
             topK: 64,
             maxOutputTokens: 8192,
             responseModalities: [],
