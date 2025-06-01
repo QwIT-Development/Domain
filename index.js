@@ -131,7 +131,6 @@ ${error}
 
 async function gracefulShutdown(signal, client) {
     await initializeSpinner();
-    const {saveReps} = require('./utils/reputation');
 
     log(`Received ${signal}`, 'info');
     try {
@@ -140,7 +139,6 @@ async function gracefulShutdown(signal, client) {
         // mostmar nem kell global
         await botOffline(client);
         await client.destroy();
-        await saveReps();
         await deleteArtifacts();
         await deleteUploadedItems();
         await stopSpinner(true, "Domain-Unchained shutting down");

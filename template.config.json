@@ -10,7 +10,6 @@
   "WEBUI_PORT": 0,
   "OWNERS": [],
   "TIMINGS": {
-    "saveReps": 0,
     "resetPrompt": 0
   },
   "SEARX_BASE_URL": "",
