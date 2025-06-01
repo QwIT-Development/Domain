@@ -4,7 +4,8 @@
 */
 
 const {SlashCommandBuilder} = require('discord.js');
-const state = require('../initializers/state');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -12,20 +13,25 @@ module.exports = {
         .setDescription('Megmutatja, hogy tiltva vagy-e a használtattól'),
 
     async execute(interaction) {
-
         const userId = interaction.user.id;
         let banned = false;
         let reason = "";
-        /*
-        banlist format:
-        {
-            "userid": "sent brainrot messages like every 2 seconds",
-            "userid2": "please stop telling me that I'm an AI"
-        }
-         */
-        if (state.banlist[userId]) {
-            banned = true;
-            reason = state.banlist[userId];
+
+        try {
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+            });
+
+            if (user && user.banned) {
+                banned = true;
+                reason = user.banMessage || "";
+            }
+        } catch (error) {
+            await interaction.reply({
+                content: "Hiba történt a tiltási állapot lekérdezése közben.",
+                flags: ["Ephemeral"]
+            });
+            return;
         }
 
         if (!banned) {
@@ -34,7 +40,7 @@ module.exports = {
                 flags: [
                     "Ephemeral"
                 ]
-            })
+            });
         } else {
             await interaction.reply({
                 content: `A fiókod tiltva van a bot használatától.
@@ -43,7 +49,7 @@ TOS: https://mnus.moe/codex/domain/`,
                 flags: [
                     "Ephemeral"
                 ]
-            })
+            });
         }
     }
 };

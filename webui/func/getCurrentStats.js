@@ -1,12 +1,13 @@
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 const state = require("../../initializers/state");
-
 const getEntry = require("./getEntry");
-async function getCurrentStats() {
-    const userIds = Object.keys(state.reputation || {});
-    const banIds = Object.keys(state.banlist || {}); // this should fix issue, that doesn't show banned users if they didn't interacted with the bot
 
-    const ids = [... new Set([...userIds, ...banIds])];
-    const entryPromises = ids.map(async userId => getEntry(userId));
+async function getCurrentStats() {
+    const allUsers = await prisma.user.findMany();
+    const userIds = allUsers.map(user => user.id);
+
+    const entryPromises = userIds.map(async userId => getEntry(userId));
     const userEntries = (await Promise.all(entryPromises)).filter(entry => entry !== null);
 
     const mem = process.memoryUsage();

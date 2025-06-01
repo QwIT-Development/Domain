@@ -1,8 +1,7 @@
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 const state = require("../../initializers/state");
-const path = require("path");
-const fs = require("fs");
 const usersCache = state.usersCache;
-const dataDir = path.join(global.dirname, 'data', 'running');
 
 const ban = async (req) => {
     let id, reason;
@@ -17,15 +16,23 @@ const ban = async (req) => {
     if (!id || !reason) {
         return new Response(JSON.stringify({ error: 'Invalid request, missing id or reason' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
-    if (state.banlist[id]) {
+
+    const existingUser = await prisma.user.findUnique({ where: { id } });
+
+    if (existingUser && existingUser.banned) {
         return new Response(JSON.stringify({ error: 'User already banned' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
-    state.banlist[id] = reason;
+
+    await prisma.user.upsert({
+        where: { id },
+        update: { banned: true, banMessage: reason },
+        create: { id, banned: true, banMessage: reason },
+    });
+
     if (usersCache[id]) {
         delete usersCache[id];
     }
-    const banlistPath = path.join(dataDir, 'banlist.json');
-    fs.writeFileSync(banlistPath, JSON.stringify(state.banlist, null, 2));
+
     return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
 }
 

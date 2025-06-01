@@ -9,8 +9,6 @@ module.exports = {
     resetCounts: 0,
     history: {},
     memories: {},
-    reputation: {},
-    banlist: {},
     commandIds: {},
     isSleeping: false,
     emojis: {},
@@ -21,5 +19,5 @@ module.exports = {
     sleepCycleTimer: null,
     usersCache: {},
     wsClients: new Set(),
-    muteCount: 0
+    muteCount: 0,
 };

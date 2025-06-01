@@ -9,7 +9,8 @@ const jailbreaks = require('../data/jailbreaks.json');
 const strings = require('../data/strings.json');
 const log = require('../utils/betterLogs');
 const {splitFuzzySearch} = require('../utils/fuzzySearch');
-const state = require('../initializers/state');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 
 /**
@@ -41,8 +42,13 @@ async function checkAuthors(message, client) {
     if (message.content.startsWith('//')) return false;
 
     // don't allow banned users
-    if (state.banlist[message.author.id]) {
-        return false;
+    try {
+        const user = await prisma.user.findUnique({ where: { id: message.author.id } });
+        if (user && user.banned) {
+            return false; // User is banned
+        }
+    } catch (error) {
+        return false; // fallback
     }
 
     // anti-jailbreak thing

@@ -3,11 +3,9 @@
         Copyright (C) 2025  BalazsManus
 */
 
-const state = require('../initializers/state');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 const log = require('../utils/betterLogs');
-const fs = require('fs');
-const path = require('path');
-const db = state.reputation;
 const config = require('../config.json');
 
 /**
@@ -21,51 +19,32 @@ async function reputation(id, type = "") {
         log(`Missing argument`, 'error', 'reputation.js');
         return false;
     }
-    if (!type) {
-        type = "";
-    }
 
     const maxValue = 1000;
 
-    const user = db[id] ? id : null;
+    let user = await prisma.user.findUnique({ where: { id } });
+
     if (!user) {
-        // create empty entry if user isn't existing already
-        db[id] = 0;
+        user = await prisma.user.create({ data: { id, repPoint: 0 } });
     }
 
     if (type === "increase") {
-        db[id] = db[id] + 1;
-        if (db[id] > maxValue) {
-            db[id] = 1000;
+        let newRep = user.repPoint + 1;
+        if (newRep > maxValue) {
+            newRep = maxValue;
         }
+        await prisma.user.update({ where: { id }, data: { repPoint: newRep } });
+        return newRep;
     } else if (type === "decrease") {
-        db[id] = db[id] - 1;
-        if (db[id] < -maxValue) {
-            db[id] = -1000;
+        let newRep = user.repPoint - 1;
+        if (newRep < -maxValue) {
+            newRep = -maxValue;
         }
+        await prisma.user.update({ where: { id }, data: { repPoint: newRep } });
+        return newRep;
     } else {
-        return db[id];
+        return user.repPoint;
     }
-
-    return db[id];
 }
 
-//cron job 2 save out rep to file from state
-async function saveReps() {
-    const filePath = path.join(global.dirname, 'data', 'running', 'reputation.json');
-
-    try {
-        // legyszives, legalabb olvashato legyen a -4-es szememnek
-        fs.writeFileSync(filePath, JSON.stringify(db, null, 4), 'utf8');
-    } catch (e) {
-        log(`Failed to save reputation file: ${e}`, 'error', 'reputation.js');
-        return false;
-    }
-    return true;
-}
-
-setInterval(async () => {
-    await saveReps();
-}, config.TIMINGS.saveReps * 1000);
-
-module.exports = {reputation, saveReps};
+module.exports = {reputation};

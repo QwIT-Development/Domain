@@ -46,60 +46,6 @@ async function initData() {
         "userid2": []
     }
      */
-
-
-    // create reputation table
-    // noinspection JSUnresolvedReference
-    const reputationPath = path.join(dataDir, 'reputation.json');
-    let reputation = {};
-    if (!fs.existsSync(reputationPath)) {
-        log('Creating reputation "db"', 'info', 'initData.js');
-        await fs.writeFileSync(reputationPath, JSON.stringify(reputation));
-        // {}
-        state.reputation = reputation;
-    } else {
-        try {
-            reputation = JSON.parse(fs.readFileSync(reputationPath, 'utf8'));
-        } catch (e) {
-            log(`Failed to parse reputation file: ${e}`, 'error', 'initData.js');
-        }
-        state.reputation = reputation;
-    }
-
-    /*
-    reputations will look like this:
-    {
-        "userid": 0,
-        "userid2": -1000
-    }
-     */
-
-    // create banlist
-    // noinspection JSUnresolvedReference
-    const banlistPath = path.join(dataDir, 'banlist.json');
-    let banlist = {};
-    if (!fs.existsSync(banlistPath)) {
-        console.info('Creating banlist');
-        await fs.writeFileSync(banlistPath, JSON.stringify(banlist));
-        // useless, bc it is already inited like this, but i put this here
-        state.banlist = banlist;
-    } else {
-        try {
-            banlist = JSON.parse(fs.readFileSync(banlistPath, 'utf8'));
-        } catch (e) {
-            log(`Failed to parse banlist file: ${e}`, 'error', 'initData.js');
-        }
-        state.banlist = banlist;
-    }
-
-    /*
-    banlist format:
-    {
-        "userid": "sent brainrot messages like every 2 seconds",
-        "userid2": "please stop telling me that I'm an AI"
-    }
-     */
-
 }
 
 module.exports = initData;

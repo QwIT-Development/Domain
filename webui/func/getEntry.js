@@ -1,49 +1,54 @@
 const config = require("../../config.json");
 const state = require("../../initializers/state");
-
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 const getUserInfo = require("./getUserInfo");
 const usersCache = state.usersCache;
 
 async function getEntry(userId) {
     const now = Date.now();
-    let entry = usersCache[userId];
-    let needsRefresh = false;
+    let cachedUserInfo = usersCache[userId];
+    let needsAPIRefresh = false;
 
-    if (!entry || (now - entry.lastUpdated > config.TIMINGS.userCacheDuration)) {
-        needsRefresh = true;
+    if (!cachedUserInfo || (now - cachedUserInfo.lastUpdated > config.TIMINGS.userCacheDuration)) {
+        needsAPIRefresh = true;
     }
 
-    let userInfo = null;
-    if (needsRefresh) {
-        userInfo = await getUserInfo(userId);
-        if (userInfo) {
-            entry = {
-                id: userId,
-                username: userInfo.username,
-                avatarUrl: userInfo.avatarUrl,
+    let apiUserInfo = null;
+    if (needsAPIRefresh) {
+        apiUserInfo = await getUserInfo(userId);
+        if (apiUserInfo) {
+            cachedUserInfo = {
+                // id: userId
+                username: apiUserInfo.username,
+                avatarUrl: apiUserInfo.avatarUrl,
                 lastUpdated: now,
-                // this shouldn't fail, but if it does fail we just return 0
-                score: state.reputation[userId] || 0,
-                banReason: state.banlist[userId] || null,
             };
-            usersCache[userId] = entry;
+            usersCache[userId] = cachedUserInfo;
         } else {
-            if (entry) {
-                entry.lastUpdated = now;
+            if (cachedUserInfo) {
+                cachedUserInfo.lastUpdated = now;
             } else {
-                entry = {
-                    id: userId,
+                cachedUserInfo = {
                     username: 'Unknown',
                     avatarUrl: null,
                     lastUpdated: now,
-                    score: state.reputation[userId] || 0,
-                    banReason: state.banlist[userId] || null,
                 };
-                usersCache[userId] = entry;
+                usersCache[userId] = cachedUserInfo;
             }
         }
     }
-    return entry;
+
+    const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+
+    return {
+        id: userId,
+        username: cachedUserInfo.username,
+        avatarUrl: cachedUserInfo.avatarUrl,
+        lastUpdated: cachedUserInfo.lastUpdated,
+        score: dbUser ? dbUser.repPoint : 0,
+        banReason: dbUser && dbUser.banned ? dbUser.banMessage : null,
+    };
 }
 
 module.exports = getEntry;
