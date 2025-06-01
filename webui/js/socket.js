@@ -54,6 +54,12 @@ function createCard(user, cardType) {
         scoreDiv.appendChild(scoreLabel);
         scoreDiv.appendChild(scoreInput);
 
+        const bondLvlP = document.createElement('p');
+        bondLvlP.textContent = `Bond Level: ${user.bondLvl}`;
+
+        const totalMsgP = document.createElement('p');
+        totalMsgP.textContent = `Total Messages: ${user.totalMsgCount}`;
+
         const saveButton = document.createElement('button');
         saveButton.type = 'button';
         saveButton.className = 'btn btn-outline-primary';
@@ -91,6 +97,8 @@ function createCard(user, cardType) {
         };
 
         cardBody.appendChild(scoreDiv);
+        cardBody.appendChild(bondLvlP);
+        cardBody.appendChild(totalMsgP);
         cardBody.appendChild(saveButton);
     } else if (cardType === 'ban') {
         const reasonDiv = document.createElement('div');

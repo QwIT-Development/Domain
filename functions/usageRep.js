@@ -39,7 +39,7 @@ async function calcRequiredMsgs(bondLvl) {
 
 async function bondUpdater(userId) {
     // the user should already exist at this point
-    const user = await prisma.user.findUnique({ where: { id } });
+    const user = await prisma.user.findUnique({ where: { id: userId } });
     const msgCount = user.msgCount || 0;
     const totalMsgCount = user.totalMsgCount || 0;
     await prisma.user.update({
@@ -62,8 +62,8 @@ async function bondUpdater(userId) {
         const currentRep = await reputation(userId);
         const newRep = currentRep + currentBondLvl + 1;
         await reputationSet(userId, newRep);
-        if (usersCache[id]) {
-            delete usersCache[id];
+        if (usersCache[userId]) {
+            delete usersCache[userId];
         }
     }
 }

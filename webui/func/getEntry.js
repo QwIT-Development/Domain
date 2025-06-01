@@ -48,6 +48,8 @@ async function getEntry(userId) {
         lastUpdated: cachedUserInfo.lastUpdated,
         score: dbUser ? dbUser.repPoint : 0,
         banReason: dbUser && dbUser.banned ? dbUser.banMessage : null,
+        bondLvl: dbUser ? dbUser.bondLvl : 0,
+        totalMsgCount: dbUser ? dbUser.totalMsgCount : 0
     };
 }
 

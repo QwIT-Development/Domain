@@ -26,6 +26,8 @@ async function getCurrentStats() {
             avatarUrl: entry.avatarUrl,
             score: entry.score,
             banReason: entry.banReason,
+            bondLvl: entry.bondLvl,
+            totalMsgCount: entry.totalMsgCount
         })) || [],
         muteCount: state.muteCount,
         logs: state.logs.toReversed() || [],
