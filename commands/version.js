@@ -9,11 +9,11 @@ const state = require('../initializers/state');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('version')
-        .setDescription('Kiírja a bot verzióját.'),
+        .setDescription('Shows the current version of the instance.'),
 
     async execute(interaction) {
         await interaction.reply({
-            content: `Bejegyzett verzió: ${state.version}`,
+            content: `Version in package.json: ${state.version}`,
             flags: [
                 "Ephemeral"
             ]

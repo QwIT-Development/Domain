@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('am_i_banned')
-        .setDescription('Megmutatja, hogy tiltva vagy-e a használtattól'),
+        .setDescription('Shows if you are banned from using the bot.'),
 
     async execute(interaction) {
         const userId = interaction.user.id;
@@ -28,7 +28,7 @@ module.exports = {
             }
         } catch (error) {
             await interaction.reply({
-                content: "Hiba történt a tiltási állapot lekérdezése közben.",
+                content: "Couldn't check your status. Please try again later.",
                 flags: ["Ephemeral"]
             });
             return;
@@ -36,15 +36,15 @@ module.exports = {
 
         if (!banned) {
             await interaction.reply({
-                content: `A fiókod használhatja a botot.`,
+                content: `Your account can use the bot.`,
                 flags: [
                     "Ephemeral"
                 ]
             });
         } else {
             await interaction.reply({
-                content: `A fiókod tiltva van a bot használatától.
-Ok: \`${reason}\`
+                content: `Your account is banned from using the bot.
+Reason: \`${reason}\`
 TOS: https://mnus.moe/codex/domain/`,
                 flags: [
                     "Ephemeral"

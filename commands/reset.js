@@ -11,12 +11,12 @@ const config = require('../config.json');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('reset')
-        .setDescription('Alaphelyzetbe állítja a bot előzményeit.'),
+        .setDescription('Resets the bot\'s history for the current channel.'),
 
     async execute(interaction) {
         if (config.OWNERS.includes(interaction.user.id)) {
             await interaction.reply({
-                content: 'Alaphelyzetbe állítás...',
+                content: 'Resetting history...',
                 flags: [
                     "Ephemeral"
                 ]
@@ -27,10 +27,10 @@ module.exports = {
             // add +1 to lobotomization count
             state.resetCounts += 1;
 
-            await interaction.editReply('Alaphelyzetbe állítva!');
+            await interaction.editReply('History reset!');
         } else {
             await interaction.reply({
-                content: 'Nincs jogod használni ezt a parancsot!',
+                content: 'You have no permission to use this command.',
                 flags: [
                     "Ephemeral"
                 ]

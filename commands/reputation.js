@@ -9,17 +9,17 @@ const {reputation} = require('../utils/reputation');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('reputation')
-        .setDescription('Kiírja a reputáció pontjaid.'),
+        .setDescription('Shows you reputation score.'),
 
     async execute(interaction) {
         const score = await reputation(interaction.user.id);
 
-        let content = `Reputációs pontjaid: ${score.toString()}\n`;
+        let content = `Reputation score: ${score.toString()}\n`;
         if (score < 0) {
-            content += `Az egészséges pontszám eléréséhez még kell ${Math.abs(score).toString()} pont!\n`;
+            content += `You need ${Math.abs(score).toString()} more points for a healthy score!\n`;
         }
-        content += `A 100%-oláshoz még kell ${(1000 - score).toString()} pont!\n`;
-        content += `Jelenlegi állásod: ${Math.floor((score / 1000) * 100).toString()}%`;
+        content += `You need ${(1000 - score).toString()} points until you 100% the bot.\n`;
+        content += `Current completion: ${Math.floor((score / 1000) * 100).toString()}%`;
 
         await interaction.reply({
             content: content,
