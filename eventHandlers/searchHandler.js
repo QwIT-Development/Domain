@@ -10,7 +10,7 @@ const config = require("../config.json");
 const {genAI} = require("../initializers/geminiClient");
 
 async function searchHandler(str, channelId, gemini) {
-    const results = await search(str);
+    const results = await search(str, genAI);
     await addToHistory('user', results, channelId);
     await addToHistory('user', "Please analyze these search results and continue our conversation.", channelId);
     const continuation = await genAI.models.generateContentStream({
