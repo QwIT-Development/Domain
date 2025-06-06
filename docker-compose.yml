@@ -8,7 +8,8 @@ services:
       - 4500:4500
     volumes:
       # you may want to change the configuration
-      - ./config.json:/app/config.json:ro
+      # config.json should no longer be read only, because of webui configurator
+      - ./config.json:/app/config.json
       # this should stay modifiable
       - ./data:/app/data/running
       # path to u r prompts
