@@ -1,4 +1,3 @@
-
 let currentConfig = null;
 
 async function loadCurrentConfig() {
@@ -105,6 +104,15 @@ function populatePromptMappings() {
         const mapping = createMappingElement(channelId, promptId, 'channelPromptMappings');
         container.appendChild(mapping);
     });
+
+    // Ensure dropdowns reflect existing data
+    updateDropdowns();
+
+    // Ensure dropdowns are created even if PROMPT_PATHS is empty
+    if (Object.keys(currentConfig.PROMPT_PATHS).length === 0) {
+        const mapping = createMappingElement('', '', 'channelPromptMappings');
+        container.appendChild(mapping);
+    }
 }
 
 function populateWikiMappings() {
@@ -271,9 +279,11 @@ function createAlert(message, type) {
 document.addEventListener('DOMContentLoaded', loadCurrentConfig);
 
 window.saveConfiguration = async function () {
+    let originalText = null;
     try {
         const validationErrors = validateConfiguration();
         if (validationErrors.length > 0) {
+            console.error('Validation Errors:', validationErrors);
             const errorMessage = 'Please fix the following errors before saving:\n\n' +
                 validationErrors.map(error => '• ' + error).join('\n');
             const alertDiv = createAlert(errorMessage.replace(/\n/g, '<br>'), 'warning');
@@ -283,8 +293,8 @@ window.saveConfiguration = async function () {
         }
 
         const saveButton = document.querySelector('button[onclick="saveConfiguration()"]');
-        const originalText = saveButton?.innerHTML;
         if (saveButton) {
+            originalText = saveButton.innerHTML;
             saveButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
             saveButton.disabled = true;
         }
@@ -454,11 +464,9 @@ function collectFormData() {
         }
     });
     data.REMOTE_LISTS = remoteLists;
-
-
     const promptPaths = {};
-    const channelSelects = document.querySelectorAll('.channel-select');
-    const promptSelects = document.querySelectorAll('.prompt-select');
+    const channelSelects = document.querySelectorAll('select[name="channelPromptMappings[][channelId]"]');
+    const promptSelects = document.querySelectorAll('select[name="channelPromptMappings[][value]"]');
 
     for (let i = 0; i < channelSelects.length; i++) {
         const channelId = channelSelects[i].value;
@@ -469,10 +477,8 @@ function collectFormData() {
         }
     }
     data.PROMPT_PATHS = promptPaths;
-
-
     const wikiUrls = {};
-    const wikiChannelSelects = document.querySelectorAll('.channel-select-wiki');
+    const wikiChannelSelects = document.querySelectorAll('select[name="wikiUrls[][channelId]"]');
     const wikiUrlTextareas = document.querySelectorAll('textarea[name="wikiUrls[][urls]"]');
 
     for (let i = 0; i < wikiChannelSelects.length; i++) {
@@ -487,7 +493,6 @@ function collectFormData() {
         }
     }
     data.WIKI_URLS = wikiUrls;
-
 
     const emojis = {};
     const emojiInputs = document.querySelectorAll('input[name^="emojis["]');
@@ -548,9 +553,7 @@ function collectFormData() {
 
     if (geminiApiKey && geminiApiKey.trim() && !geminiApiKey.includes('Current API key is set')) {
         data.GEMINI_API_KEY = geminiApiKey.trim();
-    }
-
-    return data;
+    }    return data;
 }
 
 function createAlert(message, type = 'info') {
@@ -588,7 +591,7 @@ function validateConfiguration() {
 
     const sleepingRange = document.getElementById('sleepingRange')?.value;
     if (sleepingRange) {
-        const rangeRegex = /^\d{2}:\d{2}-\d{2}:\d{2}$/;
+        const rangeRegex = /^(\d{2}|\d{1}):\d{2}-(\d{2}|\d{1}):\d{2}$/;
         if (!rangeRegex.test(sleepingRange)) {
             errors.push('Sleeping Range must be in format HH:MM-HH:MM (e.g., 22:30-06:00)');
         } else {
@@ -603,6 +606,11 @@ function validateConfiguration() {
                 endMinute < 0 || endMinute > 59
             ) {
                 errors.push('Sleeping Range contains invalid time values');
+            } else if (
+                (startHour > endHour || (startHour === endHour && startMinute >= endMinute)) &&
+                !(startHour > endHour && endHour < startHour) // Allow ranges spanning midnight
+            ) {
+                errors.push('Sleeping Range start time must be earlier than end time');
             }
         }
     }
@@ -714,10 +722,8 @@ function validateConfiguration() {
             });
         }
     });
-
-
-    const channelSelects = document.querySelectorAll('.channel-select');
-    const promptSelects = document.querySelectorAll('.prompt-select');
+    const channelSelects = document.querySelectorAll('select[name="channelPromptMappings[][channelId]"]');
+    const promptSelects = document.querySelectorAll('select[name="channelPromptMappings[][value]"]');
     const usedChannels = new Set();
 
     for (let i = 0; i < channelSelects.length; i++) {
