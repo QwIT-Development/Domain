@@ -35,5 +35,6 @@
     }
   ],
   "REMOTE_LISTS": [],
-  "TOS_URL": ""
+  "TOS_URL": "",
+  "CUMULATIVE_MODE": "classic"
 }

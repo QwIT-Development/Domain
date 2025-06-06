@@ -8,6 +8,7 @@ const prisma = new PrismaClient();
 const state = require('../initializers/state');
 const usersCache = state.usersCache;
 const {reputationSet, reputation} = require('../utils/reputation');
+const config = require('../config.json');
 
 const firstGiftCount = 10;
 const exponent = 1.8;
@@ -25,7 +26,25 @@ async function calcRequiredMsgs(bondLvl) {
     if (bondLvl === 1) {
         return firstGiftCount;
     }
-    const required = firstGiftCount + Math.pow(bondLvl - 1, exponent) * scalingFactor;
+    
+    let required;
+    const cumulativeMode = config.CUMULATIVE_MODE || 'classic';
+    
+    switch (cumulativeMode) {
+        case 'classic':
+            required = 10 + Math.pow(bondLvl - 1, 1.8) * 5;
+            break;
+        case 'noise':
+            required = 10 + 1.5 * Math.pow(bondLvl - 1, 1.3) + 5 * Math.sin(0.8 * bondLvl) + 3 * Math.cos(1.5 * bondLvl + Math.PI / 2) + 2 * Math.sin(2.5 * bondLvl + Math.PI / 3);
+            break;
+        case 'worse':
+            required = 10 + 1.2 * Math.pow(bondLvl - 1, 1.45) + (3 + 2 * Math.sin(0.3 * bondLvl + Math.PI / 7)) * Math.sin(1.1 * bondLvl + bondLvl / 5) + 4 * Math.cos(2.5 * bondLvl - Math.pow(bondLvl, 1.1) / 3 + Math.PI / 3) + 2.5 * Math.sin(7 * bondLvl) * Math.cos(0.6 * bondLvl + Math.PI / 5) + 1.8 * Math.sin(12 * bondLvl + 3 * Math.cos(bondLvl)) - 0.1 * bondLvl * Math.sin(0.2 * bondLvl);
+            break;
+        default:
+            required = 10 + Math.pow(bondLvl - 1, 1.8) * 5; // fallback, if user didn't set mode
+            break;
+    }
+    
     return Math.ceil(required);
     /*
     bond lvl 1: 10 messages
