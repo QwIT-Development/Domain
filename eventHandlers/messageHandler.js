@@ -138,24 +138,50 @@ async function messageHandler(message, client, gemini) {
                     return await message.channel.send(await RNGArray(strings.geminiTooManyReqs));
                 } else if (status && (status === 503)) {
                     return await message.channel.send(await RNGArray(strings.geminiGatewayUnavail));
+                } else if (status && (status === 500)) {
+                    // should do a retry, like a complete retry after 3 secs, for good
+                    log(`Gemini returned 500, retrying`, 'warn', 'messageHandler.js');
+                    
+                    // init retry counts for the channel
+                    if (!state.retryCounts[channelId]) {
+                        state.retryCounts[channelId] = 0;
+                    }
+                    state.retryCounts[channelId]++;
+
+                    if (state.retryCounts[channelId] > 5) {
+                        log(`Gemini returned 500 error 5 times for channel ${channelId}, dropping task`, 'error', 'messageHandler.js');
+                        state.retryCounts[channelId] = 0;
+                        return await message.channel.send("Couldn't get a response, try again later.");
+                    }
+
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    return await messageHandler(message, client, gemini);
                 } else {
                     // generic err handler
+                    // reset err counts too
+                    if (state.retryCounts[channelId]) {
+                        state.retryCounts[channelId] = 0;
+                    }
                     log(e, 'error', 'messageHandler.js');
                     console.log(e.stack);
-                    return await message.channel.send("Hiba történt. (Refer to console)");
+                    return await message.channel.send("Unhandled error. (Refer to console)");
                 }
             }
 
             responseMsg = responseMsg.replaceAll('@everyone', '[blocked :3]');
             responseMsg = responseMsg.replaceAll('@here', '[blocked :3]');
 
-            // TODO: parse commands from bot
+            // removed todo message from here
             responseMsg = await parseBotCommands(responseMsg, message, gemini);
 
             // try to remove schizophrenic context repeations
             // i really hope this works
             responseMsg = responseMsg.replaceAll(/replied to \[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
             responseMsg = responseMsg.replaceAll(/\[reputation score: ?\S*] ?\[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
+            // if success we remove retry counts for the channel
+            if (state.retryCounts[channelId]) {
+                state.retryCounts[channelId] = 0;
+            }
             if (repliedTo) {
                 responseMsg = responseMsg.replaceAll(`${repliedTo.author.username}:`, "").trim();
                 responseMsg = responseMsg.replaceAll(`${repliedTo.author.username.toLowerCase()}:`, "").trim();
