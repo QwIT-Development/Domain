@@ -16,6 +16,8 @@ const lobotomizeHandler = require('./api/lobotomize');
 const repSaveHandler = require('./api/repSave');
 const gcHandler = require('./api/gc.js');
 const heapdumpHandler = require('./api/heapdump');
+const currentConfigHandler = require('./api/currentConfig');
+const saveConfigHandler = require('./api/saveConfig');
 
 const wsConn = require('./func/wsConn');
 const broadcastStats = require('./func/broadcastStats');
@@ -26,6 +28,36 @@ const staticCSSPath = path.join(global.dirname, 'webui', 'css');
 const staticJSPath = path.join(global.dirname, 'webui', 'js');
 
 let statsInterval = null;
+
+async function getPromptsData() {
+    try {
+        const promptsDir = path.join(global.dirname, 'prompts');
+
+        if (!fs.existsSync(promptsDir)) {
+            return [];
+        }
+
+        const files = fs.readdirSync(promptsDir);
+        const prompts = [];
+
+        files.forEach((file) => {
+            if (file.endsWith('.md') || file.endsWith('.txt')) {
+                const name = file.replace(/\.(md|txt)$/i, '');
+
+                prompts.push({
+                    id: file,
+                    name: name
+                });
+            }
+        });
+
+        prompts.sort((a, b) => a.name.localeCompare(b.name));
+        return prompts;
+    } catch (error) {
+        log(`Error fetching prompts: ${error}`, 'error', 'webui.js');
+        return [];
+    }
+}
 
 const server = Bun.serve({
     port: config.WEBUI_PORT,
@@ -65,8 +97,11 @@ const server = Bun.serve({
                 const filePath = path.join(viewsPath, 'bans.ejs');
                 const html = await ejs.renderFile(filePath);
                 return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+            } else if (pathname === '/configuration') {
+                const filePath = path.join(viewsPath, 'configuration.ejs');
+                const html = await ejs.renderFile(filePath);
+                return new Response(html, { headers: { 'Content-Type': 'text/html' } });
             }
-
             // API Routes
             else if (pathname.startsWith('/api/')) {
                 if (req.method === 'DELETE' && pathname.startsWith('/api/unban/')) {
@@ -81,6 +116,14 @@ const server = Bun.serve({
                     return await gcHandler(req);
                 } else if (req.method === 'GET' && pathname === '/api/heap/dump.heapsnapshot') {
                     return await heapdumpHandler(req);
+                } else if (req.method === 'GET' && pathname === '/api/prompts') {
+                    return new Response(JSON.stringify(await getPromptsData()), {
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                } else if (req.method === 'GET' && pathname === '/api/currentConfig') {
+                    return await currentConfigHandler(req);
+                } else if (req.method === 'POST' && pathname === '/api/saveConfig') {
+                    return await saveConfigHandler(req);
                 }
             }
 
@@ -104,7 +147,7 @@ const server = Bun.serve({
                     log(`Received message from client (This shouldn't happen): ${JSON.stringify(parsedMessage)}`, 'warn', 'webui.js (WebSocket)');
                 }
             } catch (e) {
-                 log(`Received message from client (This shouldn't happen): ${message}`, 'warn', 'webui.js (WebSocket)');
+                log(`Received message from client (This shouldn't happen): ${message}`, 'warn', 'webui.js (WebSocket)');
             }
         },
         pong(ws, data) {

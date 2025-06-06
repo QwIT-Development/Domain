@@ -1,5 +1,635 @@
 <%- include('partials/head') %>
-<main class="container mt-4">
 
-</main>
-<%- include('partials/footer') %>
+    <main class="container mt-4">
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1>Configuration</h1>
+                    <div>
+                        <button type="button" class="btn btn-primary me-2" onclick="loadCurrentConfig()">
+                            <span class="material-symbols-rounded">refresh</span> Load Current Config
+                        </button>
+                        <button type="button" class="btn btn-info me-2" onclick="previewConfiguration()">
+                            <span class="material-symbols-rounded">preview</span> Preview
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="saveConfiguration()">
+                            <span class="material-symbols-rounded">save</span> Save Configuration
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100">
+                    <p class="card-header">Discord Bot Token</p>
+                    <div class="card-body">
+                        <p class="card-text"><a href="https://discord.com/developers/applications"
+                                target="_blank">Discord Developer Portal</a></p>
+                        <div class="mb-3">
+                            <input type="password" class="form-control" id="botToken" name="botToken"
+                                placeholder="uid64.epoch64.hmac">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100">
+                    <p class="card-header">Gemini API Key</p>
+                    <div class="card-body">
+                        <p class="card-text">Get your token at <a href="https://aistudio.google.com/apikey"
+                                target="_blank">Google AI Studio</a></p>
+                        <div class="mb-3">
+                            <input type="password" class="form-control" id="geminiAPIKey" name="geminiAPIKey"
+                                placeholder="Enter your Gemini API key">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card h-100">
+                    <p class="card-header">Gemini Model</p>
+                    <div class="card-body">
+                        <p class="card-text">Supported models: <a
+                                href="https://ai.google.dev/gemini-api/docs/models/#model-variations"
+                                target="_blank">Documentation</a></p>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="geminiModelId" name="geminiModelId"
+                                placeholder="gemini-2.0-flash-exp">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row mb-3">
+            <div class="col-12 col-lg-6">
+                <div class="card h-100">
+                    <p class="card-header">Bot Aliases</p>
+                    <div class="card-body">
+                        <p class="card-text">Names the bot will respond to</p>
+                        <div id="aliasesContainer">
+                            <div class="mb-3" style="display: flex; gap: 8px;">
+                                <input type="text" class="form-control" name="aliases[]" placeholder="Domain"
+                                    style="flex: 1;">
+                                <button type="button" class="btn btn-success"
+                                    onclick="addField('aliasesContainer', 'aliases[]', 'Domain', 'text')">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-6">
+                <div class="card h-100">
+                    <p class="card-header">Active Channels</p>
+                    <div class="card-body">
+                        <p class="card-text">Channel IDs where the bot should respond</p>
+                        <div id="channelsContainer">
+                            <div class="mb-3" style="display: flex; gap: 8px;">
+                                <input type="number" class="form-control" name="channels[]"
+                                    placeholder="1234567890123456789" style="flex: 1;">
+                                <button type="button" class="btn btn-success"
+                                    onclick="addField('channelsContainer', 'channels[]', '1234567890123456789', 'number')">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <p class="card-header">Bot Owners</p>
+                    <div class="card-body">
+                        <p class="card-text">Discord user IDs of bot owners (these users have admin privileges)</p>
+                        <div id="ownersContainer">
+                            <div class="mb-3" style="display: flex; gap: 8px;">
+                                <input type="number" class="form-control" name="owners[]"
+                                    placeholder="710839743222513715" style="flex: 1;">
+                                <button type="button" class="btn btn-success"
+                                    onclick="addField('ownersContainer', 'owners[]', '710839743222513715', 'number')">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <p class="card-header">Channel-Prompt Mapping</p>
+                    <div class="card-body">
+                        <p class="card-text">Map specific channels to custom prompts</p>
+                        <div id="promptMappingContainer">
+                            <div class="mb-3" style="display: flex; gap: 8px; align-items: flex-start;">
+                                <div style="flex: 1;">
+                                    <label class="form-label">Channel</label>
+                                    <select class="form-control channel-select"
+                                        name="channelPromptMappings[][channelId]">
+                                        <option value="">Select a channel...</option>
+                                    </select>
+                                </div>
+                                <div style="flex: 1;">
+                                    <label class="form-label">Prompt</label>
+                                    <select class="form-control prompt-select" name="channelPromptMappings[][promptId]">
+                                        <option value="">Select a prompt...</option>
+                                    </select>
+                                </div>
+                                <div style="align-self: flex-end;">
+                                    <button type="button" class="btn btn-success"
+                                        onclick="addPromptMapping()">Add</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row mb-3">
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card h-100">
+                    <p class="card-header">Locale</p>
+                    <div class="card-body">
+                        <p class="card-text">Language/region setting</p>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="locale" name="locale" placeholder="en-US">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card h-100">
+                    <p class="card-header">Web UI Port</p>
+                    <div class="card-body">
+                        <p class="card-text">Port for web interface</p>
+                        <div class="mb-3">
+                            <input type="number" class="form-control" id="webuiPort" name="webuiPort" placeholder="4500"
+                                min="1" max="65535">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card h-100">
+                    <p class="card-header">Max Messages</p>
+                    <div class="card-body">
+                        <p class="card-text">Maximum messages to store</p>
+                        <div class="mb-3">
+                            <input type="number" class="form-control" id="maxMessages" name="maxMessages"
+                                placeholder="200" min="1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-12 col-md-6">
+                <div class="card h-100">
+                    <p class="card-header">Sleeping Range</p>
+                    <div class="card-body">
+                        <p class="card-text">Time range when bot is less active (HH:MM-HH:MM)</p>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="sleepingRange" name="sleepingRange"
+                                placeholder="22:30-6:00" pattern="[0-9]{2}:[0-9]{2}-[0-9]{2}:[0-9]{2}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="card h-100">
+                    <p class="card-header">Search Base URL</p>
+                    <div class="card-body">
+                        <p class="card-text">Base URL for search functionality</p>
+                        <div class="mb-3">
+                            <input type="url" class="form-control" id="searxBaseUrl" name="searxBaseUrl"
+                                placeholder="https://search.example.com">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row mb-3">
+            <div class="col-12 col-md-6">
+                <div class="card h-100">
+                    <p class="card-header">Remote Lists</p>
+                    <div class="card-body">
+                        <p class="card-text">URLs for remote configuration lists</p>
+                        <div id="remoteListsContainer">
+                            <div class="mb-3" style="display: flex; gap: 8px;">
+                                <input type="url" class="form-control" name="remoteLists[]"
+                                    placeholder="https://example.com/list.txt" style="flex: 1;">
+                                <button type="button" class="btn btn-success"
+                                    onclick="addField('remoteListsContainer', 'remoteLists[]', 'https://example.com/list.txt', 'url')">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="card h-100">
+                    <p class="card-header">Additional Settings</p>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Terms of Service URL</label>
+                            <input type="url" class="form-control" id="tosUrl" name="tosUrl"
+                                placeholder="https://example.com/tos">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cumulative Mode</label>
+                            <select class="form-control" id="cumulativeMode" name="cumulativeMode">
+                                <option value="">Select mode...</option>
+                                <option value="classic">Classic</option>
+                                <option value="noise">Noise</option>
+                                <option value="worse">Worse</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="enableThinking"
+                                    name="enableThinking">
+                                <label class="form-check-label" for="enableThinking">
+                                    Enable thinking mode for enhanced responses
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <p class="card-header">Custom Emojis</p>
+                    <div class="card-body">
+                        <p class="card-text">Custom emoji IDs for bot reactions</p>
+                        <div class="row">
+                            <div class="col-sm-6 col-md-4 col-lg-3 mb-3">
+                                <label class="form-label">Uploaded</label>
+                                <input type="number" class="form-control" name="emojis[uploaded]"
+                                    placeholder="1356265811224039627">
+                            </div>
+                            <div class="col-sm-6 col-md-4 col-lg-3 mb-3">
+                                <label class="form-label">Upvote</label>
+                                <input type="number" class="form-control" name="emojis[upvote]"
+                                    placeholder="1356265801317093600">
+                            </div>
+                            <div class="col-sm-6 col-md-4 col-lg-3 mb-3">
+                                <label class="form-label">Downvote</label>
+                                <input type="number" class="form-control" name="emojis[downvote]"
+                                    placeholder="1356265789405003796">
+                            </div>
+                            <div class="col-sm-6 col-md-4 col-lg-3 mb-3">
+                                <label class="form-label">Search</label>
+                                <input type="number" class="form-control" name="emojis[search]"
+                                    placeholder="1356265779695321152">
+                            </div>
+                            <div class="col-sm-6 col-md-4 col-lg-3 mb-3">
+                                <label class="form-label">Mute</label>
+                                <input type="number" class="form-control" name="emojis[mute]"
+                                    placeholder="1356265764100898826">
+                            </div>
+                            <div class="col-sm-6 col-md-4 col-lg-3 mb-3">
+                                <label class="form-label">Uploading</label>
+                                <input type="number" class="form-control" name="emojis[uploading]"
+                                    placeholder="1356265592432230451">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <p class="card-header">Timing Settings</p>
+                    <div class="card-body">
+                        <p class="card-text">Various timing configurations (in seconds)</p>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Save Reps Interval</label>
+                                <input type="number" class="form-control" name="timings[saveReps]" placeholder="120"
+                                    min="1">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Reset Prompt Interval</label>
+                                <input type="number" class="form-control" name="timings[resetPrompt]" placeholder="600"
+                                    min="1">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">User Cache Duration (ms)</label>
+                                <input type="number" class="form-control" name="timings[userCacheDuration]"
+                                    placeholder="3600000" min="1000">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <p class="card-header">Wiki URLs</p>
+                    <div class="card-body">
+                        <p class="card-text">Map channels to specific wiki URLs for context</p>
+                        <div id="wikiUrlContainer">
+                            <div class="mb-3" style="display: flex; gap: 8px; align-items: flex-start;">
+                                <div style="flex: 1;">
+                                    <label class="form-label">Channel</label>
+                                    <select class="form-control channel-select-wiki" name="wikiUrls[][channelId]">
+                                        <option value="">Select a channel...</option>
+                                    </select>
+                                </div>
+                                <div style="flex: 2;">
+                                    <label class="form-label">Wiki URLs (one per line)</label>
+                                    <textarea class="form-control" name="wikiUrls[][urls]"
+                                        placeholder="https://example.com/wiki&#10;https://example.com/wiki2"
+                                        rows="3"></textarea>
+                                </div>
+                                <div style="align-self: flex-end;">
+                                    <button type="button" class="btn btn-success"
+                                        onclick="addWikiMapping()">Add</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <p class="card-header">Proxy Configuration</p>
+                    <div class="card-body">
+                        <p class="card-text">HTTP proxy settings for external requests (leave empty if not using
+                            proxies)</p>
+                        <div id="proxyContainer">
+                            <div class="mb-3 proxy-item"
+                                style="border: 1px solid #dee2e6; padding: 15px; border-radius: 5px;">
+                                <div class="row">
+                                    <div class="col-lg-3 col-md-4 mb-2">
+                                        <label class="form-label">Host</label>
+                                        <input type="text" class="form-control" name="proxies[][host]"
+                                            placeholder="proxy.example.com">
+                                    </div>
+                                    <div class="col-lg-2 col-md-3 mb-2">
+                                        <label class="form-label">Port</label>
+                                        <input type="number" class="form-control" name="proxies[][port]"
+                                            placeholder="8080" min="1" max="65535">
+                                    </div>
+                                    <div class="col-lg-2 col-md-3 mb-2">
+                                        <label class="form-label">Protocol</label>
+                                        <select class="form-control" name="proxies[][protocol]">
+                                            <option value="http">HTTP</option>
+                                            <option value="https">HTTPS</option>
+                                            <option value="socks4">SOCKS4</option>
+                                            <option value="socks5">SOCKS5</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-lg-2 col-md-3 mb-2">
+                                        <label class="form-label">Username (optional)</label>
+                                        <input type="text" class="form-control" name="proxies[][username]"
+                                            placeholder="username">
+                                    </div>
+                                    <div class="col-lg-2 col-md-3 mb-2">
+                                        <label class="form-label">Password (optional)</label>
+                                        <input type="password" class="form-control" name="proxies[][password]"
+                                            placeholder="password">
+                                    </div>
+                                    <div class="col-lg-1 col-md-2 mb-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-success w-100"
+                                            onclick="addProxy()">Add</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        function addField(containerId, fieldName, placeholder, inputType = 'text') {
+            const container = document.getElementById(containerId);
+            const newField = document.createElement('div');
+            newField.className = 'mb-3';
+            newField.style.display = 'flex';
+            newField.style.gap = '8px';
+
+            let inputElement;
+            if (inputType === 'textarea') {
+                inputElement = `<textarea class="form-control" name="${fieldName}" placeholder="${placeholder}" rows="3" style="flex: 1;"></textarea>`;
+            } else {
+                inputElement = `<input type="${inputType}" class="form-control" name="${fieldName}" placeholder="${placeholder}" style="flex: 1;">`;
+            }
+
+            newField.innerHTML = `
+            ${inputElement}
+            <button type="button" class="btn btn-danger" onclick="removeField(this)">Remove</button>
+        `;
+            container.appendChild(newField);
+        }
+
+        function removeField(button) {
+            const fieldDiv = button.parentElement;
+            fieldDiv.remove();
+        }
+
+        function addPromptMapping() {
+            const container = document.getElementById('promptMappingContainer');
+            const newMapping = document.createElement('div');
+            newMapping.className = 'mb-3';
+            newMapping.style.display = 'flex';
+            newMapping.style.gap = '8px';
+            newMapping.style.alignItems = 'flex-start';
+
+            newMapping.innerHTML = `
+            <div style="flex: 1;">
+                <label class="form-label">Channel</label>
+                <select class="form-control channel-select" name="channelPromptMappings[][channelId]">
+                    <option value="">Select a channel...</option>
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <label class="form-label">Prompt</label>
+                <select class="form-control prompt-select" name="channelPromptMappings[][promptId]">
+                    <option value="">Select a prompt...</option>
+                </select>
+            </div>
+            <div style="align-self: flex-end;">
+                <button type="button" class="btn btn-danger" onclick="removeField(this)">Remove</button>
+            </div>
+        `;
+
+            container.appendChild(newMapping);
+
+            populateChannelDropdown(newMapping.querySelector('.channel-select'));
+            populatePromptDropdown(newMapping.querySelector('.prompt-select'));
+        }
+
+        function addWikiMapping() {
+            const container = document.getElementById('wikiUrlContainer');
+            const newMapping = document.createElement('div');
+            newMapping.className = 'mb-3';
+            newMapping.style.display = 'flex';
+            newMapping.style.gap = '8px';
+            newMapping.style.alignItems = 'flex-start';
+
+            newMapping.innerHTML = `
+            <div style="flex: 1;">
+                <label class="form-label">Channel</label>
+                <select class="form-control channel-select-wiki" name="wikiUrls[][channelId]">
+                    <option value="">Select a channel...</option>
+                </select>
+            </div>
+            <div style="flex: 2;">
+                <label class="form-label">Wiki URLs (one per line)</label>
+                <textarea class="form-control" name="wikiUrls[][urls]" 
+                    placeholder="https://example.com/wiki&#10;https://example.com/wiki2" 
+                    rows="3"></textarea>
+            </div>
+            <div style="align-self: flex-end;">
+                <button type="button" class="btn btn-danger" onclick="removeField(this)">Remove</button>
+            </div>
+        `;
+
+            container.appendChild(newMapping);
+            populateChannelDropdown(newMapping.querySelector('.channel-select-wiki'));
+        }
+
+        function addProxy() {
+            const container = document.getElementById('proxyContainer');
+            const newProxy = document.createElement('div');
+            newProxy.className = 'mb-3 proxy-item';
+            newProxy.style.border = '1px solid #dee2e6';
+            newProxy.style.padding = '15px';
+            newProxy.style.borderRadius = '5px';
+
+            newProxy.innerHTML = `
+            <div class="row">
+                <div class="col-lg-3 col-md-4 mb-2">
+                    <label class="form-label">Host</label>
+                    <input type="text" class="form-control" name="proxies[][host]" placeholder="proxy.example.com">
+                </div>
+                <div class="col-lg-2 col-md-3 mb-2">
+                    <label class="form-label">Port</label>
+                    <input type="number" class="form-control" name="proxies[][port]" placeholder="8080" min="1" max="65535">
+                </div>
+                <div class="col-lg-2 col-md-3 mb-2">
+                    <label class="form-label">Protocol</label>
+                    <select class="form-control" name="proxies[][protocol]">
+                        <option value="http">HTTP</option>
+                        <option value="https">HTTPS</option>
+                        <option value="socks4">SOCKS4</option>
+                        <option value="socks5">SOCKS5</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-3 mb-2">
+                    <label class="form-label">Username (optional)</label>
+                    <input type="text" class="form-control" name="proxies[][username]" placeholder="username">
+                </div>
+                <div class="col-lg-2 col-md-3 mb-2">
+                    <label class="form-label">Password (optional)</label>
+                    <input type="password" class="form-control" name="proxies[][password]" placeholder="password">
+                </div>
+                <div class="col-lg-1 col-md-2 mb-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger w-100" onclick="removeField(this.closest('.proxy-item'))">Remove</button>
+                </div>
+            </div>
+        `;
+
+            container.appendChild(newProxy);
+        }
+
+        function populateChannelDropdowns() {
+            document.querySelectorAll('.channel-select').forEach(select => {
+                populateChannelDropdown(select);
+            });
+            document.querySelectorAll('.channel-select-wiki').forEach(select => {
+                populateChannelDropdown(select);
+            });
+        }
+
+        function populateChannelDropdown(selectElement) {
+            if (window.configLoader && window.configLoader.populateChannelDropdown) {
+                return window.configLoader.populateChannelDropdown(selectElement);
+            }
+
+            while (selectElement.children.length > 1) {
+                selectElement.removeChild(selectElement.lastChild);
+            }
+
+            const channelInputs = document.querySelectorAll('input[name="channels[]"]');
+            channelInputs.forEach(input => {
+                if (input.value.trim()) {
+                    const option = document.createElement('option');
+                    option.value = input.value.trim();
+                    option.textContent = input.value.trim();
+                    selectElement.appendChild(option);
+                }
+            });
+        }
+
+        function populatePromptDropdown(selectElement) {
+            while (selectElement.children.length > 1) {
+                selectElement.removeChild(selectElement.lastChild);
+            }
+
+            fetch('/api/prompts')
+                .then(response => response.json())
+                .then(prompts => {
+                    prompts.forEach(prompt => {
+                        const option = document.createElement('option');
+                        option.value = prompt.id;
+                        option.textContent = prompt.name || prompt.title || `Prompt ${prompt.id}`;
+                        selectElement.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching prompts:', error);
+                    const option = document.createElement('option');
+                    option.value = 'default';
+                    option.textContent = 'Default Prompt';
+                    selectElement.appendChild(option);
+                });
+        }
+
+        function populateAllPromptDropdowns() {
+            document.querySelectorAll('.prompt-select').forEach(select => {
+                populatePromptDropdown(select);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            populateChannelDropdowns();
+            populateAllPromptDropdowns();
+        });
+
+        document.addEventListener('input', function (e) {
+            if (e.target.matches('input[name="channels[]"]')) {
+                setTimeout(populateChannelDropdowns, 100);
+            }
+        });
+    </script>
+    <script src="/js/configuration.js"></script>
+
+    <%- include('partials/footer') %>
