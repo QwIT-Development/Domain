@@ -45,7 +45,6 @@ async function messageHandler(message, client, gemini) {
         }
 
         const score = await reputation(message.author.id);
-        // TODO: implement memory system
         const memories = await getMemories(channelId);
         let formattedMessage;
         const date = formatDate(new Date());
@@ -57,13 +56,6 @@ async function messageHandler(message, client, gemini) {
             formattedMessage = `[Memories: ${memories}]
             ${date} - [Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
         }
-        //console.log(formattedMessage);
-
-        // debug artifact command, shouldn't be used
-        /*if (message.content.includes("forceartifact")) {
-            let response = "```\ntestartifact\n```";
-            return await chunkedMsg(message, response);
-        }*/
 
         if (await checkForMentions(message, client)) {
             // this should run, bc it wouldn't be good if the bot randomly resets while getting back the response
@@ -108,7 +100,6 @@ async function messageHandler(message, client, gemini) {
                     // i really hope this will work
                     contents: state.history[channelId],
                 });
-                // responseMsg = response.response.text().trim();
                 for await (const chunk of response) {
                     if (chunk.text) {
                         responseMsg += chunk.text.trim();
@@ -171,7 +162,6 @@ async function messageHandler(message, client, gemini) {
             responseMsg = responseMsg.replaceAll('@everyone', '[blocked :3]');
             responseMsg = responseMsg.replaceAll('@here', '[blocked :3]');
 
-            // removed todo message from here
             responseMsg = await parseBotCommands(responseMsg, message, gemini);
 
             // try to remove schizophrenic context repeations
