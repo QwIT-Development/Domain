@@ -22,7 +22,7 @@ module.exports = {
                 where: { id: userId },
             });
 
-            if (user && user.banned) {
+            if (user?.banned) {
                 banned = true;
                 reason = user.banMessage || "";
             }
