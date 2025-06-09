@@ -34,7 +34,7 @@ async function parseBotCommands(string, message, gemini) {
     const reactionsToAdd = new Set();
 
     try {
-        const repRegex = /\[?([+\-])?rep]?/gi;
+        const repRegex = /\[?([+-])?rep]?/gi;
         out = out.replaceAll(repRegex, (match, sign) => {
             const userId = message.author.id;
             if (sign === '+') {
@@ -106,7 +106,7 @@ async function parseBotCommands(string, message, gemini) {
                                 // dm user
                                 const user = await message.client.users.fetch(userIdToMute);
                                 await user.send({
-                                    content: `${strings.muteMessage.replace("[REASON]", `"${reason}"`).replace("[TIME]", time / 1000)}
+                                    content: `${strings.muteMessage.replace("[REASON]", '"'+reason+'"').replace("[TIME]", time / 1000)}
 ${strings.automatedMessage}`
                                 });
 
@@ -177,8 +177,6 @@ ${strings.automatedMessage}`
                     out += ` [Nem sikerült elküldeni a képeket]`;
                     svgProcessingError = true;
                 }
-            }
-            if (svgProcessingError) {
             }
         }
     } catch (e) {
