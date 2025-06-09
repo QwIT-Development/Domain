@@ -5,6 +5,7 @@
 
 const axios = require('axios');
 const config = require('../config.json');
+const { randomInt } = require('crypto');
 
 // ja hogy megnyomom a tabot es rak egy ilyet
 // bruh
@@ -112,7 +113,7 @@ function userAgent() {
         "Mozilla/5.0 (X11; Linux x86_64; rv:135.0) Gecko/20100101 Firefox/135.0"
     ];
 
-    const rng = Math.floor(Math.random() * userAgents.length);
+    const rng = randomInt(userAgents.length);
     return userAgents[rng];
 }
 

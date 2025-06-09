@@ -3,10 +3,11 @@
         Copyright (C) 2025 Anchietae
 */
 
+const { randomInt } = require('crypto');
 
 //epic rng generator, bc every code needs one!!1!
 async function RNGArray(array) {
-    const rng = Math.floor(Math.random() * array.length);
+    const rng = randomInt(array.length);
     return array[rng];
 }
 
