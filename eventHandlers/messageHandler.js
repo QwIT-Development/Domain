@@ -192,7 +192,7 @@ async function messageHandler(message, client, gemini) {
             responseMsg = responseMsg.replaceAll(`${message.author.username.toLowerCase()}:`, "").trim();
             responseMsg = responseMsg.replaceAll(`${message.member.displayName}:`, "").trim();
             responseMsg = responseMsg.replaceAll(`${message.member.displayName.toLowerCase()}:`, "").trim();
-            responseMsg = responseMsg.replaceAll(/\[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
+            responseMsg = responseMsg.replaceAll(/\[([^\s(]*) ?\(id: ?(\d+)\)] ?([^:]*):/gmi, "").trim();
 
             // clean history before sending message
             await trimHistory(channelId)

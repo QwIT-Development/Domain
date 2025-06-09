@@ -72,7 +72,7 @@ async function parseBotCommands(string, message, gemini) {
 
 
     try {
-        const muteRegex = /mute\[\s*(?:<@!?(\d+)>|(\d+))\s*,\s*(\d+)\s*(?:,\s*"?(.*?)"?)?\s*]/gmi;
+        const muteRegex = /mute\[\s*(?:<@!?)?(\d+)>?\s*,\s*(\d+)\s*(?:,\s*([^\]]*))?\s*]/gmi;
         const muteMatches = Array.from(out.matchAll(muteRegex));
         if (muteMatches.length > 0) {
             const guild = message.guild;
