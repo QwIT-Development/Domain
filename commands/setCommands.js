@@ -32,7 +32,7 @@ async function announceCommands(client) {
         const command = require(filePath);
 
         // register commands dynamically
-        if (command.data && command.data.name) {
+        if (command.data?.name) {
             client.commands.set(command.data.name, command);
             commands.push(command.data.toJSON());
         } else {
