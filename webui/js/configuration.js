@@ -1,74 +1,164 @@
 let currentConfig = null;
+let availablePrompts = []; 
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadCurrentConfig();
+    await fetchAvailablePrompts(); 
+    populateConfigForm();
+});
+
+
+function showAlert(message, type = 'info', duration = 5000) {
+    const container = document.getElementById('alert-container');
+    if (!container) return;
+
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    container.appendChild(alertDiv);
+
+    if (duration) {
+        setTimeout(() => {
+            const bootstrapAlert = bootstrap.Alert.getInstance(alertDiv);
+            if (bootstrapAlert) {
+                bootstrapAlert.close();
+            } else if (alertDiv.parentElement) {
+                alertDiv.remove();
+            }
+        }, duration);
+    }
+}
+
 
 async function loadCurrentConfig() {
     const loadButton = document.querySelector('button[onclick="loadCurrentConfig()"]');
     const originalText = loadButton?.innerHTML;
+    if (loadButton) {
+        loadButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+        loadButton.disabled = true;
+    }
 
     try {
-        if (loadButton) {
-            loadButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
-            loadButton.disabled = true;
-        }
-
         const response = await fetch('/api/currentConfig');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         currentConfig = await response.json();
-        populateConfigForm();
-
-        const alertDiv = createAlert('Configuration loaded successfully!', 'success');
-        document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.row'));
-        setTimeout(() => alertDiv.remove(), 3000);
+        if (currentConfig) {
+            populateConfigForm();
+            showAlert('Configuration loaded successfully.', 'success');
+        } else {
+            showAlert('Failed to load configuration: Empty response.', 'danger');
+        }
     } catch (error) {
-        console.error('Error loading current configuration:', error);
-        const alertDiv = createAlert('Failed to load current configuration. Please check the console for details.', 'danger');
-        document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.row'));
-        setTimeout(() => alertDiv.remove(), 5000);
+        console.error('Error loading configuration:', error);
+        showAlert(`Error loading configuration: ${error.message}`, 'danger');
+        currentConfig = {}; 
     } finally {
-        if (loadButton && originalText) {
+        if (loadButton) {
             loadButton.innerHTML = originalText;
             loadButton.disabled = false;
         }
     }
 }
 
-function populateConfigForm() {
-    if (!currentConfig) return;
+async function saveConfiguration() {
+    const saveButton = document.querySelector('button[onclick="saveConfiguration()"]');
+    const originalText = saveButton?.innerHTML;
+    if (saveButton) {
+        saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+        saveButton.disabled = true;
+    }
 
-    populateField('botToken', currentConfig.DISCORD_TOKEN, 'Current token is set (hidden for security)');
-    populateField('geminiAPIKey', currentConfig.GEMINI_API_KEY, 'Current API key is set (hidden for security)');
-    populateField('geminiModelId', currentConfig.GEMINI_MODEL);
-    populateArrayField('aliasesContainer', 'aliases[]', currentConfig.ALIASES || []);
-    populateArrayField('channelsContainer', 'channels[]', currentConfig.CHANNELS || []);
-    populatePromptMappings();
-    populateField('locale', currentConfig.LOCALE);
-    populateField('webuiPort', currentConfig.WEBUI_PORT);
-    populateField('maxMessages', currentConfig.MAX_MESSAGES);
-    populateField('sleepingRange', currentConfig.SLEEPINGRANGE);
-    populateField('searxBaseUrl', currentConfig.SEARX_BASE_URL);
-    populateField('tosUrl', currentConfig.TOS_URL);
-    populateField('cumulativeMode', currentConfig.CUMULATIVE_MODE);
-    populateCheckbox('enableThinking', currentConfig.ENABLE_THINKING);
-    populateArrayField('ownersContainer', 'owners[]', currentConfig.OWNERS || []);
-    populateArrayField('remoteListsContainer', 'remoteLists[]', currentConfig.REMOTE_LISTS || []);
-    populateEmojis(currentConfig.EMOJIS);
-    populateTimings(currentConfig.TIMINGS);
-    populateWikiMappings();
-    populateProxies();
+    const formData = collectFormData();
+    const validation = validateConfiguration(formData);
 
-    setTimeout(() => {
-        updateDropdowns();
-    }, 100);
+    if (!validation.isValid) {
+        showAlert(`Validation Error: ${validation.errors.join('<br>')}`, 'danger', 10000);
+        if (saveButton) {
+            saveButton.innerHTML = originalText;
+            saveButton.disabled = false;
+        }
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/saveConfig', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
+        });
+        if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorData}`);
+        }
+        showAlert('Configuration saved successfully!', 'success');
+        await loadCurrentConfig(); 
+    } catch (error) {
+        console.error('Error saving configuration:', error);
+        showAlert(`Error saving configuration: ${error.message}`, 'danger');
+    } finally {
+        if (saveButton) {
+            saveButton.innerHTML = originalText;
+            saveButton.disabled = false;
+        }
+    }
 }
 
-function populateField(fieldId, value, placeholder = '') {
+
+function populateConfigForm() {
+    if (!currentConfig) {
+        showAlert('Cannot populate form: Configuration not loaded.', 'warning');
+        return;
+    }
+
+    
+    populateField('discordToken', currentConfig.DISCORD_TOKEN, 'Current token is set (hidden for security)');
+    populateField('geminiAPIKey', currentConfig.GEMINI_API_KEY, 'Current API key is set (hidden for security)');
+    populateField('geminiModel', currentConfig.GEMINI_MODEL);
+    populateArrayInput('aliasesContainer', currentConfig.ALIASES || [], 'addAliasInput', 'Alias');
+
+    
+    populateArrayInput('channelsContainer', currentConfig.CHANNELS || [], 'addChannelInput', 'Channel ID');
+    populatePromptPaths(currentConfig.PROMPT_PATHS || {});
+    populateWikiUrls(currentConfig.WIKI_URLS || {});
+
+    
+    populateField('locale', currentConfig.LOCALE);
+    populateField('maxMessages', currentConfig.MAX_MESSAGES);
+    populateField('sleepingRange', currentConfig.SLEEPINGRANGE);
+    populateField('cumulativeMode', currentConfig.CUMULATIVE_MODE);
+    populateCheckbox('enableThinking', currentConfig.ENABLE_THINKING);
+
+    
+    populateField('webuiPort', currentConfig.WEBUI_PORT);
+    populateField('searxBaseUrl', currentConfig.SEARX_BASE_URL);
+    populateField('tosUrl', currentConfig.TOS_URL); 
+    populateArrayInput('ownersContainer', currentConfig.OWNERS || [], 'addOwnerInput', 'Owner User ID');
+    populateTimings(currentConfig.TIMINGS || {});
+    populateEmojis(currentConfig.EMOJIS || {});
+    populateArrayInput('remoteListsContainer', currentConfig.REMOTE_LISTS || [], 'addRemoteListInput', 'Remote List URL', 'url');
+    populateProxies(currentConfig.PROXIES || []);
+
+    
+    updateAllDynamicDropdowns();
+}
+
+function populateField(fieldId, value, placeholderIfSet = '') {
     const input = document.getElementById(fieldId);
     if (input) {
-        if (value === '***HIDDEN***') {
-            input.placeholder = placeholder;
+        if (input.type === 'password' && value) {
+            input.placeholder = placeholderIfSet || 'Current value is set (hidden)';
+            input.value = ''; 
+        } else if (value !== undefined && value !== null) {
+            input.value = value;
         } else {
-            input.value = value || '';
+            input.value = ''; 
         }
     }
 }
@@ -80,676 +170,490 @@ function populateCheckbox(fieldId, value) {
     }
 }
 
-function populateArrayField(containerId, fieldName, values) {
+function populateArrayInput(containerId, values, addFunctionName, placeholder, inputType = 'text') {
     const container = document.getElementById(containerId);
     if (!container) return;
+    container.innerHTML = ''; 
 
-    container.innerHTML = '';
     values.forEach(value => {
-        const field = document.createElement('input');
-        field.type = 'text';
-        field.name = fieldName;
-        field.value = value;
-        field.className = 'form-control mb-2';
-        container.appendChild(field);
+        const inputGroup = createRemovableInput(value, placeholder, inputType, () => {}); 
+        container.appendChild(inputGroup);
     });
 }
 
-function populatePromptMappings() {
-    const container = document.getElementById('promptMappingContainer');
-    if (!container || !currentConfig.PROMPT_PATHS) return;
+function populateTimings(timings) {
+    populateField('timingSaveReps', timings.saveReps);
+    populateField('timingResetPrompt', timings.resetPrompt);
+    populateField('timingUserCacheDuration', timings.userCacheDuration);
+}
 
-    container.innerHTML = '';
-    Object.entries(currentConfig.PROMPT_PATHS).forEach(([channelId, promptId]) => {
-        const mapping = createMappingElement(channelId, promptId, 'channelPromptMappings');
-        container.appendChild(mapping);
-    });
+function populateEmojis(emojis) {
+    populateField('emojiUploaded', emojis.uploaded);
+    populateField('emojiUpvote', emojis.upvote);
+    populateField('emojiDownvote', emojis.downvote);
+    populateField('emojiSearch', emojis.search);
+    populateField('emojiMute', emojis.mute);
+    populateField('emojiUploading', emojis.uploading);
+}
 
-    // Ensure dropdowns reflect existing data
-    updateDropdowns();
 
-    // Ensure dropdowns are created even if PROMPT_PATHS is empty
-    if (Object.keys(currentConfig.PROMPT_PATHS).length === 0) {
-        const mapping = createMappingElement('', '', 'channelPromptMappings');
-        container.appendChild(mapping);
+function createRemovableInput(value, placeholder, inputType = 'text', onRemoveCallback = null) {
+    const div = document.createElement('div');
+    div.className = 'input-group mb-2';
+    const input = document.createElement('input');
+    input.type = inputType;
+    input.className = 'form-control';
+    input.placeholder = placeholder;
+    input.value = value || '';
+    div.appendChild(input);
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'btn btn-danger';
+    button.textContent = 'Remove';
+    button.onclick = () => {
+        div.remove();
+        if (onRemoveCallback) onRemoveCallback();
+    };
+    div.appendChild(button);
+    return div;
+}
+
+window.addAliasInput = () => addGenericInput('aliasesContainer', 'Alias');
+window.addChannelInput = () => {
+    addGenericInput('channelsContainer', 'Channel ID');
+    updateAllDynamicDropdowns(); 
+};
+window.addOwnerInput = () => addGenericInput('ownersContainer', 'Owner User ID');
+window.addRemoteListInput = () => addGenericInput('remoteListsContainer', 'Remote List URL', 'url');
+
+function addGenericInput(containerId, placeholder, inputType = 'text') {
+    const container = document.getElementById(containerId);
+    if (container) {
+        container.appendChild(createRemovableInput('', placeholder, inputType));
     }
 }
 
-function populateWikiMappings() {
-    const container = document.getElementById('wikiUrlContainer');
-    if (!container || !currentConfig.WIKI_URLS) return;
 
-    container.innerHTML = '';
-    Object.entries(currentConfig.WIKI_URLS).forEach(([channelId, urls]) => {
-        const mapping = createWikiMappingElement(channelId, urls);
-        container.appendChild(mapping);
-    });
-
-    const addButton = document.createElement('button');
-    addButton.textContent = 'Add Wiki URL';
-    addButton.className = 'btn btn-primary';
-    addButton.onclick = () => {
-        const newMapping = createWikiMappingElement('', []);
-        container.appendChild(newMapping);
-    };
-    container.appendChild(addButton);
+async function fetchAvailablePrompts() {
+    try {
+        const response = await fetch('/api/prompts'); 
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        availablePrompts = await response.json();
+        if (!Array.isArray(availablePrompts)) {
+            console.warn("Fetched prompts is not an array:", availablePrompts);
+            availablePrompts = [];
+        }
+    } catch (error) {
+        console.error('Error fetching available prompts:', error);
+        showAlert('Could not fetch available prompt files. Prompt selection may be limited.', 'warning');
+        availablePrompts = []; 
+    }
 }
 
-function createMappingElement(channelId, value, fieldName) {
-    const mapping = document.createElement('div');
-    mapping.className = 'mb-3';
-    mapping.style.display = 'flex';
-    mapping.style.gap = '8px';
-
-    const channelSelect = document.createElement('select');
-    channelSelect.name = `${fieldName}[][channelId]`;
-    channelSelect.className = 'form-control';
-    populateChannelDropdown(channelSelect);
-    channelSelect.value = channelId;
-
-    const valueField = document.createElement('select');
-    valueField.name = `${fieldName}[][value]`;
-    valueField.className = 'form-control';
-    populatePromptDropdown(valueField);
-    valueField.value = value;
-
-    mapping.appendChild(channelSelect);
-    mapping.appendChild(valueField);
-
-    return mapping;
-}
-
-function createWikiMappingElement(channelId, urls) {
-    const mapping = document.createElement('div');
-    mapping.className = 'mb-3';
-    mapping.style.display = 'flex';
-    mapping.style.flexDirection = 'column';
-    mapping.style.gap = '8px';
-
-    const channelSelect = document.createElement('select');
-    channelSelect.name = `wikiUrls[][channelId]`;
-    channelSelect.className = 'form-control';
-    populateChannelDropdown(channelSelect);
-    channelSelect.value = channelId;
-
-    const urlsTextarea = document.createElement('textarea');
-    urlsTextarea.name = `wikiUrls[][urls]`;
-    urlsTextarea.className = 'form-control';
-    urlsTextarea.rows = 4;
-    urlsTextarea.placeholder = 'Enter URLs separated by new lines';
-    urlsTextarea.value = urls.join('\n');
-
-    mapping.appendChild(channelSelect);
-    mapping.appendChild(urlsTextarea);
-
-    return mapping;
+function getChannelOptions() {
+    const channelInputs = document.querySelectorAll('#channelsContainer input');
+    const channels = Array.from(channelInputs).map(input => input.value.trim()).filter(Boolean);
+    
+    if (currentConfig && currentConfig.CHANNELS) {
+        currentConfig.CHANNELS.forEach(ch => {
+            if (!channels.includes(ch)) channels.push(ch);
+        });
+    }
+    return [...new Set(channels)]; 
 }
 
 function populateChannelDropdown(selectElement) {
-    selectElement.innerHTML = '<option value="">Select a channel...</option>';
-    const channels = currentConfig?.CHANNELS || [];
-    channels.forEach(channelId => {
+    const currentValue = selectElement.value;
+    selectElement.innerHTML = '<option value="">Select Channel</option>';
+    getChannelOptions().forEach(channelId => {
         const option = document.createElement('option');
         option.value = channelId;
         option.textContent = channelId;
         selectElement.appendChild(option);
     });
+    selectElement.value = currentValue; 
 }
 
 function populatePromptDropdown(selectElement) {
-    selectElement.innerHTML = '<option value="">Select a prompt...</option>';
-    const availablePrompts = ['prompt.md', 'bongea.md'];
-    availablePrompts.forEach(prompt => {
+    const currentValue = selectElement.value;
+    selectElement.innerHTML = '<option value="">Select Prompt</option>';
+    availablePrompts.forEach(promptFile => {
         const option = document.createElement('option');
-        option.value = prompt;
-        option.textContent = prompt;
+        option.value = promptFile;
+        option.textContent = promptFile;
         selectElement.appendChild(option);
     });
+    selectElement.value = currentValue; 
 }
 
-function updateDropdowns() {
+function updateAllDynamicDropdowns() {
     document.querySelectorAll('.channel-select').forEach(populateChannelDropdown);
-    document.querySelectorAll('.channel-select-wiki').forEach(populateChannelDropdown);
+    document.querySelectorAll('.prompt-select').forEach(populatePromptDropdown);
 }
 
-function populateEmojis(emojis) {
-    if (!emojis) return;
-    Object.entries(emojis).forEach(([type, id]) => {
-        const input = document.querySelector(`input[name="emojis[${type}]"]`);
-        if (input) input.value = id;
-    });
-}
 
-function populateTimings(timings) {
-    if (!timings) return;
-    Object.entries(timings).forEach(([type, value]) => {
-        const input = document.querySelector(`input[name="timings[${type}]"]`);
-        if (input) input.value = value;
-    });
-}
+document.addEventListener('input', (event) => {
+    if (event.target && event.target.closest('#channelsContainer')) {
+        updateAllDynamicDropdowns();
+    }
+});
 
-function populateProxies() {
-    const container = document.getElementById('proxyContainer');
+
+
+function populatePromptPaths(promptPaths) {
+    const container = document.getElementById('promptPathsContainer');
     if (!container) return;
-
     container.innerHTML = '';
-    const proxies = currentConfig.PROXIES || [];
-
-    proxies.forEach((proxy, index) => {
-        const proxyElement = createProxyElement(proxy, index);
-        container.appendChild(proxyElement);
+    Object.entries(promptPaths).forEach(([channelId, promptFile]) => {
+        container.appendChild(createPromptPathMappingElement(channelId, promptFile));
     });
-
-    const addButton = document.createElement('button');
-    addButton.textContent = 'Add Proxy';
-    addButton.className = 'btn btn-primary';
-    addButton.onclick = () => {
-        const newProxy = createProxyElement({}, container.children.length);
-        container.appendChild(newProxy);
-    };
-    container.appendChild(addButton);
 }
 
-function createProxyElement(proxy, index) {
-    const proxyElement = document.createElement('div');
-    proxyElement.className = 'proxy-item';
-    proxyElement.innerHTML = `
-        <input type="text" name="proxies[${index}][host]" value="${proxy.host || ''}" class="form-control mb-2" placeholder="Host">
-        <input type="number" name="proxies[${index}][port]" value="${proxy.port || ''}" class="form-control mb-2" placeholder="Port">
-        <select name="proxies[${index}][protocol]" class="form-control mb-2">
-            <option value="http" ${proxy.protocol === 'http' ? 'selected' : ''}>HTTP</option>
-            <option value="https" ${proxy.protocol === 'https' ? 'selected' : ''}>HTTPS</option>
-            <option value="socks4" ${proxy.protocol === 'socks4' ? 'selected' : ''}>SOCKS4</option>
-            <option value="socks5" ${proxy.protocol === 'socks5' ? 'selected' : ''}>SOCKS5</option>
-        </select>
-        <input type="text" name="proxies[${index}][username]" value="${proxy.auth?.username || ''}" class="form-control mb-2" placeholder="Username">
-        <input type="password" name="proxies[${index}][password]" value="${proxy.auth?.password || ''}" class="form-control mb-2" placeholder="Password">
-        <button type="button" class="btn btn-danger" onclick="this.parentElement.remove();">Remove</button>
-    `;
-    return proxyElement;
-}
-
-function createAlert(message, type) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type}`;
-    alertDiv.innerHTML = message;
-    return alertDiv;
-}
-
-document.addEventListener('DOMContentLoaded', loadCurrentConfig);
-
-window.saveConfiguration = async function () {
-    let originalText = null;
-    try {
-        const validationErrors = validateConfiguration();
-        if (validationErrors.length > 0) {
-            console.error('Validation Errors:', validationErrors);
-            const errorMessage = 'Please fix the following errors before saving:\n\n' +
-                validationErrors.map(error => '• ' + error).join('\n');
-            const alertDiv = createAlert(errorMessage.replace(/\n/g, '<br>'), 'warning');
-            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.row'));
-            setTimeout(() => alertDiv.remove(), 8000);
-            return;
-        }
-
-        const saveButton = document.querySelector('button[onclick="saveConfiguration()"]');
-        if (saveButton) {
-            originalText = saveButton.innerHTML;
-            saveButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
-            saveButton.disabled = true;
-        }
-
-        const formData = collectFormData();
-
-        const response = await fetch('/api/saveConfig', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            const alertDiv = createAlert('Configuration saved successfully!', 'success');
-            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.row'));
-            setTimeout(() => alertDiv.remove(), 3000);
-
-            await loadCurrentConfig();
-        } else {
-            const alertDiv = createAlert('Failed to save configuration: ' + (result.error || 'Unknown error'), 'danger');
-            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.row'));
-            setTimeout(() => alertDiv.remove(), 5000);
-        }
-    } catch (error) {
-        console.error('Error saving configuration:', error);
-        const alertDiv = createAlert('Failed to save configuration. Please check the console for details.', 'danger');
-        document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.row'));
-        setTimeout(() => alertDiv.remove(), 5000);
-    } finally {
-        const saveButton = document.querySelector('button[onclick="saveConfiguration()"]');
-        if (saveButton && originalText) {
-            saveButton.innerHTML = originalText;
-            saveButton.disabled = false;
-        }
+window.addPromptPathMapping = () => {
+    const container = document.getElementById('promptPathsContainer');
+    if (container) {
+        container.appendChild(createPromptPathMappingElement());
     }
 };
 
+function createPromptPathMappingElement(channelId = '', promptFile = '') {
+    const div = document.createElement('div');
+    div.className = 'input-group mb-2';
 
-window.previewConfiguration = function () {
-    try {
-        const validationErrors = validateConfiguration();
-        const formData = collectFormData();
+    const channelSelect = document.createElement('select');
+    channelSelect.className = 'form-control channel-select'; 
+    populateChannelDropdown(channelSelect);
+    channelSelect.value = channelId;
 
-        let previewHtml = '<h5>Configuration Preview</h5>';
+    const promptSelect = document.createElement('select');
+    promptSelect.className = 'form-control prompt-select'; 
+    populatePromptDropdown(promptSelect);
+    promptSelect.value = promptFile;
 
-        if (validationErrors.length > 0) {
-            previewHtml += '<div class="alert alert-warning mb-3"><strong>Validation Errors:</strong><br>';
-            previewHtml += validationErrors.map(error => '• ' + error).join('<br>');
-            previewHtml += '</div>';
-        }
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'btn btn-danger';
+    removeButton.textContent = 'Remove';
+    removeButton.onclick = () => div.remove();
 
-        previewHtml += '<div class="row">';
-
-
-        previewHtml += '<div class="col-md-6"><div class="card mb-3">';
-        previewHtml += '<div class="card-header"><strong>Basic Configuration</strong></div>';
-        previewHtml += '<div class="card-body">';
-        previewHtml += '<p><strong>Gemini Model:</strong> ' + (formData.GEMINI_MODEL || 'Not set') + '</p>';
-        previewHtml += '<p><strong>Bot Token:</strong> ' + (formData.DISCORD_TOKEN ? 'Set (hidden)' : 'Not changed') + '</p>';
-        previewHtml += '<p><strong>API Key:</strong> ' + (formData.GEMINI_API_KEY ? 'Set (hidden)' : 'Not changed') + '</p>';
-        previewHtml += '<p><strong>Locale:</strong> ' + (formData.LOCALE || 'Not set') + '</p>';
-        previewHtml += '<p><strong>Web UI Port:</strong> ' + formData.WEBUI_PORT + '</p>';
-        previewHtml += '<p><strong>Max Messages:</strong> ' + formData.MAX_MESSAGES + '</p>';
-        previewHtml += '<p><strong>Sleeping Range:</strong> ' + formData.SLEEPINGRANGE + '</p>';
-        previewHtml += '<p><strong>Search Base URL:</strong> ' + (formData.SEARX_BASE_URL || 'Not set') + '</p>';
-        previewHtml += '<p><strong>Terms of Service URL:</strong> ' + (formData.TOS_URL || 'Not set') + '</p>';
-        previewHtml += '<p><strong>Cumulative Mode:</strong> ' + formData.CUMULATIVE_MODE + '</p>';
-        previewHtml += '<p><strong>Enable Thinking:</strong> ' + (formData.ENABLE_THINKING ? 'Yes' : 'No') + '</p>';
-        previewHtml += '</div></div></div>';
+    div.appendChild(channelSelect);
+    div.appendChild(promptSelect);
+    div.appendChild(removeButton);
+    return div;
+}
 
 
-        previewHtml += '<div class="col-md-6"><div class="card mb-3">';
-        previewHtml += '<div class="card-header"><strong>Aliases &amp; Channels</strong></div>';
-        previewHtml += '<div class="card-body">';
-        previewHtml += '<p><strong>Aliases (' + formData.ALIASES.length + '):</strong><br>';
-        previewHtml += formData.ALIASES.map(alias => '• ' + alias).join('<br>') || 'None';
-        previewHtml += '</p>';
-        previewHtml += '<p><strong>Channels (' + formData.CHANNELS.length + '):</strong><br>';
-        previewHtml += formData.CHANNELS.map(channel => '• ' + channel).join('<br>') || 'None';
-        previewHtml += '</p>';
-        previewHtml += '<p><strong>Owners (' + formData.OWNERS.length + '):</strong><br>';
-        previewHtml += formData.OWNERS.map(owner => '• ' + owner).join('<br>') || 'None';
-        previewHtml += '</p></div></div></div>';
+function populateWikiUrls(wikiUrls) {
+    const container = document.getElementById('wikiUrlsContainer');
+    if (!container) return;
+    container.innerHTML = '';
+    Object.entries(wikiUrls).forEach(([channelId, urls]) => {
+        container.appendChild(createWikiUrlMappingElement(channelId, urls));
+    });
+}
 
-        previewHtml += '</div>';
+window.addWikiUrlMapping = () => {
+    const container = document.getElementById('wikiUrlsContainer');
+    if (container) {
+        container.appendChild(createWikiUrlMappingElement());
+    }
+};
+
+function createWikiUrlMappingElement(channelId = '', urls = []) {
+    const div = document.createElement('div');
+    div.className = 'mb-3 border p-2 rounded';
+
+    const channelSelect = document.createElement('select');
+    channelSelect.className = 'form-control mb-2 channel-select';
+    populateChannelDropdown(channelSelect);
+    channelSelect.value = channelId;
+
+    const urlsTextarea = document.createElement('textarea');
+    urlsTextarea.className = 'form-control';
+    urlsTextarea.rows = 3;
+    urlsTextarea.placeholder = 'Enter URLs, one per line';
+    urlsTextarea.value = urls.join('\\n');
+
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'btn btn-danger btn-sm mt-2';
+    removeButton.textContent = 'Remove Mapping';
+    removeButton.onclick = () => div.remove();
+
+    div.appendChild(channelSelect);
+    div.appendChild(urlsTextarea);
+    div.appendChild(removeButton);
+    return div;
+}
 
 
-        const modal = document.createElement('div');
-        modal.className = 'custom-modal';
-        modal.innerHTML = `
-            <div class="custom-modal-content">
-                <div class="custom-modal-header">
-                    <h5>Configuration Preview</h5>
-                    <button type="button" class="custom-modal-close" onclick="this.closest('.custom-modal').remove();">&times;</button>
-                </div>
-                <div class="custom-modal-body" style="max-height: 70vh; overflow-y: auto;">
-                    ${previewHtml}
-                </div>
-                <div class="custom-modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="this.closest('.custom-modal').remove();">Close</button>
-                    <button type="button" class="btn btn-success" onclick="saveConfiguration(); this.closest('.custom-modal').remove();">Save Configuration</button>
-                </div>
+function populateProxies(proxies) {
+    const container = document.getElementById('proxiesContainer');
+    if (!container) return;
+    container.innerHTML = '';
+    proxies.forEach(proxy => container.appendChild(createProxyElement(proxy)));
+}
+
+window.addProxyInput = () => {
+    const container = document.getElementById('proxiesContainer');
+    if (container) {
+        container.appendChild(createProxyElement());
+    }
+};
+
+function createProxyElement(proxy = {}) {
+    const div = document.createElement('div');
+    div.className = 'proxy-item border p-3 mb-3 rounded';
+    div.innerHTML = `
+        <div class="row g-2">
+            <div class="col-md-6">
+                <label class="form-label">Host</label>
+                <input type="text" class="form-control proxy-host" value="${proxy.host || ''}" placeholder="IP or Hostname">
             </div>
-        `;
+            <div class="col-md-3">
+                <label class="form-label">Port</label>
+                <input type="number" class="form-control proxy-port" value="${proxy.port || ''}" placeholder="Port">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Protocol</label>
+                <select class="form-control proxy-protocol">
+                    <option value="http" ${proxy.protocol === 'http' ? 'selected' : ''}>HTTP</option>
+                    <option value="https" ${proxy.protocol === 'https' ? 'selected' : ''}>HTTPS</option>
+                    <option value="socks4" ${proxy.protocol === 'socks4' ? 'selected' : ''}>SOCKS4</option>
+                    <option value="socks5" ${proxy.protocol === 'socks5' ? 'selected' : ''}>SOCKS5</option>
+                </select>
+            </div>
+        </div>
+        <div class="row g-2 mt-2">
+            <div class="col-md-6">
+                <label class="form-label">Username (Optional)</label>
+                <input type="text" class="form-control proxy-username" value="${proxy.auth?.username || ''}" placeholder="Username">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Password (Optional)</label>
+                <input type="password" class="form-control proxy-password" value="${proxy.auth?.password || ''}" placeholder="Password">
+            </div>
+        </div>
+        <button type="button" class="btn btn-danger btn-sm mt-3" onclick="this.closest('.proxy-item').remove()">Remove Proxy</button>
+    `;
+    return div;
+}
 
-        document.body.appendChild(modal);
-    } catch (error) {
-        console.error('Error previewing configuration:', error);
-        const alertDiv = createAlert('Failed to preview configuration. Please check the console for details.', 'danger');
-        document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.row'));
-        setTimeout(() => alertDiv.remove(), 5000);
-    }
-};
 
 function collectFormData() {
     const data = {};
 
+    data.DISCORD_TOKEN = document.getElementById('discordToken').value.trim() || currentConfig.DISCORD_TOKEN; 
+    data.GEMINI_API_KEY = document.getElementById('geminiAPIKey').value.trim() || currentConfig.GEMINI_API_KEY; 
+    data.GEMINI_MODEL = document.getElementById('geminiModel').value.trim();
 
-    data.GEMINI_MODEL = document.getElementById('geminiModelId')?.value || '';
+    data.ALIASES = collectArrayInputValues('aliasesContainer');
+    data.CHANNELS = collectArrayInputValues('channelsContainer');
 
+    data.PROMPT_PATHS = {};
+    document.querySelectorAll('#promptPathsContainer .input-group').forEach(group => {
+        const channel = group.querySelector('.channel-select').value;
+        const prompt = group.querySelector('.prompt-select').value;
+        if (channel && prompt) data.PROMPT_PATHS[channel] = prompt;
+    });
 
-    data.LOCALE = document.getElementById('locale')?.value || '';
-    data.WEBUI_PORT = parseInt(document.getElementById('webuiPort')?.value) || 4500;
-    data.MAX_MESSAGES = parseInt(document.getElementById('maxMessages')?.value) || 200;
-    data.SLEEPINGRANGE = document.getElementById('sleepingRange')?.value || '22:30-6:00';
-    data.SEARX_BASE_URL = document.getElementById('searxBaseUrl')?.value || '';
-    data.TOS_URL = document.getElementById('tosUrl')?.value || '';
-    data.CUMULATIVE_MODE = document.getElementById('cumulativeMode')?.value || 'classic';
-    data.ENABLE_THINKING = document.getElementById('enableThinking')?.checked || false;
+    data.LOCALE = document.getElementById('locale').value.trim();
 
-
-    const aliases = [];
-    document.querySelectorAll('input[name="aliases[]"]').forEach(input => {
-        if (input.value.trim()) {
-            aliases.push(input.value.trim());
+    data.WIKI_URLS = {};
+    document.querySelectorAll('#wikiUrlsContainer .border').forEach(group => {
+        const channel = group.querySelector('.channel-select').value;
+        const urlsText = group.querySelector('textarea').value;
+        if (channel && urlsText.trim()) {
+            data.WIKI_URLS[channel] = urlsText.split('\\n').map(u => u.trim()).filter(Boolean);
         }
     });
-    data.ALIASES = aliases;
+
+    data.WEBUI_PORT = parseInt(document.getElementById('webuiPort').value) || undefined;
+    data.TOS_URL = document.getElementById('tosUrl').value.trim() || undefined; 
+    data.OWNERS = collectArrayInputValues('ownersContainer');
+
+    data.TIMINGS = {
+        saveReps: parseInt(document.getElementById('timingSaveReps').value) || undefined,
+        resetPrompt: parseInt(document.getElementById('timingResetPrompt').value) || undefined,
+        userCacheDuration: parseInt(document.getElementById('timingUserCacheDuration').value) || undefined,
+    };
+    
+    Object.keys(data.TIMINGS).forEach(key => data.TIMINGS[key] === undefined && delete data.TIMINGS[key]);
 
 
-    const channels = [];
-    document.querySelectorAll('input[name="channels[]"]').forEach(input => {
-        if (input.value.trim()) {
-            channels.push(input.value.trim());
+    data.SEARX_BASE_URL = document.getElementById('searxBaseUrl').value.trim();
+    data.EMOJIS = {
+        uploaded: document.getElementById('emojiUploaded').value.trim(),
+        upvote: document.getElementById('emojiUpvote').value.trim(),
+        downvote: document.getElementById('emojiDownvote').value.trim(),
+        search: document.getElementById('emojiSearch').value.trim(),
+        mute: document.getElementById('emojiMute').value.trim(),
+        uploading: document.getElementById('emojiUploading').value.trim(),
+    };
+     
+    Object.keys(data.EMOJIS).forEach(key => data.EMOJIS[key] === '' && delete data.EMOJIS[key]);
+
+
+    data.MAX_MESSAGES = parseInt(document.getElementById('maxMessages').value) || undefined;
+    data.SLEEPINGRANGE = document.getElementById('sleepingRange').value.trim();
+    
+    data.PROXIES = [];
+    document.querySelectorAll('#proxiesContainer .proxy-item').forEach(item => {
+        const proxy = {
+            host: item.querySelector('.proxy-host').value.trim(),
+            port: item.querySelector('.proxy-port').value.trim(),
+            protocol: item.querySelector('.proxy-protocol').value,
+        };
+        const username = item.querySelector('.proxy-username').value.trim();
+        const password = item.querySelector('.proxy-password').value.trim();
+        if (username || password) {
+            proxy.auth = { username, password };
+        }
+        if (proxy.host && proxy.port) { 
+            data.PROXIES.push(proxy);
         }
     });
-    data.CHANNELS = channels;
+
+    data.REMOTE_LISTS = collectArrayInputValues('remoteListsContainer');
+    data.ENABLE_THINKING = document.getElementById('enableThinking').checked;
+    data.CUMULATIVE_MODE = document.getElementById('cumulativeMode').value;
+
+    
+    if (data.ALIASES.length === 0) delete data.ALIASES;
+    if (data.CHANNELS.length === 0) delete data.CHANNELS;
+    if (Object.keys(data.PROMPT_PATHS).length === 0) delete data.PROMPT_PATHS;
+    if (Object.keys(data.WIKI_URLS).length === 0) delete data.WIKI_URLS;
+    if (data.OWNERS.length === 0) delete data.OWNERS;
+    if (!data.TOS_URL) delete data.TOS_URL; 
+    if (data.PROXIES.length === 0) delete data.PROXIES;
+    if (data.REMOTE_LISTS.length === 0) delete data.REMOTE_LISTS;
+    if (Object.keys(data.TIMINGS).length === 0) delete data.TIMINGS;
+    if (Object.keys(data.EMOJIS).length === 0) delete data.EMOJIS;
 
 
-    const owners = [];
-    document.querySelectorAll('input[name="owners[]"]').forEach(input => {
-        if (input.value.trim()) {
-            owners.push(input.value.trim());
-        }
-    });
-    data.OWNERS = owners;
-
-
-    const remoteLists = [];
-    document.querySelectorAll('input[name="remoteLists[]"]').forEach(input => {
-        if (input.value.trim()) {
-            remoteLists.push(input.value.trim());
-        }
-    });
-    data.REMOTE_LISTS = remoteLists;
-    const promptPaths = {};
-    const channelSelects = document.querySelectorAll('select[name="channelPromptMappings[][channelId]"]');
-    const promptSelects = document.querySelectorAll('select[name="channelPromptMappings[][value]"]');
-
-    for (let i = 0; i < channelSelects.length; i++) {
-        const channelId = channelSelects[i].value;
-        const promptId = promptSelects[i]?.value;
-
-        if (channelId && promptId) {
-            promptPaths[channelId] = promptId;
-        }
-    }
-    data.PROMPT_PATHS = promptPaths;
-    const wikiUrls = {};
-    const wikiChannelSelects = document.querySelectorAll('select[name="wikiUrls[][channelId]"]');
-    const wikiUrlTextareas = document.querySelectorAll('textarea[name="wikiUrls[][urls]"]');
-
-    for (let i = 0; i < wikiChannelSelects.length; i++) {
-        const channelId = wikiChannelSelects[i].value;
-        const urlsText = wikiUrlTextareas[i]?.value;
-
-        if (channelId && urlsText?.trim()) {
-            const urls = urlsText.split('\n').map(url => url.trim()).filter(url => url);
-            if (urls.length > 0) {
-                wikiUrls[channelId] = urls;
-            }
-        }
-    }
-    data.WIKI_URLS = wikiUrls;
-
-    const emojis = {};
-    const emojiInputs = document.querySelectorAll('input[name^="emojis["]');
-    emojiInputs.forEach(input => {
-        const match = input.name.match(/emojis\[([^\]]+)\]/);
-        if (match && input.value.trim()) {
-            emojis[match[1]] = input.value.trim();
-        }
-    });
-    data.EMOJIS = emojis;
-
-
-    const timings = {};
-    const timingInputs = document.querySelectorAll('input[name^="timings["]');
-    timingInputs.forEach(input => {
-        const match = input.name.match(/timings\[([^\]]+)\]/);
-        if (match && input.value.trim()) {
-            timings[match[1]] = parseInt(input.value.trim()) || 0;
-        }
-    });
-    data.TIMINGS = timings;
-
-
-    const proxies = [];
-    const proxyItems = document.querySelectorAll('.proxy-item');
-    proxyItems.forEach(proxyItem => {
-        const host = proxyItem.querySelector('input[name="proxies[][host]"]')?.value?.trim();
-        const port = proxyItem.querySelector('input[name="proxies[][port]"]')?.value?.trim();
-        const protocol = proxyItem.querySelector('select[name="proxies[][protocol]"]')?.value;
-        const username = proxyItem.querySelector('input[name="proxies[][username]"]')?.value?.trim();
-        const password = proxyItem.querySelector('input[name="proxies[][password]"]')?.value?.trim();
-
-        if (host && port) {
-            const proxy = {
-                host: host,
-                port: port,
-                protocol: protocol || 'http'
-            };
-
-            if (username || password) {
-                proxy.auth = {};
-                if (username) proxy.auth.username = username;
-                if (password) proxy.auth.password = password;
-            }
-
-            proxies.push(proxy);
-        }
-    });
-    data.PROXIES = proxies;
-
-
-    const botToken = document.getElementById('botToken')?.value;
-    const geminiApiKey = document.getElementById('geminiAPIKey')?.value;
-
-    if (botToken?.trim() && !botToken.includes('Current token is set')) {
-        data.DISCORD_TOKEN = botToken.trim();
-    }
-
-    if (geminiApiKey?.trim() && !geminiApiKey.includes('Current API key is set')) {
-        data.GEMINI_API_KEY = geminiApiKey.trim();
-    }    return data;
+    return data;
 }
 
-function createAlert(message, type = 'info') {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-    alertDiv.setAttribute('role', 'alert');
-    alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
-    return alertDiv;
+function collectArrayInputValues(containerId) {
+    const inputs = document.querySelectorAll(`#${containerId} input[type="text"], #${containerId} input[type="url"], #${containerId} input[type="number"]`);
+    return Array.from(inputs).map(input => input.value.trim()).filter(Boolean);
 }
 
-function validateConfiguration() {
-    const errors = [];
 
 
-    const geminiModel = document.getElementById('geminiModelId')?.value;
-    if (!geminiModel || geminiModel.trim() === '') {
-        errors.push('Gemini Model is required');
-    }
-
-
-    const webuiPort = document.getElementById('webuiPort')?.value;
-    if (webuiPort && (parseInt(webuiPort) < 1 || parseInt(webuiPort) > 65535)) {
-        errors.push('Web UI Port must be between 1 and 65535');
-    }
-
-
-    const maxMessages = document.getElementById('maxMessages')?.value;
-    if (maxMessages && parseInt(maxMessages) < 1) {
-        errors.push('Max Messages must be greater than 0');
-    }
-
-
-    const sleepingRange = document.getElementById('sleepingRange')?.value;
-    if (sleepingRange) {
-        const rangeRegex = /^\d:\d-\d:\d$/;
-        if (!rangeRegex.test(sleepingRange)) {
-            errors.push('Sleeping Range must be in format HH:MM-HH:MM (e.g., 22:30-06:00)');
-        } else {
-            const [start, end] = sleepingRange.split('-');
-            const [startHour, startMinute] = start.split(':').map(Number);
-            const [endHour, endMinute] = end.split(':').map(Number);
-
-            if (
-                startHour < 0 || startHour > 23 ||
-                startMinute < 0 || startMinute > 59 ||
-                endHour < 0 || endHour > 23 ||
-                endMinute < 0 || endMinute > 59
-            ) {
-                errors.push('Sleeping Range contains invalid time values');
-            } else if (
-                (startHour > endHour || (startHour === endHour && startMinute >= endMinute)) &&
-                !(startHour > endHour && endHour < startHour) // Allow ranges spanning midnight
-            ) {
-                errors.push('Sleeping Range start time must be earlier than end time');
-            }
-        }
-    }
-
-
-    const searxBaseUrl = document.getElementById('searxBaseUrl')?.value;
-    if (searxBaseUrl && !isValidUrl(searxBaseUrl)) {
-        errors.push('Search Base URL must be a valid URL');
-    }
-
-
-    const tosUrl = document.getElementById('tosUrl')?.value;
-    if (tosUrl && !isValidUrl(tosUrl)) {
-        errors.push('Terms of Service URL must be a valid URL');
-    }
-
-
-    const aliases = [];
-    document.querySelectorAll('input[name="aliases[]"]').forEach(input => {
-        if (input.value.trim()) {
-            aliases.push(input.value.trim());
-        }
-    });
-    if (aliases.length === 0) {
-        errors.push('At least one alias is required');
-    }
-
-
-    const channels = [];
-    document.querySelectorAll('input[name="channels[]"]').forEach(input => {
-        if (input.value.trim()) {
-            const channelId = input.value.trim();
-
-            if (!/^\d{17,19}$/.test(channelId)) {
-                errors.push(`Invalid channel ID format: ${channelId}`);
-            } else {
-                channels.push(channelId);
-            }
-        }
-    });
-    if (channels.length === 0) {
-        errors.push('At least one channel is required');
-    }
-
-
-    document.querySelectorAll('input[name="owners[]"]').forEach(input => {
-        if (input.value.trim()) {
-            const ownerId = input.value.trim();
-            if (!/^\d{17,19}$/.test(ownerId)) {
-                errors.push(`Invalid owner ID format: ${ownerId}`);
-            }
-        }
-    });
-
-
-    document.querySelectorAll('input[name="remoteLists[]"]').forEach(input => {
-        if (input.value.trim() && !isValidUrl(input.value.trim())) {
-            errors.push(`Invalid remote list URL: ${input.value.trim()}`);
-        }
-    });
-
-
-    document.querySelectorAll('input[name^="emojis["]').forEach(input => {
-        if (input.value.trim() && !/^\d{17,19}$/.test(input.value.trim())) {
-            const match = input.name.match(/emojis\[([^\]]+)\]/);
-            const emojiType = match ? match[1] : 'unknown';
-            errors.push(`Invalid emoji ID format for ${emojiType}: ${input.value.trim()}`);
-        }
-    });
-
-
-    document.querySelectorAll('input[name^="timings["]').forEach(input => {
-        if (input.value.trim()) {
-            const value = parseInt(input.value.trim());
-            if (isNaN(value) || value < 1) {
-                const match = input.name.match(/timings\[([^\]]+)\]/);
-                const timingType = match ? match[1] : 'unknown';
-                errors.push(`Invalid timing value for ${timingType}: must be a positive number`);
-            }
-        }
-    });
-    document.querySelectorAll('.proxy-item').forEach((proxyItem, index) => {
-        const host = proxyItem.querySelector('input[name="proxies[][host]"]')?.value?.trim();
-        const port = proxyItem.querySelector('input[name="proxies[][port]"]')?.value?.trim();
-        const username = proxyItem.querySelector('input[name="proxies[][username]"]')?.value?.trim();
-        const password = proxyItem.querySelector('input[name="proxies[][password]"]')?.value?.trim();
-
-
-        if (host || port || username || password) {
-            if (!host) {
-                errors.push(`Proxy ${index + 1}: Host is required when proxy is configured`);
-            }
-            if (!port) {
-                errors.push(`Proxy ${index + 1}: Port is required when proxy is configured`);
-            } else if (parseInt(port) < 1 || parseInt(port) > 65535) {
-                errors.push(`Proxy ${index + 1}: Port must be between 1 and 65535`);
-            }
-        }
-    });
-
-
-    document.querySelectorAll('textarea[name="wikiUrls[][urls]"]').forEach((textarea, index) => {
-        if (textarea.value.trim()) {
-            const urls = textarea.value.split('\n').map(url => url.trim()).filter(url => url);
-            urls.forEach(url => {
-                if (!isValidUrl(url)) {
-                    errors.push(`Invalid wiki URL in mapping ${index + 1}: ${url}`);
-                }
-            });
-        }
-    });
-    const channelSelects = document.querySelectorAll('select[name="channelPromptMappings[][channelId]"]');
-    const promptSelects = document.querySelectorAll('select[name="channelPromptMappings[][value]"]');
-    const usedChannels = new Set();
-
-    for (let i = 0; i < channelSelects.length; i++) {
-        const channelId = channelSelects[i].value;
-        const promptId = promptSelects[i]?.value;
-
-        if (channelId && promptId) {
-            if (usedChannels.has(channelId)) {
-                errors.push(`Channel ${channelId} is mapped to multiple prompts`);
-            }
-            usedChannels.add(channelId);
-        } else if (channelId && !promptId) {
-            errors.push(`Channel ${channelId} is selected but no prompt is assigned`);
-        } else if (!channelId && promptId) {
-            errors.push(`Prompt ${promptId} is selected but no channel is assigned`);
-        }
-    }
-
-    return errors;
-}
-
-function isValidUrl(url) {
+function isValidUrl(string) {
     try {
-        new URL(url);
+        new URL(string);
         return true;
-    } catch {
+    } catch (_) {
         return false;
     }
+}
+
+function validateConfiguration(data) {
+    const errors = [];
+
+    
+    if (!data.GEMINI_MODEL) errors.push("Gemini Model ID is required.");
+    if (!data.LOCALE) errors.push("Locale is required.");
+
+    
+    if (data.ALIASES && !data.ALIASES.every(alias => typeof alias === 'string' && alias.trim() !== '')) {
+        errors.push("All Aliases must be non-empty strings.");
+    }
+    if (data.CHANNELS && !data.CHANNELS.every(ch => typeof ch === 'string' && ch.match(/^\d+$/))) {
+        errors.push("All Channel IDs must be numeric strings.");
+    }
+    if (data.OWNERS && !data.OWNERS.every(owner => typeof owner === 'string' && owner.match(/^\d+$/))) {
+        errors.push("All Owner User IDs must be numeric strings.");
+    }
+
+    
+    if (data.PROMPT_PATHS) {
+        for (const [channelId, promptFile] of Object.entries(data.PROMPT_PATHS)) {
+            if (!channelId.match(/^\d+$/)) errors.push(`Invalid Channel ID in Prompt Paths: ${channelId}`);
+            if (!promptFile.endsWith('.md')) errors.push(`Prompt file for channel ${channelId} must be a .md file: ${promptFile}`);
+        }
+    }
+
+    
+    if (data.WIKI_URLS) {
+        for (const [channelId, urls] of Object.entries(data.WIKI_URLS)) {
+            if (!channelId.match(/^\d+$/)) errors.push(`Invalid Channel ID in Wiki URLs: ${channelId}`);
+            if (!Array.isArray(urls) || !urls.every(isValidUrl)) {
+                errors.push(`All Wiki URLs for channel ${channelId} must be valid URLs.`);
+            }
+        }
+    }
+    if (data.WEBUI_PORT && (isNaN(data.WEBUI_PORT) || data.WEBUI_PORT < 1 || data.WEBUI_PORT > 65535)) {
+        errors.push("WebUI Port must be a number between 1 and 65535.");
+    }
+
+    
+    if (data.TIMINGS) {
+        if (data.TIMINGS.resetPrompt && (isNaN(data.TIMINGS.resetPrompt) || data.TIMINGS.resetPrompt < 0)) {
+            errors.push("Timing: Reset Prompt must be a non-negative number.");
+        }
+         if (data.TIMINGS.saveReps && (isNaN(data.TIMINGS.saveReps) || data.TIMINGS.saveReps < 0)) {
+            errors.push("Timing: Save Reps must be a non-negative number.");
+        }
+         if (data.TIMINGS.userCacheDuration && (isNaN(data.TIMINGS.userCacheDuration) || data.TIMINGS.userCacheDuration < 0)) {
+            errors.push("Timing: User Cache Duration must be a non-negative number.");
+        }
+    }
+
+
+    if (data.SEARX_BASE_URL && !isValidUrl(data.SEARX_BASE_URL)) {
+        errors.push("SearX Base URL must be a valid URL.");
+    }
+    if (data.TOS_URL && !isValidUrl(data.TOS_URL)) { 
+        errors.push("Terms of Service URL must be a valid URL.");
+    }
+    
+    
+    if (data.EMOJIS) {
+        Object.entries(data.EMOJIS).forEach(([key, value]) => {
+            if (value && !value.match(/^(\d+|<a?:\w+:\d+>)$/)) {
+                 errors.push(`Emoji ID for "${key}" is invalid: ${value}. Must be numeric ID or custom emoji format.`);
+            }
+        });
+    }
+
+
+    if (data.MAX_MESSAGES && (isNaN(data.MAX_MESSAGES) || data.MAX_MESSAGES < 1)) {
+        errors.push("Max Messages must be a positive integer.");
+    }
+    if (data.SLEEPINGRANGE && !data.SLEEPINGRANGE.match(/^\d{2}:\d{2}-\d{2}:\d{2}$/)) {
+        errors.push("Sleeping Range must be in HH:MM-HH:MM format (e.g., 22:00-06:00).");
+    }
+
+    
+    if (data.PROXIES) {
+        data.PROXIES.forEach((proxy, index) => {
+            if (!proxy.host) errors.push(`Proxy #${index + 1}: Host is required.`);
+            if (!proxy.port) errors.push(`Proxy #${index + 1}: Port is required.`);
+            else if (isNaN(proxy.port) || proxy.port < 1 || proxy.port > 65535) {
+                 errors.push(`Proxy #${index + 1}: Port must be a number between 1 and 65535.`);
+            }
+            if (!['http', 'https', 'socks4', 'socks5'].includes(proxy.protocol)) {
+                errors.push(`Proxy #${index + 1}: Invalid protocol.`);
+            }
+            if (proxy.auth && (!proxy.auth.username || !proxy.auth.password)) {
+                errors.push(`Proxy #${index + 1}: Both username and password are required for proxy authentication if auth object is present.`);
+            }
+        });
+    }
+
+    if (data.REMOTE_LISTS && !data.REMOTE_LISTS.every(isValidUrl)) {
+        errors.push("All Remote Block Lists must be valid URLs.");
+    }
+    if (!["classic", "noise", "worse"].includes(data.CUMULATIVE_MODE)) {
+        errors.push("Cumulative Mode must be one of 'classic', 'noise', or 'worse'.");
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
 }

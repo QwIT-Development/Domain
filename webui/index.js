@@ -38,21 +38,10 @@ async function getPromptsData() {
         }
 
         const files = fs.readdirSync(promptsDir);
-        const prompts = [];
-
-        files.forEach((file) => {
-            if (file.endsWith('.md') || file.endsWith('.txt')) {
-                const name = file.replace(/\.(md|txt)$/i, '');
-
-                prompts.push({
-                    id: file,
-                    name: name
-                });
-            }
-        });
-
-        prompts.sort((a, b) => a.name.localeCompare(b.name));
-        return prompts;
+        const promptFiles = files.filter(file => file.endsWith('.md') || file.endsWith('.txt'));
+        
+        promptFiles.sort((a, b) => a.localeCompare(b));
+        return promptFiles;
     } catch (error) {
         log(`Error fetching prompts: ${error}`, 'error', 'webui.js');
         return [];
