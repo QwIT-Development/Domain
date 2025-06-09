@@ -67,7 +67,7 @@ async function bondUpdater(userId) {
             },
     });
     const currentBondLvl = user.bondLvl || 0;
-    const requiredMsgs = await calcRequiredMsgs(currentBondLvl + 1);
+    const requiredMsgs = calcRequiredMsgs(currentBondLvl + 1);
     if (msgCount >= requiredMsgs) {
         await prisma.user.update({
             where: { id: userId },
