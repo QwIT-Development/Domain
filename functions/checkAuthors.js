@@ -44,10 +44,11 @@ async function checkAuthors(message, client) {
     // don't allow banned users
     try {
         const user = await prisma.user.findUnique({ where: { id: message.author.id } });
-        if (user && user.banned) {
+        if (user?.banned) {
             return false; // User is banned
         }
     } catch (error) {
+        log(`Error checking ban status for user ${message.author.id}: ${error.message}`, 'error', 'checkAuthors.js');
         return false; // fallback
     }
 
@@ -100,9 +101,7 @@ async function checkForMentions(message, client) {
     if (replied) return true;
 
     // noinspection RedundantIfStatementJS
-    if (splitFuzzySearch(message.content, config.ALIASES)) return true;
-
-    return false;
+    return (splitFuzzySearch(message.content, config.ALIASES));
 }
 
 module.exports = {checkAuthors, checkForMentions};
