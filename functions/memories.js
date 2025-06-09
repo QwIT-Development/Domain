@@ -19,13 +19,6 @@ async function getMemories(channelId) {
     return memories.join("\n");
 
     // what the fuck did i do
-    /*let memoryString = "";
-    memoryString += '```\n';
-    for (const memory of memories) {
-        memoryString += `${memory}\n`;
-    }
-    memoryString += '```';
-    return memoryString;*/
 }
 
 async function appendMemory(str, channelId) {

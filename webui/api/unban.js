@@ -13,7 +13,7 @@ const unban = async (req) => {
 
     const user = await prisma.user.findUnique({ where: { id } });
 
-    if (user && user.banned) {
+    if (user?.banned) {
         await prisma.user.update({ where: { id }, data: { banned: false, banMessage: null } });
         if (usersCache[id]) {
             delete usersCache[id];

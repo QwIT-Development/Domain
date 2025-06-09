@@ -43,7 +43,7 @@ async function main() {
     // noinspection ES6MissingAwait
     getBannedSites();
     // imports
-    const {promptLoader, model} = require('./initializers/geminiClient');
+    const {model} = require('./initializers/geminiClient');
     const {messageHandler} = require('./eventHandlers/messageHandler');
 
     // initialize stuff inside async thingy

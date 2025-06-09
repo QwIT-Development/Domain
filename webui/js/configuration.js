@@ -485,7 +485,7 @@ function collectFormData() {
         const channelId = wikiChannelSelects[i].value;
         const urlsText = wikiUrlTextareas[i]?.value;
 
-        if (channelId && urlsText && urlsText.trim()) {
+        if (channelId && urlsText?.trim()) {
             const urls = urlsText.split('\n').map(url => url.trim()).filter(url => url);
             if (urls.length > 0) {
                 wikiUrls[channelId] = urls;
@@ -547,11 +547,11 @@ function collectFormData() {
     const botToken = document.getElementById('botToken')?.value;
     const geminiApiKey = document.getElementById('geminiAPIKey')?.value;
 
-    if (botToken && botToken.trim() && !botToken.includes('Current token is set')) {
+    if (botToken?.trim() && !botToken.includes('Current token is set')) {
         data.DISCORD_TOKEN = botToken.trim();
     }
 
-    if (geminiApiKey && geminiApiKey.trim() && !geminiApiKey.includes('Current API key is set')) {
+    if (geminiApiKey?.trim() && !geminiApiKey.includes('Current API key is set')) {
         data.GEMINI_API_KEY = geminiApiKey.trim();
     }    return data;
 }

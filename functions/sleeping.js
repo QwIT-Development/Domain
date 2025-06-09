@@ -65,7 +65,7 @@ function schedSleep(range, client) {
 function parseTime(timeStr) {
     try {
         const timeRegex = /(\d{1,2}):(\d{2})/;
-        const matches = timeStr.match(timeRegex);
+        const matches = timeStr.exec(timeRegex);
 
         if (!matches) return null;
 
@@ -79,7 +79,7 @@ function parseTime(timeStr) {
 
         return (hours * 60 + minutes) * 60 * 1000;
     } catch (error) {
-        log(`Error parsing time string: ${timeStr}`, 'error', 'sleeping.js');
+        log(`Error parsing time string: ${timeStr}, ${error.message}`, 'error', 'sleeping.js');
         return null;
     }
 }

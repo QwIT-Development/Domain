@@ -15,13 +15,13 @@ const logMeta = {
 
 // https://colors.sh/
 const colors = {
-    "info": "\033[38;5;33m",
-    "infoWarn": "\033[38;5;16m\033[48;5;7m",
-    "warn": "\033[38;5;208m",
-    "error": "\033[38;5;15m\033[48;5;160m",
-    "ignorableErr": "\033[38;5;16m\033[48;5;7m",
+    "info": "\u001b[38;5;33m",
+    "infoWarn": "\u001b[38;5;16m\u001b[48;5;7m",
+    "warn": "\u001b[38;5;208m",
+    "error": "\u001b[38;5;15m\u001b[48;5;160m",
+    "ignorableErr": "\u001b[38;5;16m\u001b[48;5;7m",
     // reserved
-    "reset": "\033[0m"
+    "reset": "\u001b[0m"
 };
 
 const symbols = {

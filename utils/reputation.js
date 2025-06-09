@@ -59,7 +59,7 @@ async function reputationSet(id, value) {
     let user = await prisma.user.findUnique({ where: { id } });
 
     if (!user) {
-        user = await prisma.user.create({ data: { id, repPoint: 0 } });
+        await prisma.user.create({ data: { id, repPoint: 0 } });
     }
 
     let newRep = value;

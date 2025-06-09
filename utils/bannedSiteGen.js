@@ -88,8 +88,6 @@ async function getBannedSites() {
             }
         }
         allRemoteSites = allRemoteSites.concat(currentListSites);
-        // delete the current list sites, to free up memory
-        currentListSites = [];
     }
 
     let combinedSites = [...staticFileSites, ...allRemoteSites];
@@ -111,10 +109,6 @@ async function getBannedSites() {
     }
 
     log(`Total domains we are blocking: ${combinedSites.length}`, 'info', 'bannedSiteGen.js');
-    // clear arrays, that we don't need anymore
-    allRemoteSites = [];
-    staticFileSites = [];
-    combinedSites = [];
     return true;
 }
 

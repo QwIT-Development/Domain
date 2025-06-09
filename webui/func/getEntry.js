@@ -47,7 +47,7 @@ async function getEntry(userId) {
         avatarUrl: cachedUserInfo.avatarUrl,
         lastUpdated: cachedUserInfo.lastUpdated,
         score: dbUser ? dbUser.repPoint : 0,
-        banReason: dbUser && dbUser.banned ? dbUser.banMessage : null,
+        banReason: dbUser?.banned ? dbUser.banMessage : null,
         bondLvl: dbUser ? dbUser.bondLvl : 0,
         totalMsgCount: dbUser ? dbUser.totalMsgCount : 0
     };

@@ -57,7 +57,7 @@ async function fetchWithProxies(url) {
                 proxy: false,
                 headers: {
                     'User-Agent': userAgent(),
-                    'Proxy-Authorization': `Basic ${Buffer.from(`${proxy.auth.username}:${proxy.auth.password}`).toString('base64')}`,
+                    'Proxy-Authorization': `Basic ${Buffer.from(proxy.auth.username + ':' + proxy.auth.password).toString('base64')}`,
                     'X-Forwarded-For': proxy.host,
                     'X-Real-IP': proxy.host
                 },
