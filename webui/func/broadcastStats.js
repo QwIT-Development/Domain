@@ -2,6 +2,48 @@ const log = require("../../utils/betterLogs");
 const state = require("../../initializers/state");
 const getCurrentStats = require("./getCurrentStats");
 
+async function sendStatsToClient(client, currentStats, deadClients) {
+    return new Promise(resolve => {
+        if (client.readyState === WebSocket.OPEN && !deadClients.has(client)) {
+            let payloadToSend;
+            let isDelta = false;
+
+            if (!client.lastSentStats) {
+                payloadToSend = currentStats;
+                client.lastSentStats = JSON.parse(JSON.stringify(currentStats));
+            } else {
+                const diff = {};
+                let hasChanges = false;
+                for (const key in currentStats) {
+                    if (JSON.stringify(currentStats[key]) !== JSON.stringify(client.lastSentStats[key])) {
+                        diff[key] = currentStats[key];
+                        hasChanges = true;
+                    }
+                }
+
+                if (hasChanges) {
+                    payloadToSend = diff;
+                    isDelta = true;
+                    client.lastSentStats = JSON.parse(JSON.stringify(currentStats));
+                } else {
+                    resolve();
+                    return;
+                }
+            }
+
+            const data = JSON.stringify({ type: 'statsUpdate', payload: payloadToSend, isDelta });
+
+            try {
+                client.send(data);
+            } catch (err) {
+                log(`Error sending stats to client: ${err.message}`, 'error', 'webui.js (WebSocket)');
+                deadClients.add(client);
+            }
+        }
+        resolve();
+    });
+}
+
 async function broadcastStats() {
     try {
         const currentStats = await getCurrentStats();
@@ -30,45 +72,7 @@ async function broadcastStats() {
         deadClients.forEach(client => state.wsClients.delete(client));
 
         const sendPromises = Array.from(state.wsClients).map(client => {
-            return new Promise(resolve => {
-                if (client.readyState === WebSocket.OPEN && !deadClients.has(client)) {
-                    let payloadToSend;
-                    let isDelta = false;
-
-                    if (!client.lastSentStats) {
-                        payloadToSend = currentStats;
-                        client.lastSentStats = JSON.parse(JSON.stringify(currentStats));
-                    } else {
-                        const diff = {};
-                        let hasChanges = false;
-                        for (const key in currentStats) {
-                            if (JSON.stringify(currentStats[key]) !== JSON.stringify(client.lastSentStats[key])) {
-                                diff[key] = currentStats[key];
-                                hasChanges = true;
-                            }
-                        }
-
-                        if (hasChanges) {
-                            payloadToSend = diff;
-                            isDelta = true;
-                            client.lastSentStats = JSON.parse(JSON.stringify(currentStats));
-                        } else {
-                            resolve();
-                            return;
-                        }
-                    }
-
-                    const data = JSON.stringify({ type: 'statsUpdate', payload: payloadToSend, isDelta });
-
-                    try {
-                        client.send(data);
-                    } catch (err) {
-                        log(`Error sending stats to client: ${err.message}`, 'error', 'webui.js (WebSocket)');
-                        deadClients.add(client);
-                    }
-                }
-                resolve();
-            });
+            return sendStatsToClient(client, currentStats, deadClients);
         });
 
         await Promise.all(sendPromises);
