@@ -5,6 +5,7 @@
 
 const {SlashCommandBuilder} = require('discord.js');
 const {reputation} = require('../utils/reputation');
+const {log} = require('../utils/betterLogs');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -12,7 +13,16 @@ module.exports = {
         .setDescription('Shows you reputation score.'),
 
     async execute(interaction) {
-        const score = await reputation(interaction.user.id);
+        let score = await reputation(interaction.user.id);
+        score = Number(score);
+        if (isNaN(score)) {
+            await interaction.reply({
+                content: "Couldn't fetch your reputation score. Please try again later.",
+                flags: ["Ephemeral"]
+            });
+            log(`Error fetching reputation score for user ${interaction.user.id} (NaN)`, 'error', 'reputation.js');
+            return;
+        }
 
         let content = `Reputation score: ${score.toString()}\n`;
         if (score < 0) {
