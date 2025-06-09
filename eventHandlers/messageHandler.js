@@ -31,7 +31,7 @@ async function messageHandler(message, client, gemini) {
 
         let repliedTo;
         try {
-            if (message.reference && message.reference.messageId) {
+            if (message.reference?.messageId) {
                 repliedTo = await message.channel.messages.fetch(message.reference.messageId);
             }
         } catch (e) {
