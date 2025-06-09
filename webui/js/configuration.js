@@ -624,7 +624,7 @@ function validateConfiguration(data) {
     if (data.MAX_MESSAGES && (isNaN(data.MAX_MESSAGES) || data.MAX_MESSAGES < 1)) {
         errors.push("Max Messages must be a positive integer.");
     }
-    if (data.SLEEPINGRANGE && !data.SLEEPINGRANGE.match(/^\d{2}:\d{2}-\d{2}:\d{2}$/)) {
+    if (data.SLEEPINGRANGE && !data.SLEEPINGRANGE.match(/\d*:\d*-\d*:\d*/gi)) {
         errors.push("Sleeping Range must be in HH:MM-HH:MM format (e.g., 22:00-06:00).");
     }
 

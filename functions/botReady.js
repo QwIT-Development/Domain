@@ -6,7 +6,6 @@
 
 const { ActivityType: {Custom} } = require("discord.js");
 const state = require("../initializers/state");
-const {resetPrompt} = require("../initializers/geminiClient");
 
 async function botReady(client) {
     await client.user.setPresence({

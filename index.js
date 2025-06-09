@@ -19,13 +19,30 @@
 const log = require('./utils/betterLogs');
 const {Events} = require("discord.js");
 const state = require('./initializers/state');
-const config = require('./config.json');
 const {botReady, botOffline} = require('./functions/botReady');
-const {deleteArtifacts, deleteUploadedItems} = require('./utils/cleanup');
 const {initializeSpinner, stopSpinner} = require('./utils/processInfo');
 
 // async main thread hell yeah
 async function main() {
+    global.dirname = __dirname;
+    const {configurationChecker} = require('./initializers/configuration');
+    const needsFullSetup = await configurationChecker();
+    const config = require('./config.json');
+
+    let webUiStarted = false;
+    // i really hope i did this right
+    if (config.WEBUI_PORT) {
+        require('./webui/index.js');
+        webUiStarted = true;
+    } else {
+        log('WEBUI_PORT not found in config, WebUI will not start.', 'warn');
+    }
+    if (needsFullSetup) {
+        log('Bot needs full configuration via WebUI. Halting further initialization until setup is complete and bot is restarted.', 'info');
+        return;
+    }
+
+    // Continue with normal bot initialization if setup is complete
     const allowInteraction = !process.argv.includes('--no-interaction');
 
     await initializeSpinner();
@@ -33,7 +50,7 @@ async function main() {
     if (!allowInteraction) {
         log('Interaction is disabled via --no-interaction flag.', 'warn');
     }
-    global.dirname = __dirname;
+    const {deleteArtifacts, deleteUploadedItems} = require('./utils/cleanup');
     await deleteArtifacts();
     await deleteUploadedItems();
     const initData = require('./utils/initData');
@@ -87,7 +104,9 @@ async function main() {
     await stopSpinner(true, "Domain-Unchained ready");
 
     require('./cronJobs/cronReset'); // this should be run after bot is ready
-    require('./webui/index'); // fire up webui
+    if (!webUiStarted) {
+        require('./webui/index'); 
+    }
 
     discordClient.on(Events.MessageCreate, async message => {
         if (!allowInteraction) return;
@@ -130,6 +149,7 @@ ${error}
 }
 
 async function gracefulShutdown(signal, client) {
+    const {deleteArtifacts, deleteUploadedItems} = require('./utils/cleanup');
     await initializeSpinner();
 
     log(`Received ${signal}`, 'info');
@@ -151,4 +171,8 @@ async function gracefulShutdown(signal, client) {
     }
 }
 
-main().then();
+main().then().catch(error => {
+    log(`Unhandled error in main: ${error.stack}`, 'error');
+    stopSpinner(false, 'Bot crashed during startup.');
+    process.exit(1);
+});

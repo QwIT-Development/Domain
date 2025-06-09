@@ -183,8 +183,10 @@ const saveConfig = async (req) => {
         updatedConfig.PROXIES = configData.PROXIES !== undefined ? configData.PROXIES : currentConfig.PROXIES || [];
         updatedConfig.REMOTE_LISTS = configData.REMOTE_LISTS !== undefined ? configData.REMOTE_LISTS : currentConfig.REMOTE_LISTS || [];
 
+        updatedConfig.NEEDS_FULL_SETUP = false;
 
         const backupPath = configPath + '.backup.' + Date.now();
+
         fs.copyFileSync(configPath, backupPath);
 
         fs.writeFileSync(configPath, JSON.stringify(updatedConfig, null, 2));
