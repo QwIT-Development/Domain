@@ -2,6 +2,7 @@ const broadcastStats = require("../func/broadcastStats");
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const state = require("../../initializers/state");
+const {log} = require('../../utils/betterLogs');
 
 const repSave = async (req) => {
     let id, score;
@@ -10,6 +11,7 @@ const repSave = async (req) => {
         id = body.id;
         score = body.score;
     } catch (e) {
+        log(`Failed to parse JSON: ${e.message}`, 'error', 'repSave.js');
         return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
@@ -40,6 +42,7 @@ const repSave = async (req) => {
 
         return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
     } catch (error) {
+        log(`Failed to save reputation: ${e.message}`, 'error', 'repSave.js');
         return new Response(JSON.stringify({ error: 'Failed to save reputation' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 }

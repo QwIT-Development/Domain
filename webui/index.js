@@ -139,16 +139,12 @@ const server = Bun.serve({
         },
         message(ws, message) {
             ws.isAlive = true;
-            try {
                 const parsedMessage = JSON.parse(message);
                 if (parsedMessage.type === 'ping') {
                     ws.send(JSON.stringify({ type: 'pong' }));
                 } else {
                     log(`Received message from client (This shouldn't happen): ${JSON.stringify(parsedMessage)}`, 'warn', 'webui.js (WebSocket)');
                 }
-            } catch (e) {
-                log(`Received message from client (This shouldn't happen): ${message}`, 'warn', 'webui.js (WebSocket)');
-            }
         },
         pong(ws, data) {
             ws.isAlive = true;

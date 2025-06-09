@@ -25,17 +25,15 @@ async function getEntry(userId) {
                 lastUpdated: now,
             };
             usersCache[userId] = cachedUserInfo;
-        } else {
-            if (cachedUserInfo) {
+        } else if (cachedUserInfo) {
                 cachedUserInfo.lastUpdated = now;
-            } else {
+        } else {
                 cachedUserInfo = {
                     username: 'Unknown',
                     avatarUrl: null,
                     lastUpdated: now,
                 };
                 usersCache[userId] = cachedUserInfo;
-            }
         }
     }
 

@@ -17,10 +17,8 @@ const task = async () => {
         global.geminiModel = await model(state.history, false);
 
         // this won't reset history, instead it just refreshes the models
-        for (const _ in state.history) {
-            // this shouldn't add up to the global reset count
-            count += 1;
-        }
+        // this shouldn't add up to the global reset count
+        count = Object.keys(state.history).length;
         await stopSpinner(true, `Refreshed ${count} models.`);
     } catch (error) {
         log(`Error while resetting prompt reset task: ${error}`, 'error', 'cronReset.js');

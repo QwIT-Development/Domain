@@ -144,7 +144,6 @@ ${strings.automatedMessage}`
         const svgRegex = /svg\[([\s\S]*?)]/gmi;
         const svgMatches = Array.from(out.matchAll(svgRegex));
         if (svgMatches.length > 0) {
-            let svgProcessingError = false;
 
             for (const match of svgMatches) {
                 const commandText = match[0];
@@ -163,7 +162,6 @@ ${strings.automatedMessage}`
                     generatedSvgFiles.push(artifactPath);
                 } catch (e) {
                     log(`Failed to convert SVG to PNG: ${e}`, 'error', 'botCommands.js');
-                    svgProcessingError = true;
                     out += ` [SVG konvertálási hiba]`;
                 }
             }
@@ -175,7 +173,6 @@ ${strings.automatedMessage}`
                 } catch (sendError) {
                     log(`Failed to send SVG artifact(s): ${sendError}`, 'error', 'botCommands.js');
                     out += ` [Nem sikerült elküldeni a képeket]`;
-                    svgProcessingError = true;
                 }
             }
         }

@@ -591,7 +591,7 @@ function validateConfiguration() {
 
     const sleepingRange = document.getElementById('sleepingRange')?.value;
     if (sleepingRange) {
-        const rangeRegex = /^(\d{2}|\d{1}):\d{2}-(\d{2}|\d{1}):\d{2}$/;
+        const rangeRegex = /^\d:\d-\d:\d$/;
         if (!rangeRegex.test(sleepingRange)) {
             errors.push('Sleeping Range must be in format HH:MM-HH:MM (e.g., 22:30-06:00)');
         } else {

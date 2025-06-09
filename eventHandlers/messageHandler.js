@@ -93,7 +93,6 @@ async function messageHandler(message, client, gemini) {
             let response;
             let responseMsg = '';
             try {
-                // response = await gemini[channelId].sendMessage(msgParts);
                 response = await genAI.models.generateContentStream({
                     model: config.GEMINI_MODEL,
                     config: gemini[channelId],
