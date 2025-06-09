@@ -31,6 +31,10 @@ module.exports = {
                 content: "Couldn't check your status. Please try again later.",
                 flags: ["Ephemeral"]
             });
+            // "Handle this exception or don't catch it at all."
+            // editor's choice was: ignore it
+            // javascript forced editor: log it
+            log(`Error checking ban status for user ${userId}: ${error.message}`, 'error', 'amIBanned.js');
             return;
         }
 
