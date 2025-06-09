@@ -17,7 +17,7 @@ const task = async () => {
         global.geminiModel = await model(state.history, false);
 
         // this won't reset history, instead it just refreshes the models
-        for (const channel in state.history) {
+        for (const _ in state.history) {
             // this shouldn't add up to the global reset count
             count += 1;
         }
