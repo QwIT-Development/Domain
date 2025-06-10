@@ -255,7 +255,7 @@ function getChannelOptions() {
     const channelInputs = document.querySelectorAll('#channelsContainer input');
     const channels = Array.from(channelInputs).map(input => input.value.trim()).filter(Boolean);
     
-    if (currentConfig && currentConfig.CHANNELS) {
+    if (currentConfig?.CHANNELS) {
         currentConfig.CHANNELS.forEach(ch => {
             if (!channels.includes(ch)) channels.push(ch);
         });
@@ -294,7 +294,7 @@ function updateAllDynamicDropdowns() {
 
 
 document.addEventListener('input', (event) => {
-    if (event.target && event.target.closest('#channelsContainer')) {
+    if (event.target?.closest('#channelsContainer')) {
         updateAllDynamicDropdowns();
     }
 });

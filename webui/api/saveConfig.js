@@ -123,7 +123,7 @@ function validateConfigData(data) {
     }
     
     if (typeof data.ENABLE_THINKING !== 'boolean') {
-        
+        errors.push("Enable Thinking must be a boolean value.");
     }
 
     return errors;

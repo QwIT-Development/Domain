@@ -28,11 +28,7 @@ if (!fs.existsSync(tmpDir)) {
     log(`Created temporary directory: ${tmpDir}`, 'info', 'botCommands.js');
 }
 
-
-async function parseBotCommands(string, message, gemini) {
-    let out = string.trim();
-    const reactionsToAdd = new Set();
-
+async function handleReputationCommands(out, message, reactionsToAdd) {
     try {
         const repRegex = /\[?([+-])?rep]?/gi;
         out = out.replaceAll(repRegex, (match, sign) => {
@@ -46,11 +42,14 @@ async function parseBotCommands(string, message, gemini) {
             }
             return "";
         });
-        out = out.trim();
+        return out.trim();
     } catch (e) {
         log(`Failed during reputation processing: ${e}`, 'error', 'botCommands.js');
+        return out;
     }
+}
 
+async function handleMemoryCommands(out, message) {
     try {
         const memRegex = /memory\["?(.*?)"?]/gmi;
         const memMatches = Array.from(out.matchAll(memRegex));
@@ -64,13 +63,16 @@ async function parseBotCommands(string, message, gemini) {
                     log(`Skipped empty memory command.`, 'warn', 'botCommands.js');
                 }
             }
-            out = out.trim();
+            return out.trim();
         }
+        return out;
     } catch (e) {
         log(`Failed during memory processing: ${e}`, 'error', 'botCommands.js');
+        return out;
     }
+}
 
-
+async function handleMuteCommands(out, message, reactionsToAdd) {
     try {
         const muteRegex = /mute\[\s*(?:<@!?)?(\d+)>?\s*,\s*(\d+)\s*(?:,\s*([^\]]*))?\s*]/gmi;
         const muteMatches = Array.from(out.matchAll(muteRegex));
@@ -98,18 +100,15 @@ async function parseBotCommands(string, message, gemini) {
                                 await member.timeout(time, reason);
                                 reactionsToAdd.add(state.emojis["mute"]);
                                 out = out.replace(commandText, "");
-                                log(`User ${userIdToMute} muted for ${time/1000}s. Reason: ${reason}`, 'info', 'botCommands.js');
+                                log(`User ${userIdToMute} muted for ${time / 1000}s. Reason: ${reason}`, 'info', 'botCommands.js');
                                 state.muteCount += 1;
-                                // mute penalty
                                 reputation(userIdToMute, "decrease").catch(e => log(`Reputation decrease failed: ${e}`, 'error', 'botCommands.js'));
 
-                                // dm user
                                 const user = await message.client.users.fetch(userIdToMute);
                                 await user.send({
-                                    content: `${strings.muteMessage.replace("[REASON]", '"'+reason+'"').replace("[TIME]", time / 1000)}
+                                    content: `${strings.muteMessage.replace("[REASON]", '"' + reason + '"').replace("[TIME]", time / 1000)}
 ${strings.automatedMessage}`
                                 });
-
                             } else {
                                 log(`Mute failed: Member ${userIdToMute} not found after fetch.`, 'warn', 'botCommands.js');
                                 out = out.replace(commandText, `[Felhasználó nem található]`);
@@ -128,23 +127,25 @@ ${strings.automatedMessage}`
                         }
                     }
                 }
-                out = out.trim();
+                return out.trim();
             } else {
                 out = out.replaceAll(muteRegex, '[A némítás csak szervereken működik]');
-                out = out.trim();
+                return out.trim();
             }
         }
+        return out;
     } catch (e) {
         log(`Failed during mute processing: ${e}`, 'error', 'botCommands.js');
+        return out;
     }
+}
 
-
+async function handleSvgCommands(out, message) {
     const generatedSvgFiles = [];
     try {
         const svgRegex = /svg\[([\s\S]*?)]/gmi;
         const svgMatches = Array.from(out.matchAll(svgRegex));
         if (svgMatches.length > 0) {
-
             for (const match of svgMatches) {
                 const commandText = match[0];
                 const svgCode = match[1]?.trim();
@@ -176,8 +177,10 @@ ${strings.automatedMessage}`
                 }
             }
         }
+        return out;
     } catch (e) {
         log(`Failed during SVG processing block: ${e}`, 'error', 'botCommands.js');
+        return out;
     } finally {
         for (const filePath of generatedSvgFiles) {
             try {
@@ -187,8 +190,9 @@ ${strings.automatedMessage}`
             }
         }
     }
+}
 
-
+async function handleSearchCommands(out, message, gemini, reactionsToAdd) {
     try {
         const searchRegex = /search\[(.*?)]/mi;
         const searchMatch = out.match(searchRegex);
@@ -202,7 +206,7 @@ ${strings.automatedMessage}`
                     const searchResult = await searchHandler(searchQuery, message.channel.id, gemini);
                     out = `${searchResult}\n${out}`.trim();
                     reactionsToAdd.add(state.emojis["search"]);
-                } catch(searchError) {
+                } catch (searchError) {
                     log(`Search handler failed for query "${searchQuery}": ${searchError}`, 'error', 'botCommands.js');
                     out += ` [Keresés besült]`;
                 }
@@ -210,10 +214,22 @@ ${strings.automatedMessage}`
                 out = out.replace(commandText, "[Rossz keresés]").trim();
             }
         }
+        return out;
     } catch (e) {
         log(`Failed during search processing: ${e}`, 'error', 'botCommands.js');
+        return out;
     }
+}
 
+async function parseBotCommands(string, message, gemini) {
+    let out = string.trim();
+    const reactionsToAdd = new Set();
+
+    out = await handleReputationCommands(out, message, reactionsToAdd);
+    out = await handleMemoryCommands(out, message);
+    out = await handleMuteCommands(out, message, reactionsToAdd);
+    out = await handleSvgCommands(out, message);
+    out = await handleSearchCommands(out, message, gemini, reactionsToAdd);
 
     if (reactionsToAdd.size > 0) {
         try {

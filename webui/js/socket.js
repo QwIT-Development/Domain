@@ -166,122 +166,152 @@ socket.onopen = () => {
     pingIntervalId = setInterval(sendPing, 25000);
 };
 
+function handlePong() {
+    if (pingTimeout) {
+        clearTimeout(pingTimeout);
+        pingTimeout = null;
+    }
+}
+
+function updateDomElement(id, textContent) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.textContent = textContent;
+    }
+}
+
+function updateRootPathStats(stats) {
+    if (!rootPath) return;
+
+    if (stats.ram) {
+        const ramUsed = (stats.ram.used / 1024 / 1024).toFixed(2);
+        const ramTotal = (stats.ram.total / 1024 / 1024).toFixed(2);
+        updateDomElement('heapused', `${ramUsed} MB`);
+        updateDomElement('heaptotal', `${ramTotal} MB`);
+    }
+
+    if (stats.botStats) {
+        updateDomElement('msgReceived', stats.botStats.msgCount.toString());
+        updateDomElement('resetCount', stats.botStats.historyClears.toString());
+    }
+
+    if (stats.muteCount != null) {
+        updateDomElement('muteCount', stats.muteCount.toString());
+    }
+
+    if (stats.users) {
+        const users = stats.users || [];
+        updateDomElement('userNumber', users.length.toString());
+        const bans = users.filter(user => user.banReason && typeof user.banReason === 'string');
+        updateDomElement('banCount', bans.length.toString());
+    }
+
+    const logsElement = document.getElementById('logs');
+    if (stats.logs && Array.isArray(stats.logs) && logsElement) {
+        logsElement.innerHTML = '';
+        stats.logs.forEach(logEntry => {
+            const logLine = document.createElement('div');
+            logLine.classList.add('log-entry');
+            if (logEntry.cssClass) {
+                logLine.classList.add(logEntry.cssClass);
+            }
+            logLine.textContent = `${logEntry.timestamp} ${logEntry.symbol}[${logEntry.thread}]: ${logEntry.message}`;
+            logsElement.appendChild(logLine);
+        });
+    }
+}
+
+function updateReputationPathStats(stats) {
+    if (!reputationPath) return;
+
+    const userCont = document.getElementById('user-cards-container');
+    if (!userCont) return;
+
+    const users = stats.users || [];
+    const userIds = new Set(users.map(u => u.id));
+    const existingUserCards = userCont.querySelectorAll('.card[data-user-id]');
+
+    existingUserCards.forEach(cardElement => {
+        const userId = cardElement.dataset.userId;
+        if (!userIds.has(userId)) {
+            const colDiv = cardElement.closest('.col-12');
+            if (colDiv) {
+                userCont.removeChild(colDiv);
+            }
+        }
+    });
+
+    users.forEach(user => {
+        let card = userCont.querySelector(`.card[data-user-id="${user.id}"]`);
+        if (card) {
+            const scoreInput = card.querySelector('input[name="scoreInput"]');
+            const avatarImg = card.querySelector('img');
+            const usernameP = card.querySelector('.card-header p');
+
+            if (scoreInput && document.activeElement !== scoreInput && String(scoreInput.value) !== String(user.score)) {
+                scoreInput.value = user.score;
+            }
+
+            const newAvatarUrl = user.avatarUrl || 'data:,';
+            if (avatarImg && avatarImg.src !== newAvatarUrl) {
+                avatarImg.src = newAvatarUrl;
+            }
+
+            if (usernameP && usernameP.textContent !== user.username) {
+                usernameP.textContent = user.username;
+            }
+        } else {
+            const userCardElement = createCard(user, 'reputation');
+            userCont.appendChild(userCardElement);
+        }
+    });
+}
+
+function updateBansPathStats(stats) {
+    if (!bansPath) return;
+
+    const banCont = document.getElementById('ban-cards-container');
+    if (!banCont) return;
+
+    const users = stats.users || [];
+    const filteredBans = users.filter(user => user.banReason && typeof user.banReason === 'string');
+
+    banCont.innerHTML = '';
+    filteredBans.forEach(ban => {
+        const banCardElement = createCard(ban, 'ban');
+        banCont.appendChild(banCardElement);
+    });
+}
+
+function handleStatsUpdate(payload, isDelta) {
+    if (isDelta) {
+        Object.assign(currentStats, payload);
+    } else {
+        currentStats = payload;
+    }
+    const stats = currentStats;
+
+    updateRootPathStats(stats);
+    updateReputationPathStats(stats);
+    updateBansPathStats(stats);
+}
+
+function handleVersionUpdate(payload) {
+    if (payload.version) {
+        updateDomElement('version', `${payload.version}`);
+    }
+}
+
 socket.onmessage = (event) => {
     try {
         const message = JSON.parse(event.data);
 
         if (message.type === 'pong') {
-            if (pingTimeout) {
-                clearTimeout(pingTimeout);
-                pingTimeout = null;
-            }
+            handlePong();
         } else if (message.type === 'statsUpdate' && message.payload) {
-            if (message.isDelta) {
-                Object.assign(currentStats, message.payload);
-            } else {
-                currentStats = message.payload;
-            }
-
-            const stats = currentStats;
-
-            if (rootPath) {
-                if (stats.ram) {
-                    const ramUsed = (stats.ram.used / 1024 / 1024).toFixed(2);
-                    const ramTotal = (stats.ram.total / 1024 / 1024).toFixed(2);
-                    document.getElementById('heapused').textContent = `${ramUsed} MB`;
-                    document.getElementById('heaptotal').textContent = `${ramTotal} MB`;
-                }
-
-                if (stats.botStats) {
-                    document.getElementById('msgReceived').textContent = stats.botStats.msgCount.toString();
-                    document.getElementById('resetCount').textContent = stats.botStats.historyClears.toString();
-                }
-
-                if (stats.muteCount != null) {
-                    document.getElementById('muteCount').textContent = stats.muteCount.toString();
-                }
-
-                if (stats.users) {
-                    const users = stats.users || [];
-                    document.getElementById('userNumber').textContent = users.length.toString();
-                    const bans = users.filter(user => user.banReason && typeof user.banReason === 'string');
-                    document.getElementById('banCount').textContent = bans.length.toString();
-                }
-
-                const logsElement = document.getElementById('logs');
-                if (stats.logs && Array.isArray(stats.logs)) {
-                    logsElement.innerHTML = '';
-                    stats.logs.forEach(logEntry => {
-                        const logLine = document.createElement('div');
-                        logLine.classList.add('log-entry');
-                        if (logEntry.cssClass) {
-                            logLine.classList.add(logEntry.cssClass);
-                        }
-                        logLine.textContent = `${logEntry.timestamp} ${logEntry.symbol}[${logEntry.thread}]: ${logEntry.message}`;
-                        logsElement.appendChild(logLine);
-                    });
-                }
-            }
-            if (reputationPath) {
-                const userCont = document.getElementById('user-cards-container');
-                const users = stats.users || [];
-                const userIds = new Set(users.map(u => u.id));
-                const existingUserCards = userCont.querySelectorAll('.card[data-user-id]');
-
-                existingUserCards.forEach(cardElement => {
-                    const userId = cardElement.dataset.userId;
-                    if (!userIds.has(userId)) {
-                        const colDiv = cardElement.closest('.col-12');
-                        if (colDiv) {
-                            userCont.removeChild(colDiv);
-                        }
-                    }
-                });
-
-                users.forEach(user => {
-                    let card = userCont.querySelector(`.card[data-user-id="${user.id}"]`);
-
-                    if (card) {
-                        const scoreInput = card.querySelector('input[name="scoreInput"]');
-                        const avatarImg = card.querySelector('img');
-                        const usernameP = card.querySelector('.card-header p');
-
-                        if (scoreInput && document.activeElement !== scoreInput && String(scoreInput.value) !== String(user.score)) {
-                            scoreInput.value = user.score;
-                        }
-
-                        const newAvatarUrl = user.avatarUrl || 'data:,';
-                        if (avatarImg && avatarImg.src !== newAvatarUrl) {
-                            avatarImg.src = newAvatarUrl;
-                        }
-
-                        if (usernameP && usernameP.textContent !== user.username) {
-                            usernameP.textContent = user.username;
-                        }
-
-                    } else {
-                        const userCardElement = createCard(user, 'reputation');
-                        userCont.appendChild(userCardElement);
-                    }
-                });
-            }
-            if (bansPath) {
-                const banCont = document.getElementById('ban-cards-container');
-                const users = stats.users || [];
-
-                const filter = users.filter(user => user.banReason && typeof user.banReason === 'string');
-
-                banCont.innerHTML = '';
-                filter.forEach(ban => {
-                    const banCardElement = createCard(ban, 'ban');
-                    banCont.appendChild(banCardElement);
-                })
-            }
+            handleStatsUpdate(message.payload, message.isDelta);
         } else if (message.type === 'version' && message.payload) {
-            const stats = message.payload;
-            if (stats.version) {
-                document.getElementById('version').textContent = `${stats.version}`;
-            }
+            handleVersionUpdate(message.payload);
         }
     } catch (e) {
         console.error('socket parsing error:', e);

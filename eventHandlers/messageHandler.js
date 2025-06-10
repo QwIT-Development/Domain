@@ -20,179 +20,174 @@ const {formatDate} = require('../functions/makePrompt');
 const {genAI} = require('../initializers/geminiClient');
 const {bondUpdater} = require('../functions/usageRep');
 
-async function messageHandler(message, client, gemini) {
-    if (await checkAuthors(message, client)) {
-        const channelId = message.channel.id;
-        /*
-            A bot ezt a formatot kapja meg:
-            Replied to [username (ID: id)] name: message
-            [Reputation Score: score] [username (ID: id)] name: message
-        */
-
-        let repliedTo;
-        try {
-            if (message.reference?.messageId) {
-                repliedTo = await message.channel.messages.fetch(message.reference.messageId);
-            }
-        } catch (e) {
-            // ignoralhato since honnet tudjam
-            log(`Failed to fetch replied message: ${e}`, 'warn', 'messageHandler.js');
-        }
-
-        const files = await uploadFilesToGemini(message, client);
-        if (files.length > 0) {
-            message.content += '[Attachment]';
-        }
-
-        const score = await reputation(message.author.id);
-        const memories = await getMemories(channelId);
-        let formattedMessage;
-        const date = formatDate(new Date());
-        if (repliedTo) {
-            formattedMessage = `[Memories: ${memories}]
+async function formatUserMessage(message, repliedTo, channelId) {
+    const score = await reputation(message.author.id);
+    const memories = await getMemories(channelId);
+    const date = formatDate(new Date());
+    if (repliedTo) {
+        return `[Memories: ${memories}]
             Replied to [${repliedTo.author.username} (ID: ${repliedTo.author.id})] ${repliedTo.member.displayName}: ${repliedTo.content}
             ${date} - [Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
-        } else {
-            formattedMessage = `[Memories: ${memories}]
+    }
+    return `[Memories: ${memories}]
             ${date} - [Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
-        }
+}
 
-        if (await checkForMentions(message, client)) {
-            // this should run, bc it wouldn't be good if the bot randomly resets while getting back the response
-            const cronReset = require('../cronJobs/cronReset');
-            cronReset.reschedule();
-
-            // send typing so it looks more realistic
-            await message.channel.sendTyping();
-
-            // skizofren enem azt mondja, h ne bizzak a ++ban
-            state.msgCount += 1;
-
-            let msgParts = [];
-            // should add files first, then the text, bc gemini handles it this way too???
-            if (files.length > 0) {
-                files.forEach(file => {
-                    msgParts.push({
-                        fileData: {
-                            fileUri: file.uri,
-                            mimeType: file.mimeType,
-                        }
-                    });
-                });
-            }
-            msgParts.push({
-                text: formattedMessage
-            });
-
-            await trimHistory(channelId); // trim history before we add the new stuff into
-            state.history[channelId].push({
-                role: 'user',
-                parts: msgParts
-            })
-
-            let response;
-            let responseMsg = '';
-            try {
-                response = await genAI.models.generateContentStream({
-                    model: config.GEMINI_MODEL,
-                    config: gemini[channelId],
-                    // i really hope this will work
-                    contents: state.history[channelId],
-                });
-                for await (const chunk of response) {
-                    if (chunk.text) {
-                        responseMsg += chunk.text.trim();
-                    }
-                }
-            } catch (e) {
-                let msg;
-                try {
-                    if (e.response.promptFeedback.blockReason) {
-                        msg = e.response.promptFeedback.blockReason;
-                    }
-                } catch {}
-
-                let status;
-                try {
-                    if (e.error) {
-                        status = e.error.code;
-                    }
-                } catch {}
-
-                // check if msg exists then check blockreason
-                if (msg && (msg === "SAFETY" || msg === "PROHIBITED_CONTENT" || msg ==="OTHER")) {
-                    return await message.channel.send(await RNGArray(strings.geminiFiltered));
-
-                //check for toomanyrequests
-                } else if (status && (status === 429)) {
-                    return await message.channel.send(await RNGArray(strings.geminiTooManyReqs));
-                } else if (status && (status === 503)) {
-                    return await message.channel.send(await RNGArray(strings.geminiGatewayUnavail));
-                } else if (status && (status === 500)) {
-                    // should do a retry, like a complete retry after 3 secs, for good
-                    log(`Gemini returned 500, retrying`, 'warn', 'messageHandler.js');
-                    
-                    // init retry counts for the channel
-                    if (!state.retryCounts[channelId]) {
-                        state.retryCounts[channelId] = 0;
-                    }
-                    state.retryCounts[channelId]++;
-
-                    if (state.retryCounts[channelId] > 5) {
-                        log(`Gemini returned 500 error 5 times for channel ${channelId}, dropping task`, 'error', 'messageHandler.js');
-                        state.retryCounts[channelId] = 0;
-                        return await message.channel.send("Couldn't get a response, try again later.");
-                    }
-
-                    await new Promise(resolve => setTimeout(resolve, 3000));
-                    return await messageHandler(message, client, gemini);
-                } else {
-                    // generic err handler
-                    // reset err counts too
-                    if (state.retryCounts[channelId]) {
-                        state.retryCounts[channelId] = 0;
-                    }
-                    log(e, 'error', 'messageHandler.js');
-                    console.log(e.stack);
-                    return await message.channel.send("Unhandled error. (Refer to console)");
-                }
-            }
-
-            responseMsg = responseMsg.replaceAll('@everyone', '[blocked :3]');
-            responseMsg = responseMsg.replaceAll('@here', '[blocked :3]');
-
-            responseMsg = await parseBotCommands(responseMsg, message, gemini);
-
-            // try to remove schizophrenic context repeations
-            // i really hope this works
-            responseMsg = responseMsg.replaceAll(/replied to \[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
-            responseMsg = responseMsg.replaceAll(/\[reputation score: ?\S*] ?\[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
-            // if success we remove retry counts for the channel
-            if (state.retryCounts[channelId]) {
-                state.retryCounts[channelId] = 0;
-            }
-            if (repliedTo) {
-                responseMsg = responseMsg.replaceAll(`${repliedTo.author.username}:`, "").trim();
-                responseMsg = responseMsg.replaceAll(`${repliedTo.author.username.toLowerCase()}:`, "").trim();
-                responseMsg = responseMsg.replaceAll(`${repliedTo.member.displayName}:`, "").trim();
-                responseMsg = responseMsg.replaceAll(`${repliedTo.member.displayName.toLowerCase()}:`, "").trim();
-            }
-            responseMsg = responseMsg.replaceAll(`${message.author.username}:`, "").trim();
-            responseMsg = responseMsg.replaceAll(`${message.author.username.toLowerCase()}:`, "").trim();
-            responseMsg = responseMsg.replaceAll(`${message.member.displayName}:`, "").trim();
-            responseMsg = responseMsg.replaceAll(`${message.member.displayName.toLowerCase()}:`, "").trim();
-            responseMsg = responseMsg.replaceAll(/\[([^\s(]*) ?\(id: ?(\d+)\)] ?([^:]*):/gmi, "").trim();
-
-            // clean history before sending message
-            await trimHistory(channelId)
-            bondUpdater(message.author.id); // async should be ignored
-            return await chunkedMsg(message, responseMsg);
-        } else {
-            state.msgCount += 1;
-
-            return await addToHistory('user', formattedMessage, channelId);
+async function callGeminiAPI(channelId, gemini) {
+    let responseMsg = '';
+    const response = await genAI.models.generateContentStream({
+        model: config.GEMINI_MODEL,
+        config: gemini[channelId],
+        contents: state.history[channelId],
+    });
+    for await (const chunk of response) {
+        if (chunk.text) {
+            responseMsg += chunk.text.trim();
         }
     }
+    return responseMsg;
+}
+
+async function handleGeminiError(e, message, client, gemini) {
+    const channelId = message.channel.id;
+    let msg;
+    try {
+        if (e.response.promptFeedback.blockReason) {
+            msg = e.response.promptFeedback.blockReason;
+        }
+    } catch {}
+
+    let status;
+    try {
+        if (e.error) {
+            status = e.error.code;
+        }
+    } catch {}
+
+    if (msg && (msg === "SAFETY" || msg === "PROHIBITED_CONTENT" || msg === "OTHER")) {
+        return message.channel.send(await RNGArray(strings.geminiFiltered));
+    } else if (status && (status === 429)) {
+        return message.channel.send(await RNGArray(strings.geminiTooManyReqs));
+    } else if (status && (status === 503)) {
+        return message.channel.send(await RNGArray(strings.geminiGatewayUnavail));
+    } else if (status && (status === 500)) {
+        log(`Gemini returned 500, retrying`, 'warn', 'messageHandler.js');
+        if (!state.retryCounts[channelId]) {
+            state.retryCounts[channelId] = 0;
+        }
+        state.retryCounts[channelId]++;
+
+        if (state.retryCounts[channelId] > 5) {
+            log(`Gemini returned 500 error 5 times for channel ${channelId}, dropping task`, 'error', 'messageHandler.js');
+            state.retryCounts[channelId] = 0;
+            return message.channel.send("Couldn't get a response, try again later.");
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        return messageHandler(message, client, gemini);
+    } else {
+        if (state.retryCounts[channelId]) {
+            state.retryCounts[channelId] = 0;
+        }
+        log(e, 'error', 'messageHandler.js');
+        console.log(e.stack);
+        return message.channel.send("Unhandled error. (Refer to console)");
+    }
+}
+
+async function processResponse(responseMsg, message, gemini, repliedTo) {
+    responseMsg = responseMsg.replaceAll('@everyone', '[blocked :3]');
+    responseMsg = responseMsg.replaceAll('@here', '[blocked :3]');
+
+    responseMsg = await parseBotCommands(responseMsg, message, gemini);
+
+    responseMsg = responseMsg.replaceAll(/replied to \[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
+    responseMsg = responseMsg.replaceAll(/\[reputation score: ?\S*] ?\[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
+
+    if (state.retryCounts[message.channel.id]) {
+        state.retryCounts[message.channel.id] = 0;
+    }
+
+    if (repliedTo) {
+        responseMsg = responseMsg.replaceAll(`${repliedTo.author.username}:`, "").trim();
+        responseMsg = responseMsg.replaceAll(`${repliedTo.author.username.toLowerCase()}:`, "").trim();
+        responseMsg = responseMsg.replaceAll(`${repliedTo.member.displayName}:`, "").trim();
+        responseMsg = responseMsg.replaceAll(`${repliedTo.member.displayName.toLowerCase()}:`, "").trim();
+    }
+    responseMsg = responseMsg.replaceAll(`${message.author.username}:`, "").trim();
+    responseMsg = responseMsg.replaceAll(`${message.author.username.toLowerCase()}:`, "").trim();
+    responseMsg = responseMsg.replaceAll(`${message.member.displayName}:`, "").trim();
+    responseMsg = responseMsg.replaceAll(`${message.member.displayName.toLowerCase()}:`, "").trim();
+    responseMsg = responseMsg.replaceAll(/\[([^\s(]*) ?\(id: ?(\d+)\)] ?([^:]*):/gmi, "").trim();
+    return responseMsg;
+}
+
+async function messageHandler(message, client, gemini) {
+    if (!await checkAuthors(message, client)) {
+        return;
+    }
+
+    const channelId = message.channel.id;
+    let repliedTo;
+    try {
+        if (message.reference?.messageId) {
+            repliedTo = await message.channel.messages.fetch(message.reference.messageId);
+        }
+    } catch (e) {
+        log(`Failed to fetch replied message: ${e}`, 'warn', 'messageHandler.js');
+    }
+
+    const files = await uploadFilesToGemini(message, client);
+    if (files.length > 0) {
+        message.content += '[Attachment]';
+    }
+
+    const formattedMessage = await formatUserMessage(message, repliedTo, channelId);
+
+    if (!await checkForMentions(message, client)) {
+        state.msgCount += 1;
+        return addToHistory('user', formattedMessage, channelId);
+    }
+
+    const cronReset = require('../cronJobs/cronReset');
+    cronReset.reschedule();
+
+    await message.channel.sendTyping();
+    state.msgCount += 1;
+
+    let msgParts = [];
+    if (files.length > 0) {
+        files.forEach(file => {
+            msgParts.push({
+                fileData: {
+                    fileUri: file.uri,
+                    mimeType: file.mimeType,
+                }
+            });
+        });
+    }
+    msgParts.push({
+        text: formattedMessage
+    });
+
+    await trimHistory(channelId);
+    state.history[channelId].push({
+        role: 'user',
+        parts: msgParts
+    });
+
+    let responseMsg;
+    try {
+        responseMsg = await callGeminiAPI(channelId, gemini);
+    } catch (e) {
+        return handleGeminiError(e, message, client, gemini);
+    }
+
+    responseMsg = await processResponse(responseMsg, message, gemini, repliedTo);
+
+    await trimHistory(channelId);
+    bondUpdater(message.author.id);
+    return chunkedMsg(message, responseMsg);
 }
 
 /**
