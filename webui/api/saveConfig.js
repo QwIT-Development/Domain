@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-
 function isValidUrl(string) {
     try {
         new URL(string);
@@ -17,25 +16,46 @@ function validateOptionalUrlString(value, propertyName, errors) {
     }
 }
 
+function validateNumericStringArray(value, itemDescription, errors) {
+    if (value && (!Array.isArray(value) || !value.every(item => typeof item === 'string' && item.match(/^\d+$/)))) {
+        errors.push(`All ${itemDescription} must be numeric strings in an array.`);
+    }
+}
+
+function validateNonEmptyStringArray(value, itemDescription, errors) {
+    if (value && (!Array.isArray(value) || !value.every(item => typeof item === 'string' && item.trim() !== ''))) {
+        errors.push(`All ${itemDescription} must be non-empty strings in an array.`);
+    }
+}
+
+function validatePortNumber(value, propertyName, errors) {
+    if (value !== undefined && (isNaN(parseInt(value)) || parseInt(value) < 1 || parseInt(value) > 65535)) {
+        errors.push(`${propertyName} must be a number between 1 and 65535.`);
+    }
+}
+
+function validateTimingValue(value, propertyNameInMessage, errors) {
+    if (value !== undefined && (isNaN(parseInt(value)) || parseInt(value) < 0)) {
+        errors.push(`Timing: ${propertyNameInMessage} must be a non-negative number.`);
+    }
+}
+
+function validateUrlArray(value, itemDescription, errors) {
+    if (value && (!Array.isArray(value) || !value.every(url => typeof url === 'string' && isValidUrl(url)))) {
+        errors.push(`All ${itemDescription} must be valid URLs in an array.`);
+    }
+}
+
 function validateConfigData(data) {
     const errors = [];
 
-    
     if (!data.GEMINI_MODEL) errors.push("Gemini Model ID is required.");
     if (!data.LOCALE) errors.push("Locale is required.");
 
-    
-    if (data.ALIASES && !data.ALIASES.every(alias => typeof alias === 'string' && alias.trim() !== '')) {
-        errors.push("All Aliases must be non-empty strings.");
-    }
-    if (data.CHANNELS && !data.CHANNELS.every(ch => typeof ch === 'string' && ch.match(/^\d+$/))) {
-        errors.push("All Channel IDs must be numeric strings.");
-    }
-    if (data.OWNERS && !data.OWNERS.every(owner => typeof owner === 'string' && owner.match(/^\d+$/))) {
-        errors.push("All Owner User IDs must be numeric strings.");
-    }
+    validateNonEmptyStringArray(data.ALIASES, "Aliases", errors);
+    validateNumericStringArray(data.CHANNELS, "Channel IDs", errors);
+    validateNumericStringArray(data.OWNERS, "Owner User IDs", errors);
 
-    
     if (data.PROMPT_PATHS) {
         for (const [channelId, promptFile] of Object.entries(data.PROMPT_PATHS)) {
             if (!channelId.match(/^\d+$/)) errors.push(`Invalid Channel ID in Prompt Paths: ${channelId}`);
@@ -43,41 +63,29 @@ function validateConfigData(data) {
         }
     }
 
-    
     if (data.WIKI_URLS) {
         for (const [channelId, urls] of Object.entries(data.WIKI_URLS)) {
             if (!channelId.match(/^\d+$/)) errors.push(`Invalid Channel ID in Wiki URLs: ${channelId}`);
-            if (!Array.isArray(urls) || !urls.every(url => typeof url === 'string' && isValidUrl(url))) {
-                errors.push(`All Wiki URLs for channel ${channelId} must be valid URLs.`);
-            }
+            validateUrlArray(urls, `Wiki URLs for channel ${channelId}`, errors);
         }
-    }
-    if (data.WEBUI_PORT && (isNaN(parseInt(data.WEBUI_PORT)) || parseInt(data.WEBUI_PORT) < 1 || parseInt(data.WEBUI_PORT) > 65535)) {
-        errors.push("WebUI Port must be a number between 1 and 65535.");
     }
 
-    
+    validatePortNumber(data.WEBUI_PORT, "WebUI Port", errors);
+
     if (data.TIMINGS) {
         const { resetPrompt, saveReps, userCacheDuration } = data.TIMINGS;
-        if (resetPrompt !== undefined && (isNaN(parseInt(resetPrompt)) || parseInt(resetPrompt) < 0)) {
-            errors.push("Timing: Reset Prompt must be a non-negative number.");
-        }
-        if (saveReps !== undefined && (isNaN(parseInt(saveReps)) || parseInt(saveReps) < 0)) {
-            errors.push("Timing: Save Reps must be a non-negative number.");
-        }
-        if (userCacheDuration !== undefined && (isNaN(parseInt(userCacheDuration)) || parseInt(userCacheDuration) < 0)) {
-            errors.push("Timing: User Cache Duration must be a non-negative number.");
-        }
+        validateTimingValue(resetPrompt, "Reset Prompt", errors);
+        validateTimingValue(saveReps, "Save Reps", errors);
+        validateTimingValue(userCacheDuration, "User Cache Duration", errors);
     }
 
     validateOptionalUrlString(data.SEARX_BASE_URL, "SearX Base URL", errors);
     validateOptionalUrlString(data.TOS_URL, "Terms of Service URL", errors);
 
-    
     if (data.EMOJIS) {
         Object.entries(data.EMOJIS).forEach(([key, value]) => {
             if (value && (typeof value !== 'string' || !value.match(/^\d+|<a?:\w+:\d+>$/))) {
-                 errors.push(`Emoji ID for "${key}" is invalid: ${value}. Must be numeric ID or custom emoji format.`);
+                errors.push(`Emoji ID for "${key}" is invalid: ${value}. Must be numeric ID or custom emoji format.`);
             }
         });
     }
@@ -89,7 +97,6 @@ function validateConfigData(data) {
         errors.push("Sleeping Range must be in HH:MM-HH:MM format (e.g., 22:00-06:00).");
     }
 
-    
     if (data.PROXIES) {
         if (!Array.isArray(data.PROXIES)) {
             errors.push("Proxies must be an array.");
@@ -101,7 +108,7 @@ function validateConfigData(data) {
                 }
                 if (!proxy.host || typeof proxy.host !== 'string') errors.push(`Proxy #${index + 1}: Host is required and must be a string.`);
                 if (!proxy.port || isNaN(parseInt(proxy.port)) || parseInt(proxy.port) < 1 || parseInt(proxy.port) > 65535) {
-                     errors.push(`Proxy #${index + 1}: Port is required and must be a number between 1 and 65535.`);
+                    errors.push(`Proxy #${index + 1}: Port is required and must be a number between 1 and 65535.`);
                 }
                 if (!proxy.protocol || typeof proxy.protocol !== 'string' || !['http', 'https', 'socks4', 'socks5'].includes(proxy.protocol)) {
                     errors.push(`Proxy #${index + 1}: Invalid or missing protocol.`);
@@ -113,16 +120,12 @@ function validateConfigData(data) {
         }
     }
 
-    if (data.REMOTE_LISTS) {
-        if (!Array.isArray(data.REMOTE_LISTS) || !data.REMOTE_LISTS.every(url => typeof url === 'string' && isValidUrl(url))) {
-            errors.push("All Remote Block Lists must be valid URLs in an array.");
-        }
-    }
-    
+    validateUrlArray(data.REMOTE_LISTS, "Remote Block Lists", errors);
+
     if (data.CUMULATIVE_MODE && !["classic", "noise", "worse"].includes(data.CUMULATIVE_MODE)) {
         errors.push("Cumulative Mode must be one of 'classic', 'noise', or 'worse'.");
     }
-    
+
     if (typeof data.ENABLE_THINKING !== 'boolean') {
         errors.push("Enable Thinking must be a boolean value.");
     }
@@ -130,29 +133,23 @@ function validateConfigData(data) {
     return errors;
 }
 
-
 const saveConfig = async (req) => {
     try {
         const configData = await req.json();
-        
+
         const validationErrors = validateConfigData(configData);
         if (validationErrors.length > 0) {
-            return new Response(JSON.stringify({ error: 'Invalid configuration data', details: validationErrors }), { 
-                status: 400, 
-                headers: { 'Content-Type': 'application/json' } 
+            return new Response(JSON.stringify({ error: 'Invalid configuration data', details: validationErrors }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
             });
         }
 
         const configPath = path.join(global.dirname || process.cwd(), 'config.json');
         const currentConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
-        
-        const updatedConfig = {
-            ...currentConfig, 
-        };
+        const updatedConfig = { ...currentConfig };
 
-        
-        
         if (configData.DISCORD_TOKEN && configData.DISCORD_TOKEN !== '***HIDDEN***') {
             updatedConfig.DISCORD_TOKEN = configData.DISCORD_TOKEN;
         }
@@ -160,11 +157,8 @@ const saveConfig = async (req) => {
             updatedConfig.GEMINI_API_KEY = configData.GEMINI_API_KEY;
         }
 
-        
-        
-        
         const fieldsToUpdate = [
-            'GEMINI_MODEL', 'LOCALE', 'WEBUI_PORT', 'SEARX_BASE_URL', 
+            'GEMINI_MODEL', 'LOCALE', 'WEBUI_PORT', 'SEARX_BASE_URL',
             'MAX_MESSAGES', 'SLEEPINGRANGE', 'ENABLE_THINKING', 'CUMULATIVE_MODE', 'TOS_URL'
         ];
         fieldsToUpdate.forEach(field => {
@@ -172,17 +166,26 @@ const saveConfig = async (req) => {
                 updatedConfig[field] = configData[field];
             }
         });
-        
-        
-        updatedConfig.ALIASES = configData.ALIASES !== undefined ? configData.ALIASES : currentConfig.ALIASES || [];
-        updatedConfig.CHANNELS = configData.CHANNELS !== undefined ? configData.CHANNELS : currentConfig.CHANNELS || [];
-        updatedConfig.PROMPT_PATHS = configData.PROMPT_PATHS !== undefined ? configData.PROMPT_PATHS : currentConfig.PROMPT_PATHS || {};
-        updatedConfig.WIKI_URLS = configData.WIKI_URLS !== undefined ? configData.WIKI_URLS : currentConfig.WIKI_URLS || {};
-        updatedConfig.OWNERS = configData.OWNERS !== undefined ? configData.OWNERS : currentConfig.OWNERS || [];
-        updatedConfig.TIMINGS = configData.TIMINGS !== undefined ? configData.TIMINGS : currentConfig.TIMINGS || {};
-        updatedConfig.EMOJIS = configData.EMOJIS !== undefined ? configData.EMOJIS : currentConfig.EMOJIS || {};
-        updatedConfig.PROXIES = configData.PROXIES !== undefined ? configData.PROXIES : currentConfig.PROXIES || [];
-        updatedConfig.REMOTE_LISTS = configData.REMOTE_LISTS !== undefined ? configData.REMOTE_LISTS : currentConfig.REMOTE_LISTS || [];
+
+        const complexFieldsToUpdate = [
+            { name: 'ALIASES', defaultFallback: [] },
+            { name: 'CHANNELS', defaultFallback: [] },
+            { name: 'PROMPT_PATHS', defaultFallback: {} },
+            { name: 'WIKI_URLS', defaultFallback: {} },
+            { name: 'OWNERS', defaultFallback: [] },
+            { name: 'TIMINGS', defaultFallback: {} },
+            { name: 'EMOJIS', defaultFallback: {} },
+            { name: 'PROXIES', defaultFallback: [] },
+            { name: 'REMOTE_LISTS', defaultFallback: [] }
+        ];
+
+        complexFieldsToUpdate.forEach(fieldInfo => {
+            if (configData[fieldInfo.name] !== undefined) {
+                updatedConfig[fieldInfo.name] = configData[fieldInfo.name];
+            } else {
+                updatedConfig[fieldInfo.name] = currentConfig[fieldInfo.name] || fieldInfo.defaultFallback;
+            }
+        });
 
         updatedConfig.NEEDS_FULL_SETUP = false;
 
@@ -192,22 +195,22 @@ const saveConfig = async (req) => {
 
         fs.writeFileSync(configPath, JSON.stringify(updatedConfig, null, 2));
 
-        return new Response(JSON.stringify({ 
-            success: true, 
+        return new Response(JSON.stringify({
+            success: true,
             message: 'Configuration saved successfully',
-            backupPath: backupPath 
-        }), { 
-            headers: { 'Content-Type': 'application/json' } 
+            backupPath: backupPath
+        }), {
+            headers: { 'Content-Type': 'application/json' }
         });
-        
+
     } catch (error) {
         console.error('Error saving configuration:', error);
-        return new Response(JSON.stringify({ 
-            error: 'Failed to save configuration', 
-            details: error.message 
-        }), { 
-            status: 500, 
-            headers: { 'Content-Type': 'application/json' } 
+        return new Response(JSON.stringify({
+            error: 'Failed to save configuration',
+            details: error.message
+        }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
         });
     }
 };

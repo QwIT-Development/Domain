@@ -48,6 +48,46 @@ async function getPromptsData() {
     }
 }
 
+async function handleStaticFile(pathname, staticPath, prefix) {
+    const filePath = path.join(staticPath, pathname.substring(prefix.length));
+    const file = Bun.file(filePath);
+    if (await file.exists()) {
+        return new Response(file);
+    }
+    return null;
+}
+
+async function handleEjsTemplate(viewName) {
+    const filePath = path.join(viewsPath, viewName);
+    const html = await ejs.renderFile(filePath);
+    return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+}
+
+async function handleApiRoutes(req, pathname) {
+    if (req.method === 'DELETE' && pathname.startsWith('/api/unban/')) {
+        return await unbanHandler(req);
+    } else if (req.method === 'PUT' && pathname === '/api/ban') {
+        return await banHandler(req);
+    } else if (req.method === 'PUT' && pathname === '/api/lobotomize') {
+        return await lobotomizeHandler(req);
+    } else if (req.method === 'PUT' && pathname === '/api/reputation/save') {
+        return await repSaveHandler(req);
+    } else if (req.method === 'GET' && pathname === '/api/gc') {
+        return await gcHandler(req);
+    } else if (req.method === 'GET' && pathname === '/api/heap/dump.heapsnapshot') {
+        return await heapdumpHandler(req);
+    } else if (req.method === 'GET' && pathname === '/api/prompts') {
+        return new Response(JSON.stringify(await getPromptsData()), {
+            headers: { 'Content-Type': 'application/json' }
+        });
+    } else if (req.method === 'GET' && pathname === '/api/currentConfig') {
+        return await currentConfigHandler(req);
+    } else if (req.method === 'POST' && pathname === '/api/saveConfig') {
+        return await saveConfigHandler(req);
+    }
+    return null;
+}
+
 const server = Bun.serve({
     port: config.WEBUI_PORT,
     async fetch(req, server) {
@@ -59,61 +99,25 @@ const server = Bun.serve({
         }
 
         try {
+            let response = null;
             if (pathname.startsWith('/css/')) {
-                const filePath = path.join(staticCSSPath, pathname.substring('/css/'.length));
-                const file = Bun.file(filePath);
-                if (await file.exists()) {
-                    return new Response(file);
-                }
+                response = await handleStaticFile(pathname, staticCSSPath, '/css/');
             } else if (pathname.startsWith('/js/')) {
-                const filePath = path.join(staticJSPath, pathname.substring('/js/'.length));
-                const file = Bun.file(filePath);
-                if (await file.exists()) {
-                    return new Response(file);
-                }
+                response = await handleStaticFile(pathname, staticJSPath, '/js/');
+            } else if (pathname === '/') {
+                response = await handleEjsTemplate('index.ejs');
+            } else if (pathname === '/reputation') {
+                response = await handleEjsTemplate('reputation.ejs');
+            } else if (pathname === '/bans') {
+                response = await handleEjsTemplate('bans.ejs');
+            } else if (pathname === '/configuration') {
+                response = await handleEjsTemplate('configuration.ejs');
+            } else if (pathname.startsWith('/api/')) {
+                response = await handleApiRoutes(req, pathname);
             }
 
-            // ejs
-            else if (pathname === '/') {
-                const filePath = path.join(viewsPath, 'index.ejs');
-                const html = await ejs.renderFile(filePath);
-                return new Response(html, { headers: { 'Content-Type': 'text/html' } });
-            } else if (pathname === '/reputation') {
-                const filePath = path.join(viewsPath, 'reputation.ejs');
-                const html = await ejs.renderFile(filePath);
-                return new Response(html, { headers: { 'Content-Type': 'text/html' } });
-            } else if (pathname === '/bans') {
-                const filePath = path.join(viewsPath, 'bans.ejs');
-                const html = await ejs.renderFile(filePath);
-                return new Response(html, { headers: { 'Content-Type': 'text/html' } });
-            } else if (pathname === '/configuration') {
-                const filePath = path.join(viewsPath, 'configuration.ejs');
-                const html = await ejs.renderFile(filePath);
-                return new Response(html, { headers: { 'Content-Type': 'text/html' } });
-            }
-            // API Routes
-            else if (pathname.startsWith('/api/')) {
-                if (req.method === 'DELETE' && pathname.startsWith('/api/unban/')) {
-                    return await unbanHandler(req);
-                } else if (req.method === 'PUT' && pathname === '/api/ban') {
-                    return await banHandler(req);
-                } else if (req.method === 'PUT' && pathname === '/api/lobotomize') {
-                    return await lobotomizeHandler(req);
-                } else if (req.method === 'PUT' && pathname === '/api/reputation/save') {
-                    return await repSaveHandler(req);
-                } else if (req.method === 'GET' && pathname === '/api/gc') {
-                    return await gcHandler(req);
-                } else if (req.method === 'GET' && pathname === '/api/heap/dump.heapsnapshot') {
-                    return await heapdumpHandler(req);
-                } else if (req.method === 'GET' && pathname === '/api/prompts') {
-                    return new Response(JSON.stringify(await getPromptsData()), {
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                } else if (req.method === 'GET' && pathname === '/api/currentConfig') {
-                    return await currentConfigHandler(req);
-                } else if (req.method === 'POST' && pathname === '/api/saveConfig') {
-                    return await saveConfigHandler(req);
-                }
+            if (response) {
+                return response;
             }
 
             return new Response("Not Found", { status: 404 });
