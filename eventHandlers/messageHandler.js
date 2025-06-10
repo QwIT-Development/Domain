@@ -19,6 +19,7 @@ const config = require('../config.json');
 const {formatDate} = require('../functions/makePrompt');
 const {genAI} = require('../initializers/geminiClient');
 const {bondUpdater} = require('../functions/usageRep');
+const {addToHistory, trimHistory} = require('../utils/historyUtils');
 
 async function formatUserMessage(message, repliedTo, channelId) {
     const score = await reputation(message.author.id);
@@ -190,26 +191,6 @@ async function messageHandler(message, client, gemini) {
     return chunkedMsg(message, responseMsg);
 }
 
-/**
- * pushol egy frissitest a historybe (ezt dobjuk at gemininek)
- * @param role - (`model`, `user`)
- * @param content - vajon mi lehet
- * @param channelId - channel id (history management miatt)
- */
-async function addToHistory(role, content, channelId) {
-    await trimHistory(channelId);
-    if (role && content) {
-        if (role !== 'user' && role !== 'model') {
-            log(`Got invalid role to be pushed to history: ${role}`, 'warn', 'messageHandler.js');
-        }
-        state.history[channelId.toString()].push({
-            role: role,
-            parts: [{text: content}]
-        });
-    }
-}
-
-
 async function chunkedMsg(message, response) {
     // check if response empty
     if (response.trim().length === 0) {
@@ -297,18 +278,4 @@ async function chunkedMsg(message, response) {
     return true;
 }
 
-async function trimHistory(channelId) {
-    while (state.history[channelId].length > config.MAX_MESSAGES) {
-        state.history[channelId].shift();
-    }
-
-    if (state.history[channelId].length > 0 && state.history[channelId][0].role !== 'user') {
-        // Remove messages until the first message is a user
-        // ez akadalyozza meg, hogy ne szarja ossze magat a gemini sdk
-        while (state.history[channelId].length > 0 && state.history[channelId][0].role !== 'user') {
-            state.history[channelId].shift();
-        }
-    }
-}
-
-module.exports = {messageHandler, addToHistory};
+module.exports = {messageHandler};
