@@ -65,7 +65,7 @@ function schedSleep(range, client) {
 function parseTime(timeStr) {
     try {
         const timeRegex = /(\d{1,2}):(\d{2})/;
-        const matches = timeStr.exec(timeRegex);
+        const matches = timeRegex.exec(timeStr);
 
         if (!matches) return null;
 

@@ -121,7 +121,8 @@ try {
 
         // remove markdown formatting if gemini is edging
         let jsonText = responseText.trim();
-        const jsonMatch = jsonText.exec(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/);
+        const markdownMatcher = /```(?:json)?\s*(\[[\s\S]*?\])\s*```/;
+        const jsonMatch = markdownMatcher.exec(jsonText);
         if (jsonMatch) {
             jsonText = jsonMatch[1];
         } else if (jsonText.startsWith('```') && jsonText.endsWith('```')) {
