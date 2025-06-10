@@ -11,6 +11,12 @@ function isValidUrl(string) {
     }
 }
 
+function validateOptionalUrlString(value, propertyName, errors) {
+    if (value && (typeof value !== 'string' || !isValidUrl(value))) {
+        errors.push(`${propertyName} must be a valid URL string.`);
+    }
+}
+
 function validateConfigData(data) {
     const errors = [];
 
@@ -64,13 +70,8 @@ function validateConfigData(data) {
         }
     }
 
-    if (data.SEARX_BASE_URL && (typeof data.SEARX_BASE_URL !== 'string' || !isValidUrl(data.SEARX_BASE_URL))) {
-        errors.push("SearX Base URL must be a valid URL string.");
-    }
-    
-    if (data.TOS_URL && (typeof data.TOS_URL !== 'string' || !isValidUrl(data.TOS_URL))) {
-        errors.push("Terms of Service URL must be a valid URL string.");
-    }
+    validateOptionalUrlString(data.SEARX_BASE_URL, "SearX Base URL", errors);
+    validateOptionalUrlString(data.TOS_URL, "Terms of Service URL", errors);
 
     
     if (data.EMOJIS) {
