@@ -4,33 +4,64 @@
 */
 
 const state = require('../initializers/state');
+const Sentry = require('@sentry/bun');
 
 const logMeta = {
     "info": { symbol: "", cssClass: "log-info" },
-    "infoWarn": { symbol: "⚠", cssClass: "log-info-warn" },
     "warn": { symbol: "⚠", cssClass: "log-warn" },
-    "error": { symbol: "X", cssClass: "log-error" },
-    "ignorableErr": { symbol: "..?", cssClass: "log-ignorable-err" }
+    "error": { symbol: "X", cssClass: "log-error" }
 };
 
 // https://colors.sh/
 const colors = {
     "info": "\u001b[38;5;33m",
-    "infoWarn": "\u001b[38;5;16m\u001b[48;5;7m",
     "warn": "\u001b[38;5;208m",
     "error": "\u001b[38;5;15m\u001b[48;5;160m",
-    "ignorableErr": "\u001b[38;5;16m\u001b[48;5;7m",
     // reserved
     "reset": "\u001b[0m"
 };
 
 const symbols = {
     "info": "",
-    "infoWarn": "⚠",
     "warn": "⚠",
     "error": "X",
-    "ignorableErr": "..?"
 }
+
+const consoleLog = console.log;
+const loggerFile = __filename.split(/[\\/]/).pop();
+
+
+function getCaller() {
+    const prepStack = Error.prepareStackTrace;
+    let callerFile;
+
+    try {
+        // ignore that err is not read, it should be there
+        Error.prepareStackTrace = (err, stack) => stack;
+        const err = new Error();
+        const stack = err.stack;
+
+        for (let i = 0; i < stack.length; i++) {
+            const site = stack[i];
+            if (!site) continue;
+
+            const nameFromStack = site.getFileName();
+            if (nameFromStack) {
+                const baseFromStack = nameFromStack.split(/[\\/]/).pop();
+                if (baseFromStack !== loggerFile) {
+                    callerFile = baseFromStack;
+                    break;
+                }
+            }
+        }
+    } catch (e) {
+        consoleLog('Error getting caller filename:', e);
+    } finally {
+        Error.prepareStackTrace = prepStack;
+    }
+    return callerFile || "unknown";
+}
+
 
 // köszönöm szépen gemini a segítséget, hogy hogy kell intellij function kommentet írni
 /**
@@ -38,7 +69,7 @@ const symbols = {
  * Csak azert csinaltam mert nem tetszett a console.log
  *
  * @param {string} message - üzenet
- * @param {string} [type="info"] - (`info`, `infoWarn`, `warn`, `error`, `ignorableErr`)
+ * @param {string} [type="info"] - (`info`, `warn`, `error`)
  * @param {string} [thread="index.js"] - forrás
  *
  * @example
@@ -62,6 +93,13 @@ function log(message, type = "info", thread = "index.js") {
     if (state.logs.length > 100) {
         state.logs.shift();
     }
+
+    if (type === 'error') {
+        Sentry.captureMessage(message, {
+            level: 'error',
+            extra: { thread: thread }
+        });
+    }
 }
 
 function formatHour(date) {
@@ -70,5 +108,24 @@ function formatHour(date) {
 
     return `${hour}:${minute}`;
 }
+
+// override all possible functions
+console.log = (...args) => {
+    const callingModule = getCaller();
+    const message = util.format(...args);
+    log(message, "info", callingModule);
+};
+
+console.warn = (...args) => {
+    const callingModule = getCaller();
+    const message = util.format(...args);
+    log(message, "warn", callingModule);
+};
+
+console.error = (...args) => {
+    const callingModule = getCaller();
+    const message = util.format(...args);
+    log(message, "error", callingModule);
+};
 
 module.exports = log;

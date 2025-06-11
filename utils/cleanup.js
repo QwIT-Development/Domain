@@ -36,7 +36,7 @@ async function deleteUploadedItems() {
     await changeSpinnerText('Deleting Uploaded Items...');
     const fileIds = await getFileIds();
     if (!fileIds) {
-        log("No fileIds found", 'ignorableErr', 'cleanup.js');
+        log("No fileIds found", 'warn', 'cleanup.js');
         return
     }
     try {

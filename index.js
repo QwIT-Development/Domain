@@ -16,6 +16,21 @@
         along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+const Sentry = require('@sentry/bun');
+// init sentry for error tracking
+Sentry.init({
+  dsn: "https://33b9563a3d438b9ea893d5e0852bed2d@o4509481270902784.ingest.de.sentry.io/4509481272410192",
+});
+
+process.on('uncaughtException', (error) => {
+  Sentry.captureException(error);
+  console.error('Uncaught Exception:', error);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  Sentry.captureException(reason instanceof Error ? reason : new Error(`Unhandled Rejection: ${reason}`));
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 const log = require('./utils/betterLogs');
 const {Events} = require("discord.js");
 const state = require('./initializers/state');

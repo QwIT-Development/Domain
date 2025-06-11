@@ -63,7 +63,7 @@ async function checkAuthors(message, client) {
         try {
             const guild = message.guild;
             if (!guild) {
-                log(`Message wasn't sent into a guild.`, 'ignorableErr', 'checkAuthors.js');
+                log(`Message wasn't sent into a guild.`, 'warn', 'checkAuthors.js');
                 return false;
             }
 
@@ -71,7 +71,7 @@ async function checkAuthors(message, client) {
             await member.timeout(time, strings["jailbreak-attempt"]);
         } catch (e) {
             // ignoralhato hiba, anyways megy a false
-            log(`Failed to mute user: ${e}`, 'ignorableErr', 'checkAuthors.js');
+            log(`Failed to mute user: ${e}`, 'warn', 'checkAuthors.js');
             return false;
         }
         return false;

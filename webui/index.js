@@ -154,7 +154,7 @@ const server = Bun.serve({
 });
 
 log(`WebUI listening at http://localhost:${config.WEBUI_PORT}`, 'info', 'webui.js');
-log("WebUI is not secured, do not expose the port.", 'infoWarn', 'webui.js');
+log("WebUI is not secured, do not expose the port.", 'warn', 'webui.js');
 
 if (!statsInterval) {
     log('Initializing WebSocket broadcast...', 'info', 'webui.js');
