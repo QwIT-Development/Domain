@@ -221,13 +221,26 @@ async function chunkedMsg(message, response) {
 
     if (response.length <= chunkSize && response.trim().length > 0) {
         if (codeBlock.trim().length > 0) {
-            await message.reply({
-                content: response,
-                files: [artifactPath]
-            });
-            fs.unlinkSync(artifactPath);
+            try {
+                await message.reply({
+                    content: response,
+                    files: [artifactPath]
+                });
+                fs.unlinkSync(artifactPath);
+            } catch (e) {
+                log(`Failed to reply to message (it may have been deleted): ${e}`, 'warn', 'messageHandler.js');
+                if (fs.existsSync(artifactPath)) {
+                    fs.unlinkSync(artifactPath);
+                }
+                return;
+            }
         } else {
-            message.reply(response);
+            try {
+                await message.reply(response);
+            } catch (e) {
+                log(`Failed to reply to message (it may have been deleted): ${e}`, 'warn', 'messageHandler.js');
+                return;
+            }
         }
         return true;
     }
@@ -261,18 +274,38 @@ async function chunkedMsg(message, response) {
     }
 
     if (chunks.length > 0) {
-        await message.reply(chunks[0]);
+        try {
+            await message.reply(chunks[0]);
+        } catch (e) {
+            log(`Failed to reply to message with the first chunk (it may have been deleted): ${e}`, 'warn', 'messageHandler.js');
+            if (codeBlock.trim().length > 0 && fs.existsSync(artifactPath)) {
+                fs.unlinkSync(artifactPath);
+            }
+            return;
+        }
         for (let i = 1; i < chunks.length; i++) {
-            await message.channel.send(chunks[i]);
+            try {
+                await message.channel.send(chunks[i]);
+            } catch (e) {
+                log(`Failed to send subsequent chunk: ${e}`, 'warn', 'messageHandler.js');
+                return;
+            }
         }
     }
 
     if (codeBlock.trim().length > 0) {
-        await message.channel.send({
-            files: [artifactPath]
-        });
-        // delete artifact
-        fs.unlinkSync(artifactPath);
+        if (fs.existsSync(artifactPath)) {
+            try {
+                await message.channel.send({
+                    files: [artifactPath]
+                });
+            } catch (e) {
+                log(`Failed to send artifact: ${e}`, 'warn', 'messageHandler.js');
+            } finally {
+                // delete artifact
+                fs.unlinkSync(artifactPath);
+            }
+        }
     }
 
     return true;
