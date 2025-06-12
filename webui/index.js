@@ -43,7 +43,7 @@ async function getPromptsData() {
         promptFiles.sort((a, b) => a.localeCompare(b));
         return promptFiles;
     } catch (error) {
-        log(`Error fetching prompts: ${error}`, 'error', 'webui.js');
+        console.error(`Error fetching prompts: ${error}`);
         return [];
     }
 }
@@ -122,7 +122,7 @@ const server = Bun.serve({
 
             return new Response("Not Found", { status: 404 });
         } catch (error) {
-            log(`Error processing request: ${error}`, 'error', 'webui.js');
+            console.error(`Error processing request: ${error}`);
             return new Response("Internal Server Error", { status: 500 });
         }
     },
@@ -147,7 +147,7 @@ const server = Bun.serve({
         },
         error(ws, error) {
             state.wsClients.delete(ws);
-            log(`WebSocket error: ${error}`, 'error', 'webui.js (WebSocket)');
+            console.error(`WebSocket error: ${error}`);
         },
         perMessageDeflate: true,
     },

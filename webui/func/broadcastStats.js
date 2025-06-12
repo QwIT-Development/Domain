@@ -36,7 +36,7 @@ async function sendStatsToClient(client, currentStats, deadClients) {
             try {
                 client.send(data);
             } catch (err) {
-                log(`Error sending stats to client: ${err.message}`, 'error', 'webui.js (WebSocket)');
+                console.error(`Error sending stats to client: ${err.message}`);
                 deadClients.add(client);
             }
         }
@@ -62,7 +62,7 @@ async function broadcastStats() {
                 try {
                     client.ping();
                 } catch (e) {
-                    log(`Error sending ping to client: ${e.message}`, 'error', 'webui.js (WebSocket)');
+                    console.error(`Error sending ping to client: ${e.message}`);
                     deadClients.add(client);
                     return;
                 }
@@ -84,12 +84,12 @@ async function broadcastStats() {
                     client.close();
                 }
             } catch (err) {
-                log(`Error cleaning up client: ${err.message}`, 'error', 'webui.js (WebSocket)');
+                console.error(`Error cleaning up client: ${err.message}`);
             }
         });
 
     } catch (e) {
-        log(`Error broadcasting stats: ${e.message}`, 'error', 'webui.js (WebSocket)');
+        console.error(`Error broadcasting stats: ${e.message}`);
     }
 }
 

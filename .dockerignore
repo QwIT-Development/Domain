@@ -12,5 +12,4 @@ Dockerfile
 npm-debug.log*
 bun-debug.log*
 data/running
-prompts
 prisma/*.sqlite*

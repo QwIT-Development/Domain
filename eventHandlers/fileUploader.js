@@ -19,7 +19,7 @@ async function uploadFilesToGemini(message, client) {
         const files1 = await Promise.all(
             Array.from(message.attachments.values()).map(async (attachment) => {
                 if (!attachment.url) {
-                    log(`Invalid attachment URL: ${attachment}`, 'error', 'fileUploader.js');
+                    console.error(`Invalid attachment URL: ${attachment}`);
                     return null;
                 }
                 const fPath = path.join(global.dirname, 'data', 'running', 'tmp', attachment.name);
@@ -36,7 +36,7 @@ async function uploadFilesToGemini(message, client) {
                     await message.react(state.emojis['uploaded']);
                     return uploadedFile;
                 } catch (error) {
-                    log(`Error uploading file: ${error}`, 'error', 'fileUploader.js');
+                    console.error(`Error uploading file: ${error}`);
                     return null;
                 }
             })

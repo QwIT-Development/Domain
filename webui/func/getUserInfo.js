@@ -13,7 +13,7 @@ async function getUserInfo(userId) {
 
         return {username, avatarUrl};
     } catch (e) {
-        log(`Error fetching user data: ${e}`, 'error', 'webui.js (getUserStats)');
+        console.error(`Error fetching user data: ${e}`);
         return null;
     }
 }

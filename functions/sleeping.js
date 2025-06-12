@@ -23,13 +23,13 @@ function schedSleep(range, client) {
 
     try {
         if (!range || typeof range !== 'string') {
-            log(`Invalid range format: ${range}, expected: 10:00-11:00`, 'error', 'sleeping.js');
+            console.error(`Invalid range format: ${range}, expected: 10:00-11:00`);
             return false;
         }
         const parts = range.split('-').map(t => t.trim());
 
         if (parts.length !== 2 || !parts[0] || !parts[1]) {
-            log(`Invalid range format: ${range}, expected: 10:00-11:00`, 'error', 'sleeping.js');
+            console.error(`Invalid range format: ${range}, expected: 10:00-11:00`);
             return false;
         }
         const [startStr, endStr] = parts;
@@ -38,7 +38,7 @@ function schedSleep(range, client) {
         const endTimeMs = parseTime(endStr);
 
         if (startTimeMs === null || endTimeMs === null) {
-            log(`Invalid values in range: "${range}". Are you sure you used the format?`, 'error', 'sleeping.js');
+            console.error(`Invalid values in range: "${range}". Are you sure you used the format?`);
             return false;
         }
 
@@ -48,7 +48,7 @@ function schedSleep(range, client) {
         return true;
 
     } catch (error) {
-        log(`Error scheduling sleep: ${error.message}`, 'error', 'sleeping.js');
+        console.error(`Error scheduling sleep: ${error.message}`);
         if (state.sleepCycleTimer) {
             clearTimeout(state.sleepCycleTimer);
             state.sleepCycleTimer = null;
@@ -73,13 +73,13 @@ function parseTime(timeStr) {
         const minutes = parseInt(matches[2], 10);
 
         if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-            log(`Invalid time: ${hours}:${minutes}, are you sure this right?`, 'error', 'sleeping.js');
+            console.error(`Invalid time: ${hours}:${minutes}, are you sure this right?`);
             return null;
         }
 
         return (hours * 60 + minutes) * 60 * 1000;
     } catch (error) {
-        log(`Error parsing time string: ${timeStr}, ${error.message}`, 'error', 'sleeping.js');
+        console.error(`Error parsing time string: ${timeStr}, ${error.message}`);
         return null;
     }
 }
@@ -113,10 +113,10 @@ function scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr) {
 
     if (shouldBeSleeping && !state.isSleeping) {
         state.isSleeping = true;
-        botSleeping(client, wakeTimeStr).catch(err => log(`Error setting sleeping status: ${err}`, 'error', 'sleeping.js'));
+        botSleeping(client, wakeTimeStr).catch(err => console.error(`Error setting sleeping status: ${err}`));
     } else if (!shouldBeSleeping && state.isSleeping) {
         state.isSleeping = false;
-        botReady(client).catch(err => log(`Error setting ready status: ${err}`, 'error', 'sleeping.js'));
+        botReady(client).catch(err => console.error(`Error setting ready status: ${err}`));
     }
 
     let msUntilNextEvent;
@@ -133,7 +133,7 @@ function scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr) {
             log('Bot is now awake', 'info', 'sleeping.js');
             state.isSleeping = false;
             state.sleepCycleTimer = null;
-            botReady(client).catch(err => log(`Error setting ready status on wake: ${err}`, 'error', 'sleeping.js'));
+            botReady(client).catch(err => console.error(`Error setting ready status on wake: ${err}`));
             scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr);
         };
 
@@ -148,7 +148,7 @@ function scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr) {
             log('Bot is now sleeping', 'info', 'sleeping.js');
             state.isSleeping = true;
             state.sleepCycleTimer = null;
-            botSleeping(client, wakeTimeStr).catch(err => log(`Error setting sleeping status on sleep: ${err}`, 'error', 'sleeping.js'));
+            botSleeping(client, wakeTimeStr).catch(err => console.error(`Error setting sleeping status on sleep: ${err}`));
             scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr);
         };
     }

@@ -36,7 +36,7 @@ discordClient.once(Events.ClientReady, async () => {
 discordClient.login(config.DISCORD_TOKEN).then(() => {
     log("Bot logged in", 'info', 'botClient.js')
 }).catch(err => {
-    log(`Failed to log in: ${err}`, 'error', 'botClient.js');
+    console.error(`Failed to log in: ${err}`);
     process.exit(1);
 })
 

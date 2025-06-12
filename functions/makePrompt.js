@@ -47,8 +47,8 @@ async function makePrompt(channelId, showLog = true) {
             log(`Loaded prompt: ${promptPath}`, 'info', 'makeprompt.js');
         }
     } catch (e) {
-        log(`Failed to load prompt: ${e}`, 'error', 'makeprompt.js');
-        log('Defaulting to nothing', 'error', 'makeprompt.js');
+        console.error(`Failed to load prompt: ${e}`);
+        console.log('Defaulting to nothing');
         return "";
     }
 
@@ -64,7 +64,8 @@ async function makePrompt(channelId, showLog = true) {
     }
 
     // load wiki contents, if possible
-    if (config.WIKI_URLS[channelId].length > 0) {
+    // added ?, so if the channel doesn't have assigned wiki urls it won't crash
+    if (config.WIKI_URLS[channelId]?.length > 0) {
         if (prompt.includes("${WIKI_CONTENT}")) {
             let content = "";
             for (const url of config.WIKI_URLS[channelId]) {
@@ -74,6 +75,10 @@ async function makePrompt(channelId, showLog = true) {
                 log(`Loaded ${config.WIKI_URLS[channelId].length} wiki pages`, 'info', 'makeprompt.js');
             }
             prompt = prompt.replace("${WIKI_CONTENT}", content);
+        }
+    } else {
+        if (prompt.includes("${WIKI_CONTENT}")) {
+            prompt = prompt.replace("${WIKI_CONTENT}", "");
         }
     }
 
@@ -85,7 +90,7 @@ async function makePrompt(channelId, showLog = true) {
         muteWords = fs.readFileSync(path.join(global.dirname, 'data', 'muteWords.json'), 'utf8');
         muteWords = JSON.parse(muteWords);
     } catch (e) {
-        log(`Failed to load mute words: ${e}`, 'error', 'makeprompt.js');
+        console.error(`Failed to load mute words: ${e}`);
         muteWords = [];
     }
 

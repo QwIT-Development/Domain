@@ -94,7 +94,7 @@ async function search(query, genAI) {
         return finalSummary;
 
     } catch (e) {
-        log(`Search error: ${e.message}`, 'error', 'searx.js');
+        console.error(`Search error: ${e.message}`);
         return `Search failed: ${e.message}`;
     }
 }
@@ -205,7 +205,7 @@ Provide a comprehensive answer to: "${query}"`;
         return summary;
 
     } catch (e) {
-        log(`Error creating search summary: ${e.message}`, 'error', 'searx.js');
+        console.error(`Error creating search summary: ${e.message}`);
 
         const fallbackSummary = `Search results for "${query}":\n\n` +
             results.map((result, index) =>
@@ -272,7 +272,7 @@ async function getContext(url) {
         return content.trim();
 
     } catch (e) {
-        log(`Error getting context from ${url}: ${e.message}`, 'error', 'searx.js');
+        console.error(`Error getting context from ${url}: ${e.message}`);
         return "Error getting context for search";
     }
 }

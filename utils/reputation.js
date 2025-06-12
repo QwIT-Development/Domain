@@ -16,7 +16,7 @@ const config = require('../config.json');
  */
 async function reputation(id, type = "") {
     if (!id) {
-        log(`Missing argument`, 'error', 'reputation.js');
+        console.error(`Missing argument`);
         return false;
     }
 
@@ -50,7 +50,7 @@ async function reputation(id, type = "") {
 // precise reputation setter
 async function reputationSet(id, value) {
     if (!id) {
-        log(`Missing argument`, 'error', 'reputation.js');
+        console.error(`Missing argument`);
         return false;
     }
 

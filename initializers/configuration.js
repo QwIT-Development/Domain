@@ -33,13 +33,13 @@ async function configurationChecker() {
                 needsFullSetup = true;
             }
         } catch (e) {
-            log(`Error reading config.json: ${e.message}. It might be corrupted.`, 'error', 'Configuration');
+            console.error(`Error reading config.json: ${e.message}. It might be corrupted.`);
             const backupPath = configPath + '.bak.' + Date.now();
             try {
                 if(fs.existsSync(configPath)) fs.renameSync(configPath, backupPath);
                 log(`Backed up corrupted config to ${backupPath}`, 'warn', 'Configuration');
             } catch (renameError) {
-                log(`Could not back up corrupted config: ${renameError.message}`, 'error', 'Configuration');
+                console.error(`Could not back up corrupted config: ${renameError.message}`);
             }
             const minimalConfig = {
                 "WEBUI_PORT": defaultConfigValues.WEBUI_PORT,

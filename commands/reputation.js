@@ -20,7 +20,7 @@ module.exports = {
                 content: "Couldn't fetch your reputation score. Please try again later.",
                 flags: ["Ephemeral"]
             });
-            log(`Error fetching reputation score for user ${interaction.user.id} (NaN)`, 'error', 'reputation.js');
+            console.error(`Error fetching reputation score for user ${interaction.user.id} (NaN)`);
             return;
         }
 

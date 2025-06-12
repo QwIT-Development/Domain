@@ -34,17 +34,17 @@ async function handleReputationCommands(out, message, reactionsToAdd) {
         out = out.replaceAll(repRegex, (match, sign) => {
             const userId = message.author.id;
             if (sign === '+') {
-                reputation(userId, "increase").catch(e => log(`Reputation increase failed: ${e}`, 'error', 'botCommands.js'));
+                reputation(userId, "increase").catch(e => console.error(`Reputation increase failed: ${e}`));
                 reactionsToAdd.add(state.emojis["upvote"]);
             } else if (sign === '-') {
-                reputation(userId, "decrease").catch(e => log(`Reputation decrease failed: ${e}`, 'error', 'botCommands.js'));
+                reputation(userId, "decrease").catch(e => console.error(`Reputation decrease failed: ${e}`));
                 reactionsToAdd.add(state.emojis["downvote"]);
             }
             return "";
         });
         return out.trim();
     } catch (e) {
-        log(`Failed during reputation processing: ${e}`, 'error', 'botCommands.js');
+        console.error(`Failed during reputation processing: ${e}`);
         return out;
     }
 }
@@ -58,7 +58,7 @@ async function handleMemoryCommands(out, message) {
                 const memStr = match[1]?.trim();
                 out = out.replace(match[0], "");
                 if (memStr) {
-                    appendMemory(memStr, message.channel.id).catch(e => log(`Failed to save memory: "${memStr}" - ${e}`, 'error', 'botCommands.js'));
+                    appendMemory(memStr, message.channel.id).catch(e => console.error(`Failed to save memory: "${memStr}" - ${e}`));
                 } else {
                     log(`Skipped empty memory command.`, 'warn', 'botCommands.js');
                 }
@@ -67,7 +67,7 @@ async function handleMemoryCommands(out, message) {
         }
         return out;
     } catch (e) {
-        log(`Failed during memory processing: ${e}`, 'error', 'botCommands.js');
+        console.error(`Failed during memory processing: ${e}`);
         return out;
     }
 }
@@ -102,7 +102,7 @@ async function handleMuteCommands(out, message, reactionsToAdd) {
                                 out = out.replace(commandText, "");
                                 log(`User ${userIdToMute} muted for ${time / 1000}s. Reason: ${reason}`, 'info', 'botCommands.js');
                                 state.muteCount += 1;
-                                reputation(userIdToMute, "decrease").catch(e => log(`Reputation decrease failed: ${e}`, 'error', 'botCommands.js'));
+                                reputation(userIdToMute, "decrease").catch(e => console.error(`Reputation decrease failed: ${e}`));
 
                                 const user = await message.client.users.fetch(userIdToMute);
                                 await user.send({
@@ -118,10 +118,10 @@ ${strings.automatedMessage}`
                                 log(`Mute failed: Member ${userIdToMute} not found in guild.`, 'warn', 'botCommands.js');
                                 out = out.replace(commandText, `[Felhasználó nem található]`);
                             } else if (e.code === 50013) {
-                                log(`Mute failed: Missing permissions to mute ${userIdToMute}. ${e}`, 'error', 'botCommands.js');
+                                console.error(`Mute failed: Missing permissions to mute ${userIdToMute}. ${e}`);
                                 out = out.replace(commandText, `[Nincs elég jog a némításhoz (contact admin on server)]`);
                             } else {
-                                log(`Failed to mute user ${userIdToMute}: ${e}`, 'error', 'botCommands.js');
+                                console.error(`Failed to mute user ${userIdToMute}: ${e}`);
                                 out = out.replace(commandText, `[Némítás besült]`);
                             }
                         }
@@ -135,7 +135,7 @@ ${strings.automatedMessage}`
         }
         return out;
     } catch (e) {
-        log(`Failed during mute processing: ${e}`, 'error', 'botCommands.js');
+        console.error(`Failed during mute processing: ${e}`);
         return out;
     }
 }
@@ -162,7 +162,7 @@ async function handleSvgCommands(out, message) {
                     fs.writeFileSync(artifactPath, pngBuffer);
                     generatedSvgFiles.push(artifactPath);
                 } catch (e) {
-                    log(`Failed to convert SVG to PNG: ${e}`, 'error', 'botCommands.js');
+                    console.error(`Failed to convert SVG to PNG: ${e}`);
                     out += ` [SVG konvertálási hiba]`;
                 }
             }
@@ -172,14 +172,14 @@ async function handleSvgCommands(out, message) {
                 try {
                     await message.channel.send({ files: generatedSvgFiles });
                 } catch (sendError) {
-                    log(`Failed to send SVG artifact(s): ${sendError}`, 'error', 'botCommands.js');
+                    console.error(`Failed to send SVG artifact(s): ${sendError}`);
                     out += ` [Nem sikerült elküldeni a képeket]`;
                 }
             }
         }
         return out;
     } catch (e) {
-        log(`Failed during SVG processing block: ${e}`, 'error', 'botCommands.js');
+        console.error(`Failed during SVG processing block: ${e}`);
         return out;
     } finally {
         for (const filePath of generatedSvgFiles) {
@@ -207,7 +207,7 @@ async function handleSearchCommands(out, message, gemini, reactionsToAdd) {
                     out = `${searchResult}\n${out}`.trim();
                     reactionsToAdd.add(state.emojis["search"]);
                 } catch (searchError) {
-                    log(`Search handler failed for query "${searchQuery}": ${searchError}`, 'error', 'botCommands.js');
+                    console.error(`Search handler failed for query "${searchQuery}": ${searchError}`);
                     out += ` [Keresés besült]`;
                 }
             } else {
@@ -216,7 +216,7 @@ async function handleSearchCommands(out, message, gemini, reactionsToAdd) {
         }
         return out;
     } catch (e) {
-        log(`Failed during search processing: ${e}`, 'error', 'botCommands.js');
+        console.error(`Failed during search processing: ${e}`);
         return out;
     }
 }
@@ -237,7 +237,7 @@ async function parseBotCommands(string, message, gemini) {
                 await message.react(emoji).catch(e => log(`Failed to react with ${emoji}: ${e}`, 'warn', 'botCommands.js'));
             }
         } catch (e) {
-            log(`Failed to apply reactions: ${e}`, 'error', 'botCommands.js');
+            console.error(`Failed to apply reactions: ${e}`);
         }
     }
 

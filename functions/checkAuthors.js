@@ -48,7 +48,7 @@ async function checkAuthors(message, client) {
             return false; // User is banned
         }
     } catch (error) {
-        log(`Error checking ban status for user ${message.author.id}: ${error.message}`, 'error', 'checkAuthors.js');
+        console.error(`Error checking ban status for user ${message.author.id}: ${error.message}`);
         return false; // fallback
     }
 

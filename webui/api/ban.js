@@ -11,7 +11,7 @@ const ban = async (req) => {
         id = body.id;
         reason = body.reason;
     } catch (e) {
-        log(`Error parsing JSON in ban request: ${e.message}`, 'error', 'ban.js');
+        console.error(`Error parsing JSON in ban request: ${e.message}`);
         return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 

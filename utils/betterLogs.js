@@ -5,6 +5,7 @@
 
 const state = require('../initializers/state');
 const Sentry = require('@sentry/bun');
+const util = require('util');
 
 const logMeta = {
     "info": { symbol: "", cssClass: "log-info" },
@@ -62,41 +63,51 @@ function getCaller() {
     return callerFile || "unknown";
 }
 
-
 // köszönöm szépen gemini a segítséget, hogy hogy kell intellij function kommentet írni
 /**
  * Szexin loggol konzolra.\
  * Csak azert csinaltam mert nem tetszett a console.log
  *
- * @param {string} message - üzenet
+ * @param {string|Error} messageOrError - üzenet vagy Error objektum
  * @param {string} [type="info"] - (`info`, `warn`, `error`)
  * @param {string} [thread="index.js"] - forrás
  *
  * @example
  * log("szia"); // alap infó, ami "index.js"-ből "jön"
  * log("jaj ne", "warn"); // "index.js"-ből jövő warn
- * log("rósz hiba", "error", "kettospontharom.js"); // hiba specifikus forrásból
+ * log(new Error("rósz hiba"), "error", "kettospontharom.js"); // hiba specifikus forrásból
  */
-function log(message, type = "info", thread = "index.js") {
-    console.log(`\r\x1b[K${colors[type]}${symbols[type]}[${thread.toUpperCase()}]: ${message}${colors.reset}`);
+function log(messageOrError, type = "info", thread = "index.js") {
+    let consoleMessageString;
+    let entryMessageString;
+
+    if (messageOrError instanceof Error) {
+        consoleMessageString = `${messageOrError.name || 'Error'}: ${messageOrError.message}`;
+        entryMessageString = messageOrError.message || String(messageOrError);
+    } else {
+        consoleMessageString = String(messageOrError);
+        entryMessageString = String(messageOrError);
+    }
+
+    consoleLog(`\r\x1b[K${colors[type]}${symbols[type]}[${thread.toUpperCase()}]: ${consoleMessageString}${colors.reset}`);
 
     const timestamp = formatHour(new Date());
     const logEntry = {
         timestamp: timestamp,
         type: type,
         thread: thread.toUpperCase(),
-        message: message,
+        message: entryMessageString,
         symbol: logMeta[type]?.symbol || '',
         cssClass: logMeta[type]?.cssClass || 'log-info'
-    }
+    };
     state.logs.push(logEntry);
     if (state.logs.length > 100) {
         state.logs.shift();
     }
 
     if (type === 'error') {
-        Sentry.captureMessage(message, {
-            level: 'error',
+        const errorToCapture = messageOrError instanceof Error ? messageOrError : new Error(String(messageOrError));
+        Sentry.captureException(errorToCapture, {
             extra: { thread: thread }
         });
     }
@@ -124,8 +135,17 @@ console.warn = (...args) => {
 
 console.error = (...args) => {
     const callingModule = getCaller();
-    const message = util.format(...args);
-    log(message, "error", callingModule);
+    let itemToLog;
+    const errorArgument = args.find(arg => arg instanceof Error);
+
+    if (errorArgument) {
+        itemToLog = errorArgument;
+    } else {
+        const messageString = util.format(...args);
+        itemToLog = new Error(messageString);
+    }
+
+    log(itemToLog, "error", callingModule);
 };
 
 module.exports = log;

@@ -31,7 +31,7 @@ async function initData() {
         try {
             memories = JSON.parse(fs.readFileSync(memoriesPath, 'utf8'));
         } catch (e) {
-            log(`Failed to parse memories file: ${e}`, 'error', 'initData.js');
+            console.error(`Failed to parse memories file: ${e}`);
         }
         state.memories = memories;
     }

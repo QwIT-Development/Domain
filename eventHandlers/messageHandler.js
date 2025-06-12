@@ -79,7 +79,7 @@ async function handleGeminiError(e, message, client, gemini) {
         state.retryCounts[channelId]++;
 
         if (state.retryCounts[channelId] > 5) {
-            log(`Gemini returned 500 error 5 times for channel ${channelId}, dropping task`, 'error', 'messageHandler.js');
+            console.error(`Gemini returned 500 error 5 times for channel ${channelId}, dropping task`);
             state.retryCounts[channelId] = 0;
             return message.channel.send("Couldn't get a response, try again later.");
         }
@@ -90,8 +90,7 @@ async function handleGeminiError(e, message, client, gemini) {
         if (state.retryCounts[channelId]) {
             state.retryCounts[channelId] = 0;
         }
-        log(e, 'error', 'messageHandler.js');
-        console.log(e.stack);
+        console.error(e.message + "\n```" + e.stack + "```");
         return message.channel.send("Unhandled error. (Refer to console)");
     }
 }
@@ -215,7 +214,7 @@ async function chunkedMsg(message, response) {
         try {
             fs.writeFileSync(artifactPath, codeBlock);
         } catch (e) {
-            log(`Failed to save artifact: ${e}`, 'error', 'messageHandler.js');
+            console.error(`Failed to save artifact: ${e}`);
         }
     }
 

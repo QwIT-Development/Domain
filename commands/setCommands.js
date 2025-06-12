@@ -53,7 +53,7 @@ async function announceCommands(client) {
 
         log(`Registered ${result.length} commands`, 'info', 'setCommands.js');
     } catch (e) {
-        log(`Error while registering commands: ${e}`, 'error', 'setCommands.js');
+        console.error(`Error while registering commands: ${e}`);
     }
 
     for (const data of result) {

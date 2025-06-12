@@ -21,6 +21,7 @@ const Sentry = require('@sentry/bun');
 Sentry.init({
   dsn: "https://33b9563a3d438b9ea893d5e0852bed2d@o4509481270902784.ingest.de.sentry.io/4509481272410192",
 });
+require('./utils/betterLogs.js');
 
 process.on('uncaughtException', (error) => {
   Sentry.captureException(error);
@@ -46,15 +47,13 @@ async function main() {
 
     let webUiStarted = false;
     // i really hope i did this right
-    if (config.WEBUI_PORT) {
+    if (config.WEBUI_PORT && needsFullSetup) {
         require('./webui/index.js');
         webUiStarted = true;
-    } else {
-        log('WEBUI_PORT not found in config, WebUI will not start.', 'warn');
-    }
-    if (needsFullSetup) {
         log('Bot needs full configuration via WebUI. Halting further initialization until setup is complete and bot is restarted.', 'info');
         return;
+    } else if (!config.WEBUI_PORT && needsFullSetup) {
+        log('WEBUI_PORT not found in config, WebUI will not start.', 'warn');
     }
 
     // Continue with normal bot initialization if setup is complete
@@ -178,7 +177,7 @@ async function gracefulShutdown(signal, client) {
         await deleteUploadedItems();
         await stopSpinner(true, "Domain-Unchained shutting down");
     } catch (e) {
-        log(`Error while doing stuff before shutdown: ${e}`, 'error');
+        console.error(`Error while doing stuff before shutdown: ${e}`);
     } finally {
         setTimeout(() => {
             process.exit(0);
@@ -187,7 +186,7 @@ async function gracefulShutdown(signal, client) {
 }
 
 main().then().catch(error => {
-    log(`Unhandled error in main: ${error.stack}`, 'error');
+    console.error(`Unhandled error in main: ${error.stack}`);
     stopSpinner(false, 'Bot crashed during startup.');
     process.exit(1);
 });

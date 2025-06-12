@@ -14,7 +14,7 @@ if (!fs.existsSync(bannedSitesCacheDir)) {
         fs.mkdirSync(bannedSitesCacheDir, { recursive: true });
         log(`Created cache directory: ${bannedSitesCacheDir}`, 'info', 'bannedSiteGen.js');
     } catch (err) {
-        log(`Failed to create cache directory ${bannedSitesCacheDir}: ${err}`, 'error', 'bannedSiteGen.js');
+        console.error(`Failed to create cache directory ${bannedSitesCacheDir}: ${err}`);
     }
 }
 
@@ -34,7 +34,7 @@ async function getBannedSites() {
             log(`Blocking ${staticFileSites.length} domains with local filter list.`, 'info', 'bannedSiteGen.js');
         }
     } catch (e) {
-        log(`Failed to parse bannedSites.json: ${e}`, 'error', 'bannedSiteGen.js');
+        console.error(`Failed to parse bannedSites.json: ${e}`);
         staticFileSites = [];
     }
 
@@ -55,7 +55,7 @@ async function getBannedSites() {
                     cachedContent = fs.readFileSync(cachePath, 'utf-8');
                 }
             } catch (cacheReadError) {
-                log(`Error reading cache file ${cachePath}: ${cacheReadError}`, 'error', 'bannedSiteGen.js');
+                console.error(`Error reading cache file ${cachePath}: ${cacheReadError}`);
             }
 
             if (fetchedContent !== cachedContent) {
@@ -64,7 +64,7 @@ async function getBannedSites() {
                     fs.writeFileSync(cachePath, fetchedContent, 'utf-8');
                     log(`Successfully updated cache file: ${cachePath}`, 'info', 'bannedSiteGen.js');
                 } catch (writeError) {
-                    log(`Failed to write cache file ${cachePath}: ${writeError}`, 'error', 'bannedSiteGen.js');
+                    console.error(`Failed to write cache file ${cachePath}: ${writeError}`);
                 }
                 currentListSites = fetchedContent.split('\n').map(site => site.trim()).filter(site => site !== '');
             } else {
@@ -73,7 +73,7 @@ async function getBannedSites() {
             }
 
         } catch (fetchError) {
-            log(`Failed to fetch remote list ${listUrl}: ${fetchError}`, 'error', 'bannedSiteGen.js');
+            console.error(`Failed to fetch remote list ${listUrl}: ${fetchError}`);
             try {
                 if (fs.existsSync(cachePath)) {
                     const cachedContent = fs.readFileSync(cachePath, 'utf-8');
@@ -83,7 +83,7 @@ async function getBannedSites() {
                     currentListSites = [];
                 }
             } catch (cacheError) {
-                log(`Failed to read cache file ${cachePath} after fetch failure: ${cacheError}`, 'error', 'bannedSiteGen.js');
+                console.error(`Failed to read cache file ${cachePath} after fetch failure: ${cacheError}`);
                 currentListSites = [];
             }
         }

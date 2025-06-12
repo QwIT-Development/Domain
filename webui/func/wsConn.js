@@ -14,7 +14,7 @@ const wsConn = async (ws) => {
         ws.send(JSON.stringify({type: 'statsUpdate', payload: initialStats, isDelta: false}));
 
     } catch (e) {
-        log(`Error sending initial stats to client: ${e.message}`, 'error', 'webui.js (WebSocket)');
+        console.error(`Error sending initial stats to client: ${e.message}`);
         ws.close();
         return;
     }
@@ -22,7 +22,7 @@ const wsConn = async (ws) => {
     try {
         ws.send(JSON.stringify({type: 'version', payload: {version: state.version, updateAvailable: false}}));
     } catch (e) {
-        log(`Error sending version info to client: ${e.message}`, 'error', 'webui.js (WebSocket)');
+        console.error(`Error sending version info to client: ${e.message}`);
     }
 };
 

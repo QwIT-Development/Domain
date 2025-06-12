@@ -45,7 +45,7 @@ async function deleteUploadedItems() {
             log(`Deleted file with ID: ${fileId}`, 'info', 'cleanup.js');
         }
     } catch (error) {
-        log(`Error deleting file with ID: ${error}`, 'error', 'cleanup.js');
+        console.error(`Error deleting file with ID: ${error}`);
     }
 }
 
@@ -59,7 +59,7 @@ async function getFileIds(){
             return [];
         }
     } catch (error) {
-        log(`Error listing files: ${error}`, 'error', 'cleanup.js');
+        console.error(`Error listing files: ${error}`);
         return [];
     }
 }

@@ -189,7 +189,9 @@ const saveConfig = async (req) => {
 
         updatedConfig.NEEDS_FULL_SETUP = false;
 
-        const backupPath = configPath + '.backup.' + Date.now();
+        fs.mkdirSync(path.join(global.dirname, "/data/running/tmp"), { recursive: true });
+
+        const backupPath = path.join(global.dirname, "/data/running/tmp", "config.json" + '.backup.' + Date.now().toString());
 
         fs.copyFileSync(configPath, backupPath);
 

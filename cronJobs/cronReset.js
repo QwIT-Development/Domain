@@ -21,7 +21,7 @@ const task = async () => {
         count = Object.keys(state.history).length;
         await stopSpinner(true, `Refreshed ${count} models.`);
     } catch (error) {
-        log(`Error while resetting prompt reset task: ${error}`, 'error', 'cronReset.js');
+        console.error(`Error while resetting prompt reset task: ${error}`);
     } finally {
         timeoutId = setTimeout(task, intervalMilliseconds);
     }
