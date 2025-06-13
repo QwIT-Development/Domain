@@ -49,6 +49,7 @@ const {initializeSpinner, stopSpinner} = require('./utils/processInfo');
 
 // async main thread hell yeah
 async function main() {
+    state.locationHelper.init = "index.js/main startup";
     global.dirname = __dirname;
     const {configurationChecker} = require('./initializers/configuration');
     const needsFullSetup = await configurationChecker();
@@ -197,7 +198,9 @@ async function gracefulShutdown(signal, client) {
 }
 
 main().then().catch(error => {
-    console.error(`Unhandled error in main: ${error.stack}`);
+    console.error(`Unhandled error in main: ${JSON.stringify(error, null, 2)}`);
+    console.error('Stack trace:', error.stack);
+    console.error(state.locationHelper.init);
     stopSpinner(false, 'Bot crashed during startup.');
     process.exit(1);
 });

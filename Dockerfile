@@ -31,6 +31,9 @@ RUN chmod +x /usr/local/bin/entry.sh \
 
 EXPOSE 4500/tcp
 
+LABEL org.opencontainers.image.source=https://github.com/QwIT-Development/Domain
+LABEL org.opencontainers.image.licenses=AGPL-3.0-or-later
+
 USER root
 ENTRYPOINT ["/usr/local/bin/wrapper.sh"]
 CMD ["bun", "run", "index.js"]
