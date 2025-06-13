@@ -11,6 +11,7 @@ const log = require('../utils/betterLogs');
 const {changeSpinnerText} = require('../utils/processInfo');
 
 async function initData() {
+    state.locationHelper.init = "initData.js/initData";
     await changeSpinnerText('Initializing state...');
     // check if data directory exists
     const dataDir = path.join(global.dirname, 'data', 'running');

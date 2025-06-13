@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const log = require('../utils/betterLogs');
+const state = require('../initializers/state');
 
 const defaultConfigValues = {
     "WEBUI_PORT": 4500,
@@ -8,6 +9,7 @@ const defaultConfigValues = {
 };
 
 async function configurationChecker() {
+    state.locationHelper.init = "configuration.js/configurationChecker";
     const configPath = path.join(global.dirname, 'config.json');
     let needsFullSetup = false;
 

@@ -11,8 +11,10 @@ const {GoogleAIFileManager} = require("@google/generative-ai/server");
 const fileManager = new GoogleAIFileManager(config.GEMINI_API_KEY);
 const log = require('./betterLogs')
 const {changeSpinnerText} = require('../utils/processInfo');
+const state = require('../initializers/state');
 
 async function deleteArtifacts() {
+    state.locationHelper.init = "cleanup.js/deleteArtifacts";
     await changeSpinnerText('Deleting Artifacts...');
     const artifactDir = path.join(global.dirname, 'data', 'running', 'tmp');
     // check if it exists (in docker it does not)
@@ -33,6 +35,7 @@ async function deleteArtifacts() {
 }
 
 async function deleteUploadedItems() {
+    state.locationHelper.init = "cleanup.js/deleteUploadedItems";
     await changeSpinnerText('Deleting Uploaded Items...');
     const fileIds = await getFileIds();
     if (!fileIds) {

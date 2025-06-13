@@ -108,7 +108,7 @@ function log(messageOrError, type = "info", thread = "index.js") {
     if (type === 'error') {
         const errorToCapture = messageOrError instanceof Error ? messageOrError : new Error(String(messageOrError));
         Sentry.captureException(errorToCapture, {
-            extra: { thread: thread }
+            extra: { thread: thread, initLocation: state.locationHelper.init },
         });
     }
 }

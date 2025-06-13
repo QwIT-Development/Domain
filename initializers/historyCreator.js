@@ -8,6 +8,7 @@ const config = require('../config.json');
 const {changeSpinnerText} = require('../utils/processInfo');
 
 async function generateHistory() {
+    state.locationHelper.init = "historyCreator.js/generateHistory";
     await changeSpinnerText("Generating empty history...");
     for (const channel of config.CHANNELS) {
         state.history[channel] = [];

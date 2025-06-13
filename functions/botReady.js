@@ -8,6 +8,7 @@ const { ActivityType: {Custom} } = require("discord.js");
 const state = require("../initializers/state");
 
 async function botReady(client) {
+    state.locationHelper.init = "botReady.js/botReady";
     await client.user.setPresence({
         activities: [{
             name: 'Említs meg, vagy válaszolj egy üzenetemre!',

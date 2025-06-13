@@ -9,8 +9,10 @@ const config = require('../config.json');
 const {makePrompt} = require('../functions/makePrompt');
 const log = require('../utils/betterLogs');
 const {changeSpinnerText} = require('../utils/processInfo');
+const state = require('./state');
 
 async function model(history, showLog = true) {
+    state.locationHelper.init = "geminiClient.js/model";
     await changeSpinnerText("Creating gemini models...");
     const models = {};
 

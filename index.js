@@ -20,6 +20,8 @@ const Sentry = require('@sentry/bun');
 // init sentry for error tracking
 Sentry.init({
   dsn: "https://33b9563a3d438b9ea893d5e0852bed2d@o4509481270902784.ingest.de.sentry.io/4509481272410192",
+  release: `domain@${require('./package.json').version}`,
+  attachStacktrace: true,
 });
 require('./utils/betterLogs.js');
 
@@ -78,6 +80,7 @@ async function main() {
     const {messageHandler} = require('./eventHandlers/messageHandler');
 
     // initialize stuff inside async thingy
+    state.locationHelper.init = "index.js/discordClient";
     let discordClientReady = false;
     const discordClient = require('./initializers/botClient');
     discordClient.once(Events.ClientReady, () => {
@@ -116,6 +119,7 @@ async function main() {
     process.on('exit', () => gracefulShutdown('exit', discordClient));
 
     await stopSpinner(true, "Domain-Unchained ready");
+    state.locationHelper.init = "init complete";
 
     require('./cronJobs/cronReset'); // this should be run after bot is ready
     if (!webUiStarted) {

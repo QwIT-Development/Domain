@@ -21,4 +21,7 @@ module.exports = {
     usersCache: {},
     wsClients: new Set(),
     muteCount: 0,
+    locationHelper: {
+        init: "main"
+    }
 };

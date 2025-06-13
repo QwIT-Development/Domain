@@ -24,6 +24,7 @@ const getCachePathForUrl = (url) => {
 };
 
 async function getBannedSites() {
+    state.locationHelper.init = "bannedSiteGen.js/getBannedSites";
     log(`Generating banned sites list...`, 'info', 'bannedSiteGen.js');
 
     let staticFileSites = [];

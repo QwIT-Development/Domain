@@ -14,6 +14,7 @@ const state = require('../initializers/state');
 const {changeSpinnerText} = require('../utils/processInfo');
 
 async function announceCommands(client) {
+    state.locationHelper.init = "setCommands.js/announceCommands";
     await changeSpinnerText("Announcing commands to all servers...");
     // push commands to collection
     // this will set the commands internally

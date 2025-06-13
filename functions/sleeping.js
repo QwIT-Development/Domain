@@ -19,6 +19,7 @@ if (state.isSleeping === undefined) state.isSleeping = false;
  * @returns {boolean} - ha fasza minden truet ad ~~(ha nem akkor nem)~~
  */
 function schedSleep(range, client) {
+    state.locationHelper.init = "sleeping.js/schedSleep";
     changeSpinnerText("Scheduling sleep...").then();
 
     try {
@@ -63,6 +64,7 @@ function schedSleep(range, client) {
  * @returns {number|null} - millisec éfjéltől számolva
  */
 function parseTime(timeStr) {
+    state.locationHelper.init = "sleeping.js/parseTime";
     try {
         const timeRegex = /(\d{1,2}):(\d{2})/;
         const matches = timeRegex.exec(timeStr);
@@ -92,6 +94,7 @@ function parseTime(timeStr) {
  * @param {string} wakeTimeStr - ido string
  */
 function scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr) {
+    state.locationHelper.init = "sleeping.js/scheduleSleepCycle";
     if (state.sleepCycleTimer) clearTimeout(state.sleepCycleTimer);
     state.sleepCycleTimer = null;
 
