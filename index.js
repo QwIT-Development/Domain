@@ -27,7 +27,8 @@ Sentry.init({
     if (event.server_name) {
         delete event.server_name;
     }
-  }
+  },
+  ignoreErrors: [/503 Service Unavailable/gmi]
 });
 require('./utils/betterLogs.js');
 

@@ -50,6 +50,9 @@ async function callGeminiAPI(channelId, gemini) {
 }
 
 async function handleGeminiError(e, message, client, gemini) {
+    // purely for testing, to find out what actually went wrong
+    console.error(JSON.stringify(e, null, 2));
+
     const channelId = message.channel.id;
     let msg;
     try {
