@@ -16,7 +16,12 @@ function createCard(user, cardType) {
     cardHeader.className = 'card-header';
 
     const avatarImg = document.createElement('img');
-    avatarImg.src = user.avatarUrl || 'data:,';
+    let avatarSrc = user.avatarUrl || 'data:,';
+    if (avatarSrc && !avatarSrc.startsWith('http:') && !avatarSrc.startsWith('https:') && !avatarSrc.startsWith('data:')) {
+        console.warn('Invalid avatar URL protocol, using default.');
+        avatarSrc = 'data:,';
+    }
+    avatarImg.src = avatarSrc;
     avatarImg.alt = ''; // blank alt
     avatarImg.width = 32;
     avatarImg.height = 32;
