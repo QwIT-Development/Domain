@@ -173,7 +173,7 @@ socket.onopen = () => {
 
     const sendPing = () => {
         if (socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({type: 'ping'}));
+            socket.send(JSON.stringify({ type: 'ping' }));
             if (pingTimeout) clearTimeout(pingTimeout);
             pingTimeout = setTimeout(() => {
                 console.warn('No pong received from server. Connection might be stale.');
@@ -273,7 +273,28 @@ function updateReputationPathStats(stats) {
                 scoreInput.value = user.score;
             }
 
-            const newAvatarUrl = user.avatarUrl || 'data:,';
+            let newAvatarUrl;
+            const rawUserAvatarUrl = user.avatarUrl;
+
+            if (typeof rawUserAvatarUrl === 'string' && rawUserAvatarUrl.trim() !== '') {
+                const lowerUrl = rawUserAvatarUrl.toLowerCase();
+                if (lowerUrl.startsWith('https:')) {
+                    newAvatarUrl = rawUserAvatarUrl;
+                } else if (lowerUrl.startsWith('data:')) {
+                    newAvatarUrl = rawUserAvatarUrl;
+                } else if (lowerUrl.startsWith('http:')) {
+                    if (window.location.protocol === 'https:') {
+                        newAvatarUrl = 'data:,';
+                    } else {
+                        newAvatarUrl = rawUserAvatarUrl;
+                    }
+                } else {
+                    newAvatarUrl = 'data:,';
+                }
+            } else {
+                newAvatarUrl = 'data:,';
+            }
+
             if (avatarImg && avatarImg.src !== newAvatarUrl) {
                 avatarImg.src = newAvatarUrl;
             }
