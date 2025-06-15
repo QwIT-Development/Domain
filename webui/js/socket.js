@@ -16,9 +16,25 @@ function createCard(user, cardType) {
     cardHeader.className = 'card-header';
 
     const avatarImg = document.createElement('img');
-    let avatarSrc = user.avatarUrl || 'data:,';
-    if (avatarSrc && !avatarSrc.startsWith('http:') && !avatarSrc.startsWith('https:') && !avatarSrc.startsWith('data:')) {
-        console.warn('Invalid avatar URL protocol, using default.');
+    let avatarSrc;
+    const rawUserAvatarUrl = user.avatarUrl;
+
+    if (typeof rawUserAvatarUrl === 'string' && rawUserAvatarUrl.trim() !== '') {
+        const lowerUrl = rawUserAvatarUrl.toLowerCase();
+        if (lowerUrl.startsWith('https:')) {
+            avatarSrc = rawUserAvatarUrl;
+        } else if (lowerUrl.startsWith('data:')) {
+            avatarSrc = rawUserAvatarUrl;
+        } else if (lowerUrl.startsWith('http:')) {
+            if (window.location.protocol === 'https:') {
+                avatarSrc = 'data:,';
+            } else {
+                avatarSrc = rawUserAvatarUrl;
+            }
+        } else {
+            avatarSrc = 'data:,';
+        }
+    } else {
         avatarSrc = 'data:,';
     }
     avatarImg.src = avatarSrc;
