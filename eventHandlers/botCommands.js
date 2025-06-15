@@ -74,7 +74,7 @@ async function handleMemoryCommands(out, message) {
 
 async function handleMuteCommands(out, message, reactionsToAdd) {
     try {
-        const muteRegex = /mute\[\s*(?:<@!?)?(\d+)>?\s*,\s*(\d+)\s*(?:,\s*([^\]]*))?\s*]/gmi;
+        const muteRegex = /mute\[\s*(?:<@!?)?(\d+)>?\s*,\s*(\d+[a-z]*)\s*(?:,\s*([^\]]*))?\s*]/gmi;
         const muteMatches = Array.from(out.matchAll(muteRegex));
         if (muteMatches.length > 0) {
             const guild = message.guild;
