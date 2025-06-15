@@ -115,7 +115,7 @@ function createCard(user, cardType) {
         liftButton.textContent = 'Lift Ban';
         liftButton.style.width = '100%';
         liftButton.onclick = () => {
-            fetch(`/api/unban/${user.id}`, {
+            fetch(`/api/unban/${encodeURIComponent(user.id)}`, {
                 method: 'DELETE'
             })
                 .then(response => response.json())
