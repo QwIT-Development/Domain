@@ -22,7 +22,6 @@ Sentry.init({
   dsn: "https://33b9563a3d438b9ea893d5e0852bed2d@o4509481270902784.ingest.de.sentry.io/4509481272410192",
   release: `domain@${require('./package.json').version}`,
   attachStacktrace: true,
-  tracesSampleRate: 1.0, // csak nem fogja leterhelni a cput a gecibe
   beforeSend(event) {
     if (event.server_name) {
         delete event.server_name;
