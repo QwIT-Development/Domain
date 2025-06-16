@@ -39,20 +39,35 @@ async function callGemini(genAI, prompt, configOverride = {}) {
 
     const mergedConfig = { ...defaultConfig, ...configOverride };
 
-    const response = await genAI.models.generateContentStream({
-        model: 'gemini-2.0-flash-lite',
-        config: mergedConfig,
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
-    });
+    const maxRetries = 5;
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const response = await genAI.models.generateContentStream({
+                model: 'gemini-2.0-flash-lite',
+                config: mergedConfig,
+                contents: [{ role: 'user', parts: [{ text: prompt }] }]
+            });
 
-    let responseText = '';
-    for await (const chunk of response) {
-        if (chunk.text) {
-            responseText += chunk.text;
+            let responseText = '';
+            for await (const chunk of response) {
+                if (chunk.text) {
+                    responseText += chunk.text;
+                }
+            }
+            return responseText;
+        } catch (error) {
+            if (error.message && error.message.includes('500')) {
+                if (i < maxRetries - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                } else {
+                    console.warn(`Gemini call failed after ${maxRetries} retries.`);
+                    throw error;
+                }
+            } else {
+                throw error;
+            }
         }
     }
-
-    return responseText;
 }
 
 async function search(query, genAI) {
