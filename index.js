@@ -54,11 +54,9 @@ async function main() {
     const needsFullSetup = await configurationChecker();
     const config = require('./config.json');
 
-    let webUiStarted = false;
     // i really hope i did this right
     if (config.WEBUI_PORT && needsFullSetup) {
         require('./webui/index.js');
-        webUiStarted = true;
         log('Bot needs full configuration via WebUI. Halting further initialization until setup is complete and bot is restarted.', 'info');
         return;
     } else if (!config.WEBUI_PORT && needsFullSetup) {
@@ -129,9 +127,7 @@ async function main() {
     state.locationHelper.init = "init complete";
 
     require('./cronJobs/cronReset'); // this should be run after bot is ready
-    if (!webUiStarted) {
-        require('./webui/index'); 
-    }
+    require('./webui/index');
 
     discordClient.on(Events.MessageCreate, async message => {
         if (!allowInteraction) return;
