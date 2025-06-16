@@ -17,7 +17,8 @@ function validateOptionalUrlString(value, propertyName, errors) {
 }
 
 function validateNumericStringArray(value, itemDescription, errors) {
-    if (value && (!Array.isArray(value) || !value.every(item => typeof item === 'string' && item.match(/^\d+$/)))) {
+    const numericRegex = /^\d+$/;
+    if (value && (!Array.isArray(value) || !value.every(item => typeof item === 'string' && numericRegex.test(item)))) {
         errors.push(`All ${itemDescription} must be numeric strings in an array.`);
     }
 }
@@ -83,8 +84,9 @@ function validateConfigData(data) {
     validateOptionalUrlString(data.TOS_URL, "Terms of Service URL", errors);
 
     if (data.EMOJIS) {
+        const emojiRegex = /^(\d+|<a?:\w+:\d+>)$/;
         Object.entries(data.EMOJIS).forEach(([key, value]) => {
-            if (value && (typeof value !== 'string' || !value.match(/^\d+|<a?:\w+:\d+>$/))) {
+            if (value && (typeof value !== 'string' || !emojiRegex.test(value))) {
                 errors.push(`Emoji ID for "${key}" is invalid: ${value}. Must be numeric ID or custom emoji format.`);
             }
         });

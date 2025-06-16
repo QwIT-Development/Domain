@@ -193,6 +193,7 @@ async function messageHandler(message, client, gemini) {
     return chunkedMsg(message, responseMsg);
 }
 
+// longest function with 55 "Cognitive Complexity", good to go for now, also we need to take mute command apart, might be making a different module
 async function chunkedMsg(message, response) {
     // check if response empty
     if (response.trim().length === 0) {

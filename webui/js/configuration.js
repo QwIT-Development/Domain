@@ -558,14 +558,14 @@ function validateConfiguration(data) {
     if (!data.GEMINI_MODEL) errors.push("Gemini Model ID is required.");
     if (!data.LOCALE) errors.push("Locale is required.");
 
-    
+    const numericRegex = /^\d+$/;
     if (data.ALIASES && !data.ALIASES.every(alias => typeof alias === 'string' && alias.trim() !== '')) {
         errors.push("All Aliases must be non-empty strings.");
     }
-    if (data.CHANNELS && !data.CHANNELS.every(ch => typeof ch === 'string' && ch.match(/^\d+$/))) {
+    if (data.CHANNELS && !data.CHANNELS.every(ch => typeof ch === 'string' && numericRegex.test(ch))) {
         errors.push("All Channel IDs must be numeric strings.");
     }
-    if (data.OWNERS && !data.OWNERS.every(owner => typeof owner === 'string' && owner.match(/^\d+$/))) {
+    if (data.OWNERS && !data.OWNERS.every(owner => typeof owner === 'string' && numericRegex.test(owner))) {
         errors.push("All Owner User IDs must be numeric strings.");
     }
 

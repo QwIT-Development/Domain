@@ -72,6 +72,7 @@ async function handleMemoryCommands(out, message) {
     }
 }
 
+// "Cognitive Complexity of functions should not be too high", should need a refactor, but good for now
 async function handleMuteCommands(out, message, reactionsToAdd) {
     try {
         const muteRegex = /mute\[\s*(?:<@!?)?(\d+)>?\s*,\s*(\d+[a-z]*)\s*(?:,\s*([^\]]*))?\s*]/gmi;
@@ -141,6 +142,7 @@ ${strings.automatedMessage}`
     }
 }
 
+// same here, only refactor if sonar complains
 async function handleSvgCommands(out, message) {
     const generatedSvgFiles = [];
     try {

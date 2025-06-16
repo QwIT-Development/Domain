@@ -56,7 +56,7 @@ async function callGemini(genAI, prompt, configOverride = {}) {
             }
             return responseText;
         } catch (error) {
-            if (error.message && error.message.includes('500')) {
+            if (error.message?.includes('500')) {
                 if (i < maxRetries - 1) {
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 } else {

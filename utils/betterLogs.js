@@ -42,8 +42,7 @@ function getCaller() {
         const err = new Error();
         const stack = err.stack;
 
-        for (let i = 0; i < stack.length; i++) {
-            const site = stack[i];
+        for (const site of stack) {
             if (!site) continue;
 
             const nameFromStack = site.getFileName();
