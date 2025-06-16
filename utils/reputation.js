@@ -20,7 +20,7 @@ async function reputation(id, type = "") {
         return false;
     }
 
-    const maxValue = 1000;
+    const maxValue = 2000; // old value = 1000 (100%)
 
     let user = await prisma.user.findUnique({ where: { id } });
 
