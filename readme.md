@@ -160,6 +160,6 @@ This project is licensed under the GNU Affero General Public License v3.0 or lat
 
 ## Support
 
-*   **Support Channel (Matrix):** [matrix.to/#/#domain:irc.mnus.moe](https://matrix.to/#/#domain:irc.mnus.moe)
+*   **Support Channel (Matrix):** [#domainsupport:anchietae.cc](https://matrix.to/#/#domainsupport:anchietae.cc)
 *   **Wiki & Further Information:** [GitHub Wiki](https://github.com/QwIT-Development/Domain/wiki)
 *   **Issues:** [GitHub Issues](https://github.com/QwIT-Development/Domain/issues)
