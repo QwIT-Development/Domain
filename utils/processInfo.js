@@ -25,7 +25,6 @@ async function initializeSpinner(initialText = 'Initializing...') {
 
 async function changeSpinnerText(text) {
     if (!spinner) {
-        log('Spinner is not initialized yet.', 'warn', 'processInfo.js');
         return;
     }
     spinner.text = `${darkGray}${text}${reset}`;
