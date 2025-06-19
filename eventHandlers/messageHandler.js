@@ -36,17 +36,29 @@ async function formatUserMessage(message, repliedTo, channelId) {
 
 async function callGeminiAPI(channelId, gemini) {
     let responseMsg = '';
+    let functionCalls = null;
+
     const response = await genAI.models.generateContentStream({
         model: config.GEMINI_MODEL,
         config: gemini[channelId],
         contents: state.history[channelId],
     });
+
     for await (const chunk of response) {
-        if (chunk.text) {
-            responseMsg += chunk.text.trim();
+        if (chunk.functionCalls) {
+            if (!functionCalls) {
+                functionCalls = [];
+            }
+            functionCalls.push(...chunk.functionCalls);
+        } else if (chunk.text) {
+            responseMsg += chunk.text;
         }
     }
-    return responseMsg;
+
+    if (functionCalls) {
+        return { functionCalls, text: responseMsg.trim() };
+    }
+    return { text: responseMsg.trim() };
 }
 
 async function handleGeminiError(e, message, client, gemini) {
@@ -98,14 +110,12 @@ async function handleGeminiError(e, message, client, gemini) {
     }
 }
 
-async function processResponse(responseMsg, message, gemini, repliedTo) {
+async function processResponse(responseMsg, message, repliedTo) {
     responseMsg = responseMsg.replaceAll('@everyone', '[blocked :3]');
     responseMsg = responseMsg.replaceAll('@here', '[blocked :3]');
 
-    responseMsg = await parseBotCommands(responseMsg, message, gemini);
-
-    responseMsg = responseMsg.replaceAll(/replied to \[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
-    responseMsg = responseMsg.replaceAll(/\[reputation score: ?\S*] ?\[\S* ?\(id: ?\S*\)] ?\S*:/gmi, "").trim();
+    responseMsg = responseMsg.replaceAll(/replied to \[\S* ?\(id: ?\S*\)\] ?\S*:/gmi, "").trim();
+    responseMsg = responseMsg.replaceAll(/\[reputation score: ?\S*\] ?\[\S* ?\(id: ?\S*\)\] ?\S*:/gmi, "").trim();
 
     if (state.retryCounts[message.channel.id]) {
         state.retryCounts[message.channel.id] = 0;
@@ -121,7 +131,7 @@ async function processResponse(responseMsg, message, gemini, repliedTo) {
     responseMsg = responseMsg.replaceAll(`${message.author.username.toLowerCase()}:`, "").trim();
     responseMsg = responseMsg.replaceAll(`${message.member.displayName}:`, "").trim();
     responseMsg = responseMsg.replaceAll(`${message.member.displayName.toLowerCase()}:`, "").trim();
-    responseMsg = responseMsg.replaceAll(/\[([^\s(]*) ?\(id: ?(\d+)\)] ?([^:]*):/gmi, "").trim();
+    responseMsg = responseMsg.replaceAll(/\[([^\s(]*) ?\(id: ?(\d+)\)\] ?([^:]*):/gmi, "").trim();
     return responseMsg;
 }
 
@@ -179,15 +189,53 @@ async function messageHandler(message, client, gemini) {
         parts: msgParts
     });
 
-    let responseMsg;
+    let response;
     try {
-        responseMsg = await callGeminiAPI(channelId, gemini);
+        response = await callGeminiAPI(channelId, gemini);
     } catch (e) {
         return handleGeminiError(e, message, client, gemini);
     }
 
-    responseMsg = await processResponse(responseMsg, message, gemini, repliedTo);
+    if (response.functionCalls && response.functionCalls.length > 0) {
+        state.history[channelId].push({
+            role: 'model',
+            parts: response.functionCalls.map(fc => ({ functionCall: fc }))
+        });
 
+        const toolResponses = await parseBotCommands(response.functionCalls, message, gemini);
+
+        const functionResponseParts = toolResponses.map(toolResponse => ({
+            functionResponse: {
+                name: toolResponse.name,
+                response: toolResponse.response,
+            },
+        }));
+
+        state.history[channelId].push({
+            role: 'user',
+            parts: functionResponseParts,
+        });
+
+        let finalResponse;
+        try {
+            finalResponse = await callGeminiAPI(channelId, gemini);
+        } catch (e) {
+            return handleGeminiError(e, message, client, gemini);
+        }
+
+        let responseMsg = finalResponse.text || '';
+        responseMsg = await processResponse(responseMsg, message, repliedTo);
+
+        addToHistory('model', responseMsg, channelId);
+        await trimHistory(channelId);
+        bondUpdater(message.author.id);
+        return chunkedMsg(message, responseMsg);
+    }
+
+    let responseMsg = response.text || '';
+    responseMsg = await processResponse(responseMsg, message, repliedTo);
+
+    addToHistory('model', responseMsg, channelId);
     await trimHistory(channelId);
     bondUpdater(message.author.id);
     return chunkedMsg(message, responseMsg);
