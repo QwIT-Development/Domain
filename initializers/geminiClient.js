@@ -4,12 +4,13 @@
 */
 
 
-const {GoogleGenAI} = require("@google/genai");
+const {GoogleGenAI, Type} = require("@google/genai");
 const config = require('../config.json');
 const {makePrompt} = require('../functions/makePrompt');
 const log = require('../utils/betterLogs');
 const {changeSpinnerText} = require('../utils/processInfo');
 const state = require('./state');
+const tools = require('./tools');
 
 async function model(history, showLog = true) {
     state.locationHelper.init = "geminiClient.js/model";
@@ -28,6 +29,7 @@ async function model(history, showLog = true) {
             thinkingConfig: {
                 thinkingBudget: config.ENABLE_THINKING ? 8000 : 0,
             },
+            tools
         };
     }
 
