@@ -2,8 +2,13 @@ const fs = require('fs');
 const path = require('path');
 
 function isValidUrl(string) {
-    new URL(string);
-    return true;
+    try {
+        new URL(string);
+        return true;
+    } catch (err) {
+        console.debug(err.message);
+        return false;
+    }
 }
 
 function validateOptionalUrlString(value, propertyName, errors) {

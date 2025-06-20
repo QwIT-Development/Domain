@@ -1,10 +1,10 @@
 let currentConfig = null;
-let availablePrompts = []; 
+let availablePrompts = [];
 
 
 document.addEventListener('DOMContentLoaded', async () => {
     await loadCurrentConfig();
-    await fetchAvailablePrompts(); 
+    await fetchAvailablePrompts();
     populateConfigForm();
 });
 
@@ -58,7 +58,7 @@ async function loadCurrentConfig() {
     } catch (error) {
         console.error('Error loading configuration:', error);
         showAlert(`Error loading configuration: ${error.message}`, 'danger');
-        currentConfig = {}; 
+        currentConfig = {};
     } finally {
         if (loadButton) {
             loadButton.innerHTML = originalText;
@@ -98,7 +98,7 @@ async function saveConfiguration() {
             throw new Error(`HTTP error! status: ${response.status}, message: ${errorData}`);
         }
         showAlert('Configuration saved successfully!', 'success');
-        await loadCurrentConfig(); 
+        await loadCurrentConfig();
     } catch (error) {
         console.error('Error saving configuration:', error);
         showAlert(`Error saving configuration: ${error.message}`, 'danger');
@@ -117,35 +117,35 @@ function populateConfigForm() {
         return;
     }
 
-    
+
     populateField('discordToken', currentConfig.DISCORD_TOKEN, 'Current token is set (hidden for security)');
     populateField('geminiAPIKey', currentConfig.GEMINI_API_KEY, 'Current API key is set (hidden for security)');
     populateField('geminiModel', currentConfig.GEMINI_MODEL);
     populateArrayInput('aliasesContainer', currentConfig.ALIASES || [], 'addAliasInput', 'Alias');
 
-    
+
     populateArrayInput('channelsContainer', currentConfig.CHANNELS || [], 'addChannelInput', 'Channel ID');
     populatePromptPaths(currentConfig.PROMPT_PATHS || {});
     populateWikiUrls(currentConfig.WIKI_URLS || {});
 
-    
+
     populateField('locale', currentConfig.LOCALE);
     populateField('maxMessages', currentConfig.MAX_MESSAGES);
     populateField('sleepingRange', currentConfig.SLEEPINGRANGE);
     populateField('cumulativeMode', currentConfig.CUMULATIVE_MODE);
     populateCheckbox('enableThinking', currentConfig.ENABLE_THINKING);
 
-    
+
     populateField('webuiPort', currentConfig.WEBUI_PORT);
     populateField('searxBaseUrl', currentConfig.SEARX_BASE_URL);
-    populateField('tosUrl', currentConfig.TOS_URL); 
+    populateField('tosUrl', currentConfig.TOS_URL);
     populateArrayInput('ownersContainer', currentConfig.OWNERS || [], 'addOwnerInput', 'Owner User ID');
     populateTimings(currentConfig.TIMINGS || {});
     populateEmojis(currentConfig.EMOJIS || {});
     populateArrayInput('remoteListsContainer', currentConfig.REMOTE_LISTS || [], 'addRemoteListInput', 'Remote List URL', 'url');
     populateProxies(currentConfig.PROXIES || []);
 
-    
+
     updateAllDynamicDropdowns();
 }
 
@@ -154,11 +154,11 @@ function populateField(fieldId, value, placeholderIfSet = '') {
     if (input) {
         if (input.type === 'password' && value) {
             input.placeholder = placeholderIfSet || 'Current value is set (hidden)';
-            input.value = ''; 
+            input.value = '';
         } else if (value !== undefined && value !== null) {
             input.value = value;
         } else {
-            input.value = ''; 
+            input.value = '';
         }
     }
 }
@@ -173,10 +173,10 @@ function populateCheckbox(fieldId, value) {
 function populateArrayInput(containerId, values, addFunctionName, placeholder, inputType = 'text') {
     const container = document.getElementById(containerId);
     if (!container) return;
-    container.innerHTML = ''; 
+    container.innerHTML = '';
 
     values.forEach(value => {
-        const inputGroup = createRemovableInput(value, placeholder, inputType, () => {}); 
+        const inputGroup = createRemovableInput(value, placeholder, inputType, () => { });
         container.appendChild(inputGroup);
     });
 }
@@ -222,7 +222,7 @@ function createRemovableInput(value, placeholder, inputType = 'text', onRemoveCa
 window.addAliasInput = () => addGenericInput('aliasesContainer', 'Alias');
 window.addChannelInput = () => {
     addGenericInput('channelsContainer', 'Channel ID');
-    updateAllDynamicDropdowns(); 
+    updateAllDynamicDropdowns();
 };
 window.addOwnerInput = () => addGenericInput('ownersContainer', 'Owner User ID');
 window.addRemoteListInput = () => addGenericInput('remoteListsContainer', 'Remote List URL', 'url');
@@ -237,7 +237,7 @@ function addGenericInput(containerId, placeholder, inputType = 'text') {
 
 async function fetchAvailablePrompts() {
     try {
-        const response = await fetch('/api/prompts'); 
+        const response = await fetch('/api/prompts');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         availablePrompts = await response.json();
         if (!Array.isArray(availablePrompts)) {
@@ -247,20 +247,20 @@ async function fetchAvailablePrompts() {
     } catch (error) {
         console.error('Error fetching available prompts:', error);
         showAlert('Could not fetch available prompt files. Prompt selection may be limited.', 'warning');
-        availablePrompts = []; 
+        availablePrompts = [];
     }
 }
 
 function getChannelOptions() {
     const channelInputs = document.querySelectorAll('#channelsContainer input');
     const channels = Array.from(channelInputs).map(input => input.value.trim()).filter(Boolean);
-    
+
     if (currentConfig?.CHANNELS) {
         currentConfig.CHANNELS.forEach(ch => {
             if (!channels.includes(ch)) channels.push(ch);
         });
     }
-    return [...new Set(channels)]; 
+    return [...new Set(channels)];
 }
 
 function populateChannelDropdown(selectElement) {
@@ -272,7 +272,7 @@ function populateChannelDropdown(selectElement) {
         option.textContent = channelId;
         selectElement.appendChild(option);
     });
-    selectElement.value = currentValue; 
+    selectElement.value = currentValue;
 }
 
 function populatePromptDropdown(selectElement) {
@@ -284,7 +284,7 @@ function populatePromptDropdown(selectElement) {
         option.textContent = promptFile;
         selectElement.appendChild(option);
     });
-    selectElement.value = currentValue; 
+    selectElement.value = currentValue;
 }
 
 function updateAllDynamicDropdowns() {
@@ -322,12 +322,12 @@ function createPromptPathMappingElement(channelId = '', promptFile = '') {
     div.className = 'input-group mb-2';
 
     const channelSelect = document.createElement('select');
-    channelSelect.className = 'form-control channel-select'; 
+    channelSelect.className = 'form-control channel-select';
     populateChannelDropdown(channelSelect);
     channelSelect.value = channelId;
 
     const promptSelect = document.createElement('select');
-    promptSelect.className = 'form-control prompt-select'; 
+    promptSelect.className = 'form-control prompt-select';
     populatePromptDropdown(promptSelect);
     promptSelect.value = promptFile;
 
@@ -444,8 +444,8 @@ function createProxyElement(proxy = {}) {
 function collectFormData() {
     const data = {};
 
-    data.DISCORD_TOKEN = document.getElementById('discordToken').value.trim() || currentConfig.DISCORD_TOKEN; 
-    data.GEMINI_API_KEY = document.getElementById('geminiAPIKey').value.trim() || currentConfig.GEMINI_API_KEY; 
+    data.DISCORD_TOKEN = document.getElementById('discordToken').value.trim() || currentConfig.DISCORD_TOKEN;
+    data.GEMINI_API_KEY = document.getElementById('geminiAPIKey').value.trim() || currentConfig.GEMINI_API_KEY;
     data.GEMINI_MODEL = document.getElementById('geminiModel').value.trim();
 
     data.ALIASES = collectArrayInputValues('aliasesContainer');
@@ -470,7 +470,7 @@ function collectFormData() {
     });
 
     data.WEBUI_PORT = parseInt(document.getElementById('webuiPort').value) || undefined;
-    data.TOS_URL = document.getElementById('tosUrl').value.trim() || undefined; 
+    data.TOS_URL = document.getElementById('tosUrl').value.trim() || undefined;
     data.OWNERS = collectArrayInputValues('ownersContainer');
 
     data.TIMINGS = {
@@ -478,7 +478,7 @@ function collectFormData() {
         resetPrompt: parseInt(document.getElementById('timingResetPrompt').value) || undefined,
         userCacheDuration: parseInt(document.getElementById('timingUserCacheDuration').value) || undefined,
     };
-    
+
     Object.keys(data.TIMINGS).forEach(key => data.TIMINGS[key] === undefined && delete data.TIMINGS[key]);
 
 
@@ -491,13 +491,13 @@ function collectFormData() {
         mute: document.getElementById('emojiMute').value.trim(),
         uploading: document.getElementById('emojiUploading').value.trim(),
     };
-     
+
     Object.keys(data.EMOJIS).forEach(key => data.EMOJIS[key] === '' && delete data.EMOJIS[key]);
 
 
     data.MAX_MESSAGES = parseInt(document.getElementById('maxMessages').value) || undefined;
     data.SLEEPINGRANGE = document.getElementById('sleepingRange').value.trim();
-    
+
     data.PROXIES = [];
     document.querySelectorAll('#proxiesContainer .proxy-item').forEach(item => {
         const proxy = {
@@ -510,7 +510,7 @@ function collectFormData() {
         if (username || password) {
             proxy.auth = { username, password };
         }
-        if (proxy.host && proxy.port) { 
+        if (proxy.host && proxy.port) {
             data.PROXIES.push(proxy);
         }
     });
@@ -519,13 +519,13 @@ function collectFormData() {
     data.ENABLE_THINKING = document.getElementById('enableThinking').checked;
     data.CUMULATIVE_MODE = document.getElementById('cumulativeMode').value;
 
-    
+
     if (data.ALIASES.length === 0) delete data.ALIASES;
     if (data.CHANNELS.length === 0) delete data.CHANNELS;
     if (Object.keys(data.PROMPT_PATHS).length === 0) delete data.PROMPT_PATHS;
     if (Object.keys(data.WIKI_URLS).length === 0) delete data.WIKI_URLS;
     if (data.OWNERS.length === 0) delete data.OWNERS;
-    if (!data.TOS_URL) delete data.TOS_URL; 
+    if (!data.TOS_URL) delete data.TOS_URL;
     if (data.PROXIES.length === 0) delete data.PROXIES;
     if (data.REMOTE_LISTS.length === 0) delete data.REMOTE_LISTS;
     if (Object.keys(data.TIMINGS).length === 0) delete data.TIMINGS;
@@ -540,17 +540,20 @@ function collectArrayInputValues(containerId) {
     return Array.from(inputs).map(input => input.value.trim()).filter(Boolean);
 }
 
-
-
 function isValidUrl(string) {
-    new URL(string);
-    return true;
+    try {
+        new URL(string);
+        return true;
+    } catch (err) {
+        console.debug(err.message);
+        return false;
+    }
 }
 
 function validateConfiguration(data) {
     const errors = [];
 
-    
+
     if (!data.GEMINI_MODEL) errors.push("Gemini Model ID is required.");
     if (!data.LOCALE) errors.push("Locale is required.");
 
@@ -565,7 +568,7 @@ function validateConfiguration(data) {
         errors.push("All Owner User IDs must be numeric strings.");
     }
 
-    
+
     if (data.PROMPT_PATHS) {
         for (const [channelId, promptFile] of Object.entries(data.PROMPT_PATHS)) {
             if (!channelId.match(/^\d+$/)) errors.push(`Invalid Channel ID in Prompt Paths: ${channelId}`);
@@ -573,7 +576,7 @@ function validateConfiguration(data) {
         }
     }
 
-    
+
     if (data.WIKI_URLS) {
         for (const [channelId, urls] of Object.entries(data.WIKI_URLS)) {
             if (!channelId.match(/^\d+$/)) errors.push(`Invalid Channel ID in Wiki URLs: ${channelId}`);
@@ -586,15 +589,15 @@ function validateConfiguration(data) {
         errors.push("WebUI Port must be a number between 1 and 65535.");
     }
 
-    
+
     if (data.TIMINGS) {
         if (data.TIMINGS.resetPrompt && (isNaN(data.TIMINGS.resetPrompt) || data.TIMINGS.resetPrompt < 0)) {
             errors.push("Timing: Reset Prompt must be a non-negative number.");
         }
-         if (data.TIMINGS.saveReps && (isNaN(data.TIMINGS.saveReps) || data.TIMINGS.saveReps < 0)) {
+        if (data.TIMINGS.saveReps && (isNaN(data.TIMINGS.saveReps) || data.TIMINGS.saveReps < 0)) {
             errors.push("Timing: Save Reps must be a non-negative number.");
         }
-         if (data.TIMINGS.userCacheDuration && (isNaN(data.TIMINGS.userCacheDuration) || data.TIMINGS.userCacheDuration < 0)) {
+        if (data.TIMINGS.userCacheDuration && (isNaN(data.TIMINGS.userCacheDuration) || data.TIMINGS.userCacheDuration < 0)) {
             errors.push("Timing: User Cache Duration must be a non-negative number.");
         }
     }
@@ -603,15 +606,15 @@ function validateConfiguration(data) {
     if (data.SEARX_BASE_URL && !isValidUrl(data.SEARX_BASE_URL)) {
         errors.push("SearX Base URL must be a valid URL.");
     }
-    if (data.TOS_URL && !isValidUrl(data.TOS_URL)) { 
+    if (data.TOS_URL && !isValidUrl(data.TOS_URL)) {
         errors.push("Terms of Service URL must be a valid URL.");
     }
-    
-    
+
+
     if (data.EMOJIS) {
         Object.entries(data.EMOJIS).forEach(([key, value]) => {
             if (value && !value.match(/^(\d+|<a?:\w+:\d+>)$/)) {
-                 errors.push(`Emoji ID for "${key}" is invalid: ${value}. Must be numeric ID or custom emoji format.`);
+                errors.push(`Emoji ID for "${key}" is invalid: ${value}. Must be numeric ID or custom emoji format.`);
             }
         });
     }
@@ -624,13 +627,13 @@ function validateConfiguration(data) {
         errors.push("Sleeping Range must be in HH:MM-HH:MM format (e.g., 22:00-06:00).");
     }
 
-    
+
     if (data.PROXIES) {
         data.PROXIES.forEach((proxy, index) => {
             if (!proxy.host) errors.push(`Proxy #${index + 1}: Host is required.`);
             if (!proxy.port) errors.push(`Proxy #${index + 1}: Port is required.`);
             else if (isNaN(proxy.port) || proxy.port < 1 || proxy.port > 65535) {
-                 errors.push(`Proxy #${index + 1}: Port must be a number between 1 and 65535.`);
+                errors.push(`Proxy #${index + 1}: Port must be a number between 1 and 65535.`);
             }
             if (!['http', 'https', 'socks4', 'socks5'].includes(proxy.protocol)) {
                 errors.push(`Proxy #${index + 1}: Invalid protocol.`);
