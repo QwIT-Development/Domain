@@ -12,7 +12,7 @@ Domain is a feature-rich Discord chatbot powered by Google's Gemini API. It's de
 *   **AI-Powered Conversations:** Utilizes Google's Gemini API for intelligent and context-aware chat responses.
 *   **Smart Context Gathering:** Employs sophisticated methods to understand conversation context for more relevant interactions.
 *   **Reputation System:** Allows users to build and track reputation within the server.
-*   **Image Generation:** Capable of generating images, including SVG for free-tier users.
+*   **Image Generation:** Capable of generating images from SVG code.
 *   **User Moderation:** Includes features for timing out users.
 *   **Code Snippet Handling:** Can understand and process snippets from code blocks.
 *   **File & Picture Understanding:** Ability to interpret and react to uploaded pictures and files.
@@ -23,7 +23,7 @@ Domain is a feature-rich Discord chatbot powered by Google's Gemini API. It's de
     *   Real-time server statistics.
     *   Live configuration editing.
 *   **Customizable Prompts:** Supports different prompts per channel for tailored bot behavior.
-*   **Extensive Configuration:** Highly configurable through `config.json` and the WebUI.
+*   **Extensive Configuration:** Highly configurable through the WebUI.
 *   **Emoji Management:** Resolves and utilizes custom emojis.
 *   **Banned Site Filtering:** Filters messages containing links to banned sites.
 *   **"Thinking" Indicator:** Shows when the bot is processing a request.
@@ -35,42 +35,13 @@ Domain is a feature-rich Discord chatbot powered by Google's Gemini API. It's de
 
 ### Prerequisites
 
-*   [Bun](https://bun.sh/) installed.
+*   [Docker](https://docs.docker.com/engine/install/) installed.
 *   A Discord Bot Token.
 *   A Google Gemini API Key.
 
 ### Installation & Setup
 
-1.  **Clone the repository (if you haven't already):**
-    ```bash
-    git clone <your-repository-url> --recursive
-    cd Domain
-    ```
-
-2.  **Install dependencies:**
-    ```bash
-    bun install
-    ```
-
-3.  **Prepare configuration file:**
-    *   Create an empty `config.json`. This file will store your bot's configuration.
-
-4.  **Set up Prisma (Database):**
-    The project uses Prisma for database interactions. Ensure your database is set up according to your `prisma/schema.prisma` file.
-    *   Initialize your database and run migrations:
-        ```bash
-        bunx prisma deploy
-        ```
-
-5.  **Start the bot:**
-    ```bash
-    bun start
-    ```
-
-6.  **Initial Configuration via WebUI:**
-    *   Once the bot is running, open your web browser and navigate to the WebUI. By default, it should be accessible at `http://localhost:4500`. If you changed `WEBUI_PORT` in `template.config.json` before renaming it, use that port.
-    *   Through the WebUI, you can set your `DISCORD_TOKEN`, `GEMINI_API_KEY`, `GEMINI_MODEL`, define bot `ALIASES`, specify active `CHANNELS`, and configure other core settings.
-    *   The WebUI is the recommended method for initial setup and managing most configurations.
+TODO
 
 ## Usage
 
@@ -81,7 +52,7 @@ Once the bot is running and configured for your channels, you can interact with 
 The bot primarily interacts through natural language. However, some slash commands are available:
 *   `/amibanned`: Checks if the user is banned.
 *   `/reputation`: Checks user reputation.
-*   `/reset`: (Owner only) Resets bot's memory/context.
+*   `/reset`: (Owner only) Resets bot's context history.
 *   `/version`: Displays the bot's version.
 
 (More commands might be available or under development.)
@@ -101,7 +72,6 @@ The `config.json` file holds all configuration settings for Domain. While the [W
 *   `WEBUI_PORT`: The port number on which the WebUI will run.
 *   `OWNERS`: An array of Discord user IDs that have administrative privileges over the bot.
 *   `TIMINGS`:
-    *   `saveReps`: Interval in seconds for saving reputation data.
     *   `resetPrompt`: Interval in seconds for resetting/reloading the prompt.
     *   `userCacheDuration`: Duration in milliseconds for caching user data.
 *   `SEARX_BASE_URL`: Base URL for a SearXNG instance if you want the bot to use it for web searches.
@@ -118,7 +88,7 @@ Refer to `template.config.json` for a full list of available options and their s
 
 ## WebUI
 
-Domain includes a powerful WebUI accessible via `http://localhost:<WEBUI_PORT>` (as configured in `config.json`).
+Domain includes a powerful WebUI accessible via `http://localhost:4500`
 
 **Features of the WebUI:**
 
