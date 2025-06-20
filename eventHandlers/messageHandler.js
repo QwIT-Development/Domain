@@ -131,7 +131,7 @@ async function processResponse(responseMsg, message, repliedTo) {
     responseMsg = responseMsg.replaceAll(`${message.author.username.toLowerCase()}:`, "").trim();
     responseMsg = responseMsg.replaceAll(`${message.member.displayName}:`, "").trim();
     responseMsg = responseMsg.replaceAll(`${message.member.displayName.toLowerCase()}:`, "").trim();
-    responseMsg = responseMsg.replaceAll(/\[([^\s(]*) ?\(id: ?(\d+)\)\] ?([^:]*):/gmi, "").trim();
+    responseMsg = responseMsg.replaceAll(/\[([^\s(]+) \(id: ?(\d+)\)\] ?([^:]*):/gmi, "").trim();
     return responseMsg;
 }
 
