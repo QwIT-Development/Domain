@@ -76,7 +76,7 @@ async function search(query, genAI) {
 
         const encodedQuery = encodeURIComponent(query);
         const response = await axios.get(`${config.SEARX_BASE_URL}/search?q="${encodedQuery}"&format=json`, {
-            headers: { "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36" }
+            headers: { "User-Agent": `Mozilla/5.0 (compatible; Domain-Unchained/${state.version}; +https://github.com/QwIT-Development/Domain) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36` }
         });
 
         if (!response.data?.results) {
