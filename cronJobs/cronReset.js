@@ -8,14 +8,9 @@ const intervalMilliseconds = config.TIMINGS.resetPrompt * 1000;
 let timeoutId = null;
 
 const task = async () => {
-    let count = 0;
     try {
         // rebuild models (so prompt updates too)
         global.geminiModel = await model(state.history, false);
-
-        // this won't reset history, instead it just refreshes the models
-        // this shouldn't add up to the global reset count
-        count = Object.keys(state.history).length;
     } catch (error) {
         console.error(`Error while resetting prompt reset task: ${error}`);
     } finally {
