@@ -10,6 +10,7 @@ const config = require('../config.json');
 const state = require('../initializers/state');
 const log = require('./betterLogs');
 const cheerio = require('cheerio');
+const robotsParser = require('robots-parser');
 
 const options = {
     wordwrap: 130,
@@ -163,6 +164,7 @@ async function generateContext(genAI, url, query) {
 
     if (basicContext === "Invalid website" ||
         basicContext === "Blocked website" ||
+        basicContext === "Blocked by robots.txt" ||
         basicContext === "Error getting context" ||
         !basicContext || basicContext.trim().length < 50) {
         return basicContext;
@@ -246,6 +248,14 @@ async function getContext(url) {
     }
 
     try {
+        const robotUrl = `${new URL(url).origin}/robots.txt`;
+        const userAgent = "Domain-Unchained"; // this shouldn't include the version, so it is easier to block
+        const robots = robotsParser(robotUrl, await axios.get(robotUrl, { responseType: 'text' }).then(res => res.data).catch(() => ""));
+        if (!robots.isAllowed(url, userAgent)) {
+            log(`Skipping site due to robots.txt: ${url}`, 'warn', 'searx.js');
+            return "Blocked by robots.txt";
+        }
+
         let response = await axios.get(url, { responseType: 'arraybuffer' });
         response = Buffer.from(response.data, 'binary').toString('utf8');
         const $ = cheerio.load(response);
