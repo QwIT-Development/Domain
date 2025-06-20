@@ -52,7 +52,7 @@ async function parseBotCommands(toolCalls, message, gemini) {
             case 'memory': {
                 const { string: memStr } = args;
                 if (memStr) {
-                    appendMemory(memStr, message.channel.id).catch(e => console.error(`Failed to save memory: \"${memStr}\" - ${e}`));
+                    appendMemory(memStr, message.channel.id).catch(e => console.error(`Failed to save memory: "${memStr}" - ${e}`));
                     response.content = "Memory saved.";
                 } else {
                     log(`Skipped empty memory command.`, 'warn', 'botCommands.js');
@@ -91,7 +91,7 @@ async function parseBotCommands(toolCalls, message, gemini) {
 
                             const user = await message.client.users.fetch(userIdToMute.toString());
                             await user.send({
-                                content: `${strings.muteMessage.replace("[REASON]", '\"' + reason + '\"').replace("[TIME]", time / 1000)}\n${strings.automatedMessage}`
+                                content: `${strings.muteMessage.replace("[REASON]", `"${reason}"`).replace("[TIME]", time / 1000)}\n${strings.automatedMessage}`
                             });
                             response.content = `User ${userIdToMute} muted successfully.`;
                         } else {
@@ -141,7 +141,7 @@ async function parseBotCommands(toolCalls, message, gemini) {
                         response.content = searchResult;
                         reactionsToAdd.add(state.emojis["search"]);
                     } catch (searchError) {
-                        console.error(`Search handler failed for query \"${searchQuery}\": ${searchError}`);
+                        console.error(`Search handler failed for query "${searchQuery}": ${searchError}`);
                         response.content = `[Keresés besült]`;
                     }
                 } else {

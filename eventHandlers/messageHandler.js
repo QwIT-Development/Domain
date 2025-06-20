@@ -4,34 +4,55 @@
 */
 
 
-const {checkAuthors, checkForMentions} = require('../functions/checkAuthors');
+const { checkAuthors, checkForMentions } = require('../functions/checkAuthors');
 const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
-const {reputation} = require('../utils/reputation');
+const { reputation } = require('../utils/reputation');
 const parseBotCommands = require('./botCommands');
 const fs = require('fs');
 const path = require('path');
-const {RNGArray} = require('../functions/rng');
-const {getMemories} = require('../functions/memories');
+const { RNGArray } = require('../functions/rng');
+const { getMemories } = require('../functions/memories');
 const strings = require('../data/strings.json');
 const uploadFilesToGemini = require('../eventHandlers/fileUploader');
 const config = require('../config.json');
-const {formatDate} = require('../functions/makePrompt');
-const {genAI} = require('../initializers/geminiClient');
-const {bondUpdater} = require('../functions/usageRep');
-const {addToHistory, trimHistory} = require('../utils/historyUtils');
+const { formatDate } = require('../functions/makePrompt');
+const { genAI } = require('../initializers/geminiClient');
+const { bondUpdater } = require('../functions/usageRep');
+const { addToHistory, trimHistory } = require('../utils/historyUtils');
 
 async function formatUserMessage(message, repliedTo, channelId) {
     const score = await reputation(message.author.id);
     const memories = await getMemories(channelId);
     const date = formatDate(new Date());
+    let replyContent = "";
     if (repliedTo) {
-        return `[Memories: ${memories}]
-            Replied to [${repliedTo.author.username} (ID: ${repliedTo.author.id})] ${repliedTo.member.displayName}: ${repliedTo.content}
-            ${date} - [Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
+        replyContent = `[Parent message from reply]
+Author-ID: ${repliedTo.author.id}
+Author-Username: ${repliedTo.author.username}
+Author-DisplayName: ${repliedTo.member.displayName}
+Content:
+\`\`\`
+${repliedTo.content}
+\`\`\``;
     }
-    return `[Memories: ${memories}]
-            ${date} - [Reputation Score: ${score.toString()}] [${message.author.username} (ID: ${message.author.id})] ${message.member.displayName}: ${message.content}`;
+    return `--- System Context ---
+Memories:
+${memories}
+
+--- Conversation History ---
+${replyContent}
+
+[Current message]
+Author-ID: ${message.author.id}
+Author-Username: ${message.author.username}
+Author-DisplayName:: ${message.member.displayName}
+Timestamp: ${date}
+Reputation: ${score.toString()}
+Content:
+\`\`\`
+${message.content}
+\`\`\``;
 }
 
 async function callGeminiAPI(channelId, gemini) {
@@ -71,14 +92,14 @@ async function handleGeminiError(e, message, client, gemini) {
         if (e.response.promptFeedback.blockReason) {
             msg = e.response.promptFeedback.blockReason;
         }
-    } catch {}
+    } catch { }
 
     let status;
     try {
         if (e.error) {
             status = e.error.code;
         }
-    } catch {}
+    } catch { }
 
     if (msg && (msg === "SAFETY" || msg === "PROHIBITED_CONTENT" || msg === "OTHER")) {
         return message.channel.send(await RNGArray(strings.geminiFiltered));
@@ -111,27 +132,14 @@ async function handleGeminiError(e, message, client, gemini) {
 }
 
 async function processResponse(responseMsg, message, repliedTo) {
-    responseMsg = responseMsg.replaceAll('@everyone', '[blocked :3]');
-    responseMsg = responseMsg.replaceAll('@here', '[blocked :3]');
-
-    responseMsg = responseMsg.replaceAll(/replied to \[\S* ?\(id: ?\S*\)\] ?\S*:/gmi, "").trim();
-    responseMsg = responseMsg.replaceAll(/\[reputation score: ?\S*\] ?\[\S* ?\(id: ?\S*\)\] ?\S*:/gmi, "").trim();
+    responseMsg = responseMsg.replaceAll('@everyone', '[blocked]');
+    responseMsg = responseMsg.replaceAll('@here', '[blocked]');
 
     if (state.retryCounts[message.channel.id]) {
         state.retryCounts[message.channel.id] = 0;
     }
 
-    if (repliedTo) {
-        responseMsg = responseMsg.replaceAll(`${repliedTo.author.username}:`, "").trim();
-        responseMsg = responseMsg.replaceAll(`${repliedTo.author.username.toLowerCase()}:`, "").trim();
-        responseMsg = responseMsg.replaceAll(`${repliedTo.member.displayName}:`, "").trim();
-        responseMsg = responseMsg.replaceAll(`${repliedTo.member.displayName.toLowerCase()}:`, "").trim();
-    }
-    responseMsg = responseMsg.replaceAll(`${message.author.username}:`, "").trim();
-    responseMsg = responseMsg.replaceAll(`${message.author.username.toLowerCase()}:`, "").trim();
-    responseMsg = responseMsg.replaceAll(`${message.member.displayName}:`, "").trim();
-    responseMsg = responseMsg.replaceAll(`${message.member.displayName.toLowerCase()}:`, "").trim();
-    responseMsg = responseMsg.replaceAll(/\[([^\s(]+) \(id: ?(\d+)\)\] ?([^:]*):/gmi, "").trim();
+    responseMsg = responseMsg.replaceAll(/^\s*--- System Context ---\s*[\s\S]*?---\s*Conversation History\s*---[\s\S]*```\s*$/gmi, "").trim();
     return responseMsg;
 }
 
@@ -362,4 +370,4 @@ async function chunkedMsg(message, response) {
     return true;
 }
 
-module.exports = {messageHandler};
+module.exports = { messageHandler };

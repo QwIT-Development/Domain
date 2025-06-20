@@ -7,7 +7,7 @@ const config = require('../config.json');
 const path = require('path');
 const fs = require('fs');
 const log = require('../utils/betterLogs');
-const {getContext} = require('../utils/searx');
+const { getContext } = require('../utils/searx');
 
 /**
  * Beformázza az időt egy szebb stringbe
@@ -17,10 +17,10 @@ const {getContext} = require('../utils/searx');
 function formatDate(date) {
     const year = date.getFullYear();
     // noinspection JSCheckFunctionSignatures
-    const month = date.toLocaleString(config.LOCALE, {month: 'short'});
+    const month = date.toLocaleString(config.LOCALE, { month: 'short' });
     const day = String(date.getDate()).padStart(2, '0');
     // noinspection JSCheckFunctionSignatures
-    const weekday = date.toLocaleString(config.LOCALE, {weekday: 'long'});
+    const weekday = date.toLocaleString(config.LOCALE, { weekday: 'long' });
     const hour = String(date.getHours()).padStart(2, '0');
     const minute = String(date.getMinutes()).padStart(2, '0');
 
@@ -65,21 +65,17 @@ async function makePrompt(channelId, showLog = true) {
 
     // load wiki contents, if possible
     // added ?, so if the channel doesn't have assigned wiki urls it won't crash
-    if (config.WIKI_URLS[channelId]?.length > 0) {
-        if (prompt.includes("${WIKI_CONTENT}")) {
-            let content = "";
-            for (const url of config.WIKI_URLS[channelId]) {
-                content += `\n${await getContext(url)}`
-            }
-            if (showLog) {
-                log(`Loaded ${config.WIKI_URLS[channelId].length} wiki pages`, 'info', 'makeprompt.js');
-            }
-            prompt = prompt.replace("${WIKI_CONTENT}", content);
+    if (config.WIKI_URLS[channelId]?.length > 0 && prompt.includes("${WIKI_CONTENT}")) {
+        let content = "";
+        for (const url of config.WIKI_URLS[channelId]) {
+            content += `\n${await getContext(url)}`
         }
-    } else {
-        if (prompt.includes("${WIKI_CONTENT}")) {
-            prompt = prompt.replace("${WIKI_CONTENT}", "");
+        if (showLog) {
+            log(`Loaded ${config.WIKI_URLS[channelId].length} wiki pages`, 'info', 'makeprompt.js');
         }
+        prompt = prompt.replace("${WIKI_CONTENT}", content);
+    } else if (prompt.includes("${WIKI_CONTENT}")) {
+        prompt = prompt.replace("${WIKI_CONTENT}", "");
     }
 
     // load mute words, for later use
@@ -103,4 +99,4 @@ async function makePrompt(channelId, showLog = true) {
 }
 
 
-module.exports = {makePrompt, formatDate};
+module.exports = { makePrompt, formatDate };

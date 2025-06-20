@@ -42,7 +42,7 @@ const repSave = async (req) => {
 
         return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
     } catch (error) {
-        console.error(`Failed to save reputation: ${e.message}`);
+        console.error(`Failed to save reputation: ${error.message}`);
         return new Response(JSON.stringify({ error: 'Failed to save reputation' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
     }
 }
