@@ -13,7 +13,7 @@ ENV DATABASE_URL="file:/app/data/running/db.sqlite"
 COPY --from=deps /app/node_modules ./node_modules
 COPY ./prisma /app/prisma
 RUN bunx prisma migrate dev --name buildtime \
-&& rm -f/app/data/running/db.sqlite \
+&& rm -f /app/data/running/db.sqlite \
 && rm -f /app/data/running/db.sqlite-journal \
 && bunx prisma generate
 
