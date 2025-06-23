@@ -23,5 +23,6 @@ module.exports = {
     muteCount: 0,
     locationHelper: {
         init: "main"
-    }
+    },
+    summaries: {}
 };

@@ -310,4 +310,4 @@ function extractDomain(url) {
     }
 }
 
-module.exports = { getContext, search };
+module.exports = { getContext, search, callGemini };

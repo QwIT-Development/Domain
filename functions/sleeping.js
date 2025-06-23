@@ -7,6 +7,11 @@ const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
 const { botReady, botSleeping } = require('./botReady');
 const { changeSpinnerText } = require('../utils/processInfo');
+const fs = require('fs');
+const path = require('path');
+const { callGemini } = require('../utils/searx');
+const { genAI } = require('../initializers/geminiClient');
+const { appendMemory } = require('./memories');
 
 // kibasszuk a sleeptimert ha meg nem null
 if (state.sleepCycleTimer === undefined) state.sleepCycleTimer = null;
@@ -55,6 +60,39 @@ function schedSleep(range, client) {
             state.sleepCycleTimer = null;
         }
         return false;
+    }
+}
+
+async function createSummariesAndClearHistories() {
+    log('Creating summaries and clearing histories...', 'info', 'sleeping.js');
+    try {
+        const summarizePromptTemplate = fs.readFileSync(path.join(global.dirname, 'prompts', 'summarize.md'), 'utf8');
+
+        for (const channelId in state.history) {
+            if (Object.hasOwnProperty.call(state.history, channelId)) {
+                const history = state.history[channelId];
+                if (history && history.length > 0) {
+                    try {
+                        const historyText = history.map(h => `${h.role}: ${h.parts[0].text}`).join('\n');
+                        const prompt = summarizePromptTemplate.replace('{history}', historyText);
+
+                        const summary = await callGemini(genAI, prompt, { model: "gemini-2.5-flash" });
+
+                        state.summaries[channelId] = summary;
+                        await appendMemory(summary, channelId);
+
+                        log(`Summary created for channel ${channelId}`, 'info', 'sleeping.js');
+                    } catch (error) {
+                        log(`Failed to create summary for channel ${channelId}: ${error}`, 'error', 'sleeping.js');
+                    }
+                }
+            }
+        }
+        // Clear all histories
+        state.history = {};
+        log('Finished creating summaries and cleared all histories.', 'info', 'sleeping.js');
+    } catch (e) {
+        log(`Error in createSummariesAndClearHistories: ${e}`, 'error', 'sleeping.js');
     }
 }
 
@@ -147,8 +185,9 @@ function scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr) {
         }
         log(`Bot is awake, sleeping at: ${formatDuration(msUntilNextEvent)}`, 'info', 'sleeping.js');
 
-        nextAction = () => {
+        nextAction = async () => {
             log('Bot is now sleeping', 'info', 'sleeping.js');
+            await createSummariesAndClearHistories();
             state.isSleeping = true;
             state.sleepCycleTimer = null;
             botSleeping(client, wakeTimeStr).catch(err => console.error(`Error setting sleeping status on sleep: ${err}`));

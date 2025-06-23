@@ -1,0 +1,15 @@
+Analyze the following conversation and provide a summary based on these points:
+
+1.  **Bot's Performance:**
+    *   Identify any instances where the bot's responses were strange, nonsensical, or deviated from its intended purpose. Provide specific examples.
+
+2.  **Individual User Behavior:**
+    *   Briefly describe the general behavior and attitude of each user who participated in the conversation.
+
+3.  **Daily Summary:**
+    *   Create a concise, third-person summary of the day's events from the bot's perspective. This should be a brief narrative that the bot can use as a memory of what happened.
+
+**Conversation History:**
+```
+{history}
+```
