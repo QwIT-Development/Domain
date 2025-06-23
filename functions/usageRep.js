@@ -8,7 +8,8 @@ const prisma = new PrismaClient();
 const state = require('../initializers/state');
 const usersCache = state.usersCache;
 const {reputationSet, reputation} = require('../utils/reputation');
-const config = require('../config.json');
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 
 const firstGiftCount = 10;
 

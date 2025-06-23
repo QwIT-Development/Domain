@@ -10,7 +10,9 @@ const {Client, GatewayIntentBits, Events} = require('discord.js');
 Fuck dotenv, config.jsont hasznalunk. legalabb nem kell kulon package csak azert h betoltsunk egy izet.
 configot
  */
-const config = require('../config.json');
+// mar toml
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 const log = require('../utils/betterLogs');
 const {changeSpinnerText} = require('../utils/processInfo');
 

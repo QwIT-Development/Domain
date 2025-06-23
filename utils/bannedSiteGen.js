@@ -3,7 +3,8 @@ const path = require('path');
 const axios = require('axios');
 const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
-const config = require('../config.json');
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 
 const bannedSitesCacheDir = path.join(global.dirname, 'data', 'running', 'bannedSitesCache');
 const remoteLists = config.REMOTE_LISTS || [];

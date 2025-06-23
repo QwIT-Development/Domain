@@ -6,7 +6,8 @@
 const { SlashCommandBuilder } = require('discord.js');
 const {resetPrompt} = require('../initializers/geminiClient');
 const state = require('../initializers/state');
-const config = require('../config.json');
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 
 module.exports = {
     data: new SlashCommandBuilder()

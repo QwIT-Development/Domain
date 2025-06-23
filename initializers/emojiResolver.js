@@ -5,7 +5,8 @@
 
 
 const state = require('./state');
-const config = require('../config.json');
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 const {changeSpinnerText} = require('../utils/processInfo');
 const {resolvePartialEmoji} = require("discord.js");
 

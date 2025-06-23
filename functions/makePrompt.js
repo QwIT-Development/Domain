@@ -3,7 +3,8 @@
         Copyright (C) 2025 Anchietae
 */
 
-const config = require('../config.json');
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 const path = require('path');
 const fs = require('fs');
 const log = require('../utils/betterLogs');
@@ -32,7 +33,7 @@ function formatDate(date) {
  * @returns {Promise<string>}
  */
 async function makePrompt(channelId, showLog = true) {
-    const promptPath = config.PROMPT_PATHS[channelId];
+    const promptPath = config.CHANNELS[channelId]?.prompt;
     // noinspection JSUnresolvedReference
     const aliases = config.ALIASES;
     let prompt;
@@ -65,13 +66,13 @@ async function makePrompt(channelId, showLog = true) {
 
     // load wiki contents, if possible
     // added ?, so if the channel doesn't have assigned wiki urls it won't crash
-    if (config.WIKI_URLS[channelId]?.length > 0 && prompt.includes("${WIKI_CONTENT}")) {
+    if (config.CHANNELS[channelId]?.wikis?.length > 0 && prompt.includes("${WIKI_CONTENT}")) {
         let content = "";
-        for (const url of config.WIKI_URLS[channelId]) {
+        for (const url of config.CHANNELS[channelId]?.wikis) {
             content += `\n${await getContext(url)}`
         }
         if (showLog) {
-            log(`Loaded ${config.WIKI_URLS[channelId].length} wiki pages`, 'info', 'makeprompt.js');
+            log(`Loaded ${config.CHANNELS[channelId].wikis.length} wiki pages`, 'info', 'makeprompt.js');
         }
         prompt = prompt.replace("${WIKI_CONTENT}", content);
     } else if (prompt.includes("${WIKI_CONTENT}")) {

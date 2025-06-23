@@ -4,7 +4,8 @@
 */
 
 
-const config = require('../config.json');
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 const jailbreaks = require('../data/jailbreaks.json');
 const strings = require('../data/strings.json');
 const log = require('../utils/betterLogs');

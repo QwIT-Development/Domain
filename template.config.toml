@@ -1,0 +1,69 @@
+## Main configuration
+
+# discord token (https://discord.com/developers/applications)
+DISCORD_TOKEN = ""
+
+# gemini api key (https://aistudio.google.com/apikey)
+GEMINI_API_KEY = ""
+
+# gemini model id (https://ai.google.dev/gemini-api/docs/models/#model-variations)
+# GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = "gemini-2.5-flash-preview-04-17"
+
+# aliases the bot will respond to (exception: the ping and replying)
+# ALIASES = [ "dave", "domain" ]
+ALIASES = []
+
+# locale of the bot (used for date formatting) https://simplelocalize.io/data/locales/
+LOCALE = "hu-HU"
+
+# webui port
+WEBUI_PORT = 4500
+
+# administrator user ids, capable of running some commands not available for regular users
+OWNERS = []
+
+# searx base url
+# SEARX_BASE_URL = "https://search.example.com"
+SEARX_BASE_URL = ""
+
+# total number of messages to be stored in memory
+MAX_MESSAGES = 200
+
+# sleeping range for the bot, during this time it will not respond to anything except commands
+# SLEEPINGRANGE = "22:30-6:00"
+SLEEPINGRANGE = ""
+
+# proxies to be used for requests
+PROXIES = []
+
+# remote blocklists (hosts), must be an url to the plaintext file
+REMOTE_LISTS = []
+
+# enables the thinking capabilities of the model (if it supports it)
+ENABLE_THINKING = true
+
+# set to false, so it doesn't "bootloop"
+NEEDS_SETUP = true
+
+# cumulative mode
+# classic, noise, worse
+CUMULATIVE_MODE = "classic"
+
+# channels to be tracked
+[CHANNELS]
+# "12312312324312123" = { prompt = "default.md", wikis = [] }
+
+## timings, should be in milliseconds
+[TIMINGS]
+resetPrompt = 600
+userCacheDuration = 3600000
+
+## emojis, these should be uploaded to a server where the bot is present / on discord's developer portal
+[EMOJIS]
+uploaded = ""
+upvote = ""
+downvote = ""
+search = ""
+mute = ""
+uploading = ""

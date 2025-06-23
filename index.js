@@ -45,23 +45,18 @@ const {Events} = require("discord.js");
 const state = require('./initializers/state');
 const {botReady, botOffline} = require('./functions/botReady');
 const {initializeSpinner, stopSpinner} = require('./utils/processInfo');
+const { configurationChecker, loadConfig } = require('./initializers/configuration');
 
 // async main thread hell yeah
 async function main() {
     state.locationHelper.init = "index.js/main startup";
     global.dirname = __dirname;
-    const {configurationChecker} = require('./initializers/configuration');
     const needsFullSetup = await configurationChecker();
-    const config = require('./config.json');
-
-    // i really hope i did this right
-    if (config.WEBUI_PORT && needsFullSetup) {
-        require('./webui/index.js');
-        log('Bot needs full configuration via WebUI. Halting further initialization until setup is complete and bot is restarted.', 'info');
+    if (needsFullSetup) {
+        log('Bot needs configuration. Please edit config.toml and restart.', 'info');
         return;
-    } else if (!config.WEBUI_PORT && needsFullSetup) {
-        log('WEBUI_PORT not found in config, WebUI will not start.', 'warn');
     }
+    const config = loadConfig();
 
     // Continue with normal bot initialization if setup is complete
     const allowInteraction = !process.argv.includes('--no-interaction');

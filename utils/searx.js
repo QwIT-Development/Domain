@@ -6,7 +6,8 @@
 
 const axios = require('axios');
 const { convert } = require('html-to-text');
-const config = require('../config.json');
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 const state = require('../initializers/state');
 const log = require('./betterLogs');
 const cheerio = require('cheerio');

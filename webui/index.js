@@ -5,7 +5,8 @@
 
 
 const log = require('../utils/betterLogs');
-const config = require('../config.json');
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 const path = require('path');
 const ejs = require('ejs');
 const fs = require('fs');
@@ -16,8 +17,6 @@ const lobotomizeHandler = require('./api/lobotomize');
 const repSaveHandler = require('./api/repSave');
 const gcHandler = require('./api/gc.js');
 const heapdumpHandler = require('./api/heapdump');
-const currentConfigHandler = require('./api/currentConfig');
-const saveConfigHandler = require('./api/saveConfig');
 
 const wsConn = require('./func/wsConn');
 const broadcastStats = require('./func/broadcastStats');
@@ -80,10 +79,6 @@ async function handleApiRoutes(req, pathname) {
         return new Response(JSON.stringify(await getPromptsData()), {
             headers: { 'Content-Type': 'application/json' }
         });
-    } else if (req.method === 'GET' && pathname === '/api/currentConfig') {
-        return await currentConfigHandler(req);
-    } else if (req.method === 'POST' && pathname === '/api/saveConfig') {
-        return await saveConfigHandler(req);
     }
     return null;
 }

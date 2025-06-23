@@ -4,7 +4,8 @@
 */
 
 const state = require('../initializers/state');
-const config = require('../config.json');
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 const log = require('./betterLogs');
 
 async function addToHistory(role, content, channelId) {

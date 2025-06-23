@@ -7,7 +7,8 @@
 
 const state = require("../initializers/state");
 const log = require("../utils/betterLogs");
-const config = require("../config.json");
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 const { appendMemory } = require("../functions/memories");
 const path = require("path");
 const fs = require("fs");

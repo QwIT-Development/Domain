@@ -6,7 +6,8 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const log = require('../utils/betterLogs');
-const config = require('../config.json');
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 
 /**
  * lekérő és változtató func

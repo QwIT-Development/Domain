@@ -6,7 +6,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const config = require('../config.json');
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 const {GoogleAIFileManager} = require("@google/generative-ai/server");
 const fileManager = new GoogleAIFileManager(config.GEMINI_API_KEY);
 const log = require('./betterLogs')

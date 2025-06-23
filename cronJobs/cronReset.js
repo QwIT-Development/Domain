@@ -1,9 +1,10 @@
 const log = require('../utils/betterLogs');
-const config = require('../config.json');
+const {loadConfig} = require('../initializers/configuration');
 const state = require("../initializers/state");
 const {model} = require("../initializers/geminiClient");
 log(`Prompt reset schedule set`, 'info', 'cronReset.js');
 
+const config = loadConfig();
 const intervalMilliseconds = config.TIMINGS.resetPrompt * 1000;
 let timeoutId = null;
 

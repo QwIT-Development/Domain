@@ -4,7 +4,7 @@ node_modules
 .idea
 .vscode
 *.iml
-config.json
+config.toml
 .DS_Store
 Thumbs.db
 Dockerfile

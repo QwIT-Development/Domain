@@ -1,4 +1,5 @@
-const config = require("../../config.json");
+const {loadConfig} = require('../../initializers/configuration');
+const config = loadConfig();
 const state = require("../../initializers/state");
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();

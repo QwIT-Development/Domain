@@ -5,7 +5,8 @@
 
 
 const {GoogleGenAI, Type} = require("@google/genai");
-const config = require('../config.json');
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 const {makePrompt} = require('../functions/makePrompt');
 const log = require('../utils/betterLogs');
 const {changeSpinnerText} = require('../utils/processInfo');

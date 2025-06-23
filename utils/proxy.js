@@ -4,7 +4,8 @@
 */
 
 const axios = require('axios');
-const config = require('../config.json');
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 const { randomInt } = require('crypto');
 
 // ja hogy megnyomom a tabot es rak egy ilyet
