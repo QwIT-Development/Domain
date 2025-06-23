@@ -2,31 +2,28 @@
         Domain-Unchained, src of the discord bot, that uses gemini api to generate messages
         Copyright (C) 2025 Anchietae
 */
-
-
-
-const state = require('../initializers/state');
-const fs = require('fs');
-const path = require('path');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 async function getMemories(channelId) {
-    const memories = state.memories[channelId];
-    if (!memories) {
-        // this should create a new memories array
-        state.memories[channelId] = [];
-        return "";
-    }
-    return memories.join("\n");
-
-    // what the fuck did i do
+    const memories = await prisma.memory.findMany({
+        where: {
+            channelId: channelId,
+        },
+        orderBy: {
+            createdAt: 'asc',
+        },
+    });
+    return memories.map(m => m.content).join("\n");
 }
 
 async function appendMemory(str, channelId) {
-    const memories = state.memories[channelId];
-    memories.push(str);
-
-    const fpath = path.join(global.dirname, 'data', 'running', 'memories.json');
-    fs.writeFileSync(fpath, JSON.stringify(memories, null, 2));
+    await prisma.memory.create({
+        data: {
+            channelId: channelId,
+            content: str,
+        },
+    });
 }
 
 module.exports = {getMemories, appendMemory};
