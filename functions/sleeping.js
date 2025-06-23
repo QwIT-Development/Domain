@@ -69,7 +69,7 @@ async function createSummariesAndClearHistories() {
         const summarizePromptTemplate = fs.readFileSync(path.join(global.dirname, 'prompts', 'summarize.md'), 'utf8');
 
         for (const channelId in state.history) {
-            if (Object.hasOwnProperty.call(state.history, channelId)) {
+            if (Object.hasOwn(state.history, channelId)) {
                 const history = state.history[channelId];
                 if (history && history.length > 0) {
                     try {

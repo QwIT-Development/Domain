@@ -68,7 +68,7 @@ async function makePrompt(channelId, showLog = true) {
     // added ?, so if the channel doesn't have assigned wiki urls it won't crash
     if (config.CHANNELS[channelId]?.wikis?.length > 0 && prompt.includes("${WIKI_CONTENT}")) {
         let content = "";
-        for (const url of config.CHANNELS[channelId]?.wikis) {
+        for (const url of config.CHANNELS[channelId]?.wikis ?? []) {
             content += `\n${await getContext(url)}`
         }
         if (showLog) {

@@ -92,7 +92,7 @@ async function parseBotCommands(toolCalls, message, gemini) {
 
                             const user = await message.client.users.fetch(userIdToMute.toString());
                             await user.send({
-                                content: `${strings.muteMessage.replace("[REASON]", `"${reason}"`).replace("[TIME]", time / 1000)}\n${strings.automatedMessage}`
+                                content: `${strings.muteMessage.replace("[REASON]", reason).replace("[TIME]", time / 1000)}\n${strings.automatedMessage}`
                             });
                             response.content = `User ${userIdToMute} muted successfully.`;
                         } else {
