@@ -31,7 +31,7 @@ const prisma = new PrismaClient();
  */
 async function checkAuthors(message, client) {
     // check if message is sent into a tracked channel
-    if (!config.CHANNELS.includes(message.channel.id)) return false;
+    if (!Object.keys(config.CHANNELS).includes(message.channel.id)) return false;
 
     // if bot send messsagre = bad
     if (message.author.bot) return false;

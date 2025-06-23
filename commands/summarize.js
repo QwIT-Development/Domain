@@ -14,7 +14,9 @@ module.exports = {
         .setDescription('Shows the last summary of the channel.'),
 
     async execute(interaction) {
-        if (!config.ADMIN_USERS.includes(interaction.user.id)) {
+        // megegyszer belehaluzol valamit geci copilot autofill es kilesz belezve a csaladod (o1, 3.5 meg a faszomtudja meg milyen szar modellek)
+        // ugyhogy huzd meg magad copilot, vagy hivjalak inkabb szargptnek?
+        if (!config.OWNERS.includes(interaction.user.id)) {
             return interaction.reply({
                 content: 'You are not authorized to use this command.',
                 ephemeral: true
