@@ -37,7 +37,7 @@
   },
   "private": true,
   "scripts": {
-    "start": "bun run index.js",
+    "start": "bun run index.js --smol",
     "update": "bun update",
     "build": "docker buildx build --platform linux/amd64,linux/arm64 ."
   },

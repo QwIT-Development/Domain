@@ -36,4 +36,4 @@ LABEL org.opencontainers.image.licenses=AGPL-3.0-or-later
 
 USER root
 ENTRYPOINT ["/usr/local/bin/wrapper.sh"]
-CMD ["bun", "start", ".", "--smol"]
+CMD ["bun", "start"]
