@@ -232,7 +232,7 @@ async function messageHandler(message, client, gemini) {
         }
 
         let responseMsg = finalResponse.text || '';
-        responseMsg = await processResponse(responseMsg, message, repliedTo);
+        responseMsg = await processResponse(responseMsg, message);
 
         await addToHistory('model', responseMsg, channelId);
         await trimHistory(channelId);
@@ -241,7 +241,7 @@ async function messageHandler(message, client, gemini) {
     }
 
     let responseMsg = response.text || '';
-    responseMsg = await processResponse(responseMsg, message, repliedTo);
+    responseMsg = await processResponse(responseMsg, message);
 
     await addToHistory('model', responseMsg, channelId);
     await trimHistory(channelId);
