@@ -21,9 +21,8 @@ Domain is a feature-rich Discord chatbot powered by Google's Gemini API. It's de
     *   Managing bans.
     *   Viewing reputation.
     *   Real-time server statistics.
-    *   Live configuration editing.
 *   **Customizable Prompts:** Supports different prompts per channel for tailored bot behavior.
-*   **Extensive Configuration:** Highly configurable through the WebUI.
+*   **Extensive Configuration:** Highly configurable through the `config.toml`.
 *   **Emoji Management:** Resolves and utilizes custom emojis.
 *   **Banned Site Filtering:** Filters messages containing links to banned sites.
 *   **"Thinking" Indicator:** Shows when the bot is processing a request.
@@ -35,13 +34,31 @@ Domain is a feature-rich Discord chatbot powered by Google's Gemini API. It's de
 
 ### Prerequisites
 
-*   [Docker](https://docs.docker.com/engine/install/) installed.
+*   [**Docker**](https://docs.docker.com/engine/install/) installed.
 *   A Discord Bot Token.
 *   A Google Gemini API Key.
+*   **Linux**: A Linux environment is recommended for running Domain, but it can also run on Windows or macOS with Docker.
 
 ### Installation & Setup
 
-TODO
+1. **Create a directory for Domain**:
+   ```bash
+   mkdir domain
+   cd domain
+   ```
+2. **Create basic directories and files**:
+   ```bash
+   mkdir data
+   mkdir prompts
+   touch config.toml
+   ```
+3. Copy the template configuration (Optional)
+4. **Copy docker-compose.yml to the directory**
+5. If you are not running it on Linux, you may want to remove `/etc/timezone` and `/etc/localtime` from the `docker-compose.yml` file to avoid timezone issues.
+6. **Start the bot with docker compose**:
+    ```bash
+    docker compose up -d
+    ```
 
 ## Usage
 
@@ -54,37 +71,15 @@ The bot primarily interacts through natural language. However, some slash comman
 *   `/reputation`: Checks user reputation.
 *   `/reset`: (Owner only) Resets bot's context history.
 *   `/version`: Displays the bot's version.
+*   `/summarize`: Returns the last summarization of the day.
 
 (More commands might be available or under development.)
 
-## Configuration (`config.json`)
+## Configuration (`config.toml`)
 
-The `config.json` file holds all configuration settings for Domain. While the [WebUI](#webui) is the primary and recommended way for initial setup and many ongoing adjustments (including live editing for some settings), this section serves as a detailed reference for all available parameters. You might refer to this for advanced configurations or if you prefer manual editing.
+The `config.toml` file holds all configuration settings for Domain. It is the primary and recommended way for initial setup and many ongoing adjustments, this section serves as a detailed reference for all available parameters. You might refer to this for advanced configurations or if you prefer manual editing.
 
-*   `DISCORD_TOKEN`: **Required.** Your Discord application's bot token.
-*   `GEMINI_API_KEY`: **Required.** Your API key for the Google Gemini service.
-*   `GEMINI_MODEL`: **Required.** Specifies the Gemini model to use.
-*   `ALIASES`: An array of strings. The bot will respond if a message starts with one of these aliases.
-*   `CHANNELS`: An array of Discord channel IDs where the bot will be active.
-*   `PROMPT_PATHS`: An object mapping channel IDs to `.md` or `.txt` prompt files located in the `/prompts` directory. This allows for different bot personalities or instructions per channel.
-*   `LOCALE`: Sets the locale for the bot, affecting language and regional settings.
-*   `WIKI_URLS`: Configuration for specific wiki URLs to be used by the bot, potentially for context or search.
-*   `WEBUI_PORT`: The port number on which the WebUI will run.
-*   `OWNERS`: An array of Discord user IDs that have administrative privileges over the bot.
-*   `TIMINGS`:
-    *   `resetPrompt`: Interval in seconds for resetting/reloading the prompt.
-    *   `userCacheDuration`: Duration in milliseconds for caching user data.
-*   `SEARX_BASE_URL`: Base URL for a SearXNG instance if you want the bot to use it for web searches.
-*   `EMOJIS`: IDs for custom emojis used by the bot for various indicators (uploaded, upvote, downvote, search, mute, uploading).
-*   `MAX_MESSAGES`: Maximum number of messages to keep in history for context.
-*   `SLEEPINGRANGE`: A time range (e.g., "22:30-6:00") during which the bot will be inactive.
-*   `PROXIES`: Array of proxy configurations for network requests.
-*   `REMOTE_LISTS`: URLs to remote blocklists (e.g., for ad/porn domains).
-*   `ENABLE_THINKING`: Boolean to enable/disable the "bot is thinking" indicator.
-*   `TOS_URL`: Link to a Terms of Service document, if applicable.
-*   `CUMULATIVE_MODE`: Mode for message accumulation (e.g., "classic").
-
-Refer to `template.config.json` for a full list of available options and their structure.
+Refer to `template.config.toml` for a full list of available options and their structure.
 
 ## WebUI
 
@@ -96,7 +91,6 @@ Domain includes a powerful WebUI accessible via `http://localhost:4500`
 *   **Logs:** View real-time logs from the bot.
 *   **Ban Management:** View and manage banned users.
 *   **Reputation Viewer:** Inspect user reputations.
-*   **Configuration Editor:** Modify `config.json` settings live (requires bot restart for some changes to take effect).
 *   **System Controls:** Access to functions like manual garbage collection (`gc`) or heap dumps for debugging.
 *   **Real-time Stats:** WebSocket-based live updates of bot and system performance.
 

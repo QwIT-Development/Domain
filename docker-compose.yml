@@ -1,5 +1,3 @@
-version: "3.7"
-
 services:
   Domain-Unchained:
     container_name: Domain-Unchained
@@ -8,8 +6,7 @@ services:
       - 4500:4500
     volumes:
       # you may want to change the configuration
-      # config.json should no longer be read only, because of webui configurator
-      - ./config.json:/app/config.json
+      - ./config.toml:/app/config.toml:ro
       # this should stay modifiable
       - ./data:/app/data/running
       # path to u r prompts
