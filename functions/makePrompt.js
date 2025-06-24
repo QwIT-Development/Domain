@@ -11,7 +11,7 @@ const log = require('../utils/betterLogs');
 const { getContext } = require('../utils/searx');
 
 /**
- * Beformázza az időt egy szebb stringbe
+ * Formats the time to a much better format
  * @param date
  * @returns string - 2025. jan 01. Wednesday 12:00
  */
@@ -29,7 +29,7 @@ function formatDate(date) {
 }
 
 /**
- * fontos, promptot cisnal
+ * **REQUIRED** creates a prompt
  * @returns {Promise<string>}
  */
 async function makePrompt(channelId, showLog = true) {

@@ -18,10 +18,10 @@ if (state.sleepCycleTimer === undefined) state.sleepCycleTimer = null;
 if (state.isSleeping === undefined) state.isSleeping = false;
 
 /**
- * range alapjan elkezdi a sleep beallitasat (ajanlatos configbol szulni)
- * @param {string} range - formatum: `10:00-11:00` (ennyit alszok en is)
+ * starts configuring the sleep cycle
+ * @param {string} range - format: `10:00-11:00`
  * @param {*} client
- * @returns {boolean} - ha fasza minden truet ad ~~(ha nem akkor nem)~~
+ * @returns {boolean} - if everything is good it returns true, otherwise false
  */
 function schedSleep(range, client) {
     state.locationHelper.init = "sleeping.js/schedSleep";
@@ -97,9 +97,9 @@ async function createSummariesAndClearHistories() {
 }
 
 /**
- * parseli az idő stringet
+ * parses time string
  * @param {string} timeStr - format (`10:00`)
- * @returns {number|null} - millisec éfjéltől számolva
+ * @returns {number|null} - millisec from midnight
  */
 function parseTime(timeStr) {
     state.locationHelper.init = "sleeping.js/parseTime";
@@ -125,11 +125,11 @@ function parseTime(timeStr) {
 }
 
 /**
- * Következő "csicsikálási" eventet beállítja
+ * Sets the next sleep event
  * @param {number} sleepTime - start time ms
  * @param {number} wakeTime - end tiem ms
  * @param {*} client
- * @param {string} wakeTimeStr - ido string
+ * @param {string} wakeTimeStr - time string
  */
 function scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr) {
     state.locationHelper.init = "sleeping.js/scheduleSleepCycle";
@@ -201,9 +201,9 @@ function scheduleSleepCycle(sleepTime, wakeTime, client, wakeTimeStr) {
 }
 
 /**
- * humánus olvasható formába formázza az időt
+ * formats the time to humanly forms
  * @param {number} ms - milisec
- * @returns {string} - szexi formátum
+ * @returns {string} - sexy formatted string
  */
 function formatDuration(ms) {
     if (ms < 0) ms = 0; // handle rollowers

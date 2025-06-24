@@ -15,19 +15,19 @@ const prisma = new PrismaClient();
 
 
 /**
- * megnezi, hogy megfelel-e az üzenet par dolognak (descriptionban reszletesebben leirva)
- * @param message - üzenet
- * @param client - kliens (mutingra)
+ * Checks if the message meets certain criteria (described in more detail in the description)
+ * @param message - message
+ * @param client - client (for muting)
  * @returns Promise<boolean>
  * @async
  *
  * @desc
- * **en vagyok a desc**\
- * lenyeg h megnezi, hogy bottol jon-e az uzenet, ha igen akk ignoralja\
- * same if domain sends it (ez leginkabb azert h ne kapjon skizo rohamot)
- * //-t ignoralja ugyszinten\
- * ha nincs trackelt csatornaba kuldve az uzenet insta returnol\
- * jailbreakra mutel is
+ * **I am the desc**\
+ * The point is that it checks if the message comes from a bot, if so, it ignores it\
+ * Same if Domain sends it (this is mostly so it doesn't have a schizo attack)
+ * // is also ignored\
+ * If the message is not sent in a tracked channel, it returns instantly\
+ * Also mutes for jailbreak attempts
  */
 async function checkAuthors(message, client) {
     // check if message is sent into a tracked channel
@@ -83,9 +83,9 @@ async function checkAuthors(message, client) {
 }
 
 /**
- * megnezi, hogy megemlitik-e domaint
- * @param message - uzenet
- * @param client - kliens (idhez)
+ * Checks if Domain is mentioned
+ * @param message - message
+ * @param client - client (for id)
  * @returns Promise<boolean>
  * @async
  */

@@ -64,17 +64,17 @@ function getCaller() {
 
 // köszönöm szépen gemini a segítséget, hogy hogy kell intellij function kommentet írni
 /**
- * Szexin loggol konzolra.\
- * Csak azert csinaltam mert nem tetszett a console.log
+ * Logs sexy, colored lines to the console.\
+ * and also sends errors to Sentry.
  *
- * @param {string|Error} messageOrError - üzenet vagy Error objektum
+ * @param {string|Error} messageOrError - message or err object
  * @param {string} [type="info"] - (`info`, `warn`, `error`)
- * @param {string} [thread="index.js"] - forrás
+ * @param {string} [thread="index.js"] - file name (where it comes from, it automatically detects if you use console.x)
  *
  * @example
- * log("szia"); // alap infó, ami "index.js"-ből "jön"
- * log("jaj ne", "warn"); // "index.js"-ből jövő warn
- * log(new Error("rósz hiba"), "error", "kettospontharom.js"); // hiba specifikus forrásból
+ * log("szia"); // "szia" from index.js
+ * log("jaj ne", "warn"); // warn from index.js
+ * log(new Error("rósz hiba"), "error", "kettospontharom.js"); // error from specific source
  */
 function log(messageOrError, type = "info", thread = "index.js") {
     let consoleMessageString;

@@ -10,10 +10,10 @@ const {loadConfig} = require('../initializers/configuration');
 const config = loadConfig();
 
 /**
- * lekérő és változtató func
+ * getter and setter func
  * @param id - userid
- * @param type - `increase`/`decrease` vagy semmi (lekérdezés)
- * @returns {Promise<number|boolean>} - visszaad egy számot vagy boolt (változásnál)
+ * @param type - `increase`/`decrease` or nothing (getter)
+ * @returns {Promise<number|boolean>} - returns a number on getting and a bool on setting
  */
 async function reputation(id, type = "") {
     if (!id) {

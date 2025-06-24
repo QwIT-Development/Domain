@@ -11,14 +11,14 @@ const { randomInt } = require('crypto');
 // ja hogy megnyomom a tabot es rak egy ilyet
 // bruh
 /**
- * kérést küld egy szerver felé proxyval
+ * sends a request with a proxy
  * @async
  * @param url
  * @returns  {data: any, proxyUsed: string, usingProxy: boolean}
  * @async
  *
  * @desc
- * visszaad egy *data*-t (ez kell neked) és e mellé egy proxyUsed-et (fölös) és egy usingProxy-t (lehet kell)
+ * returns a *data* (you need this) and a *proxyUsed* string (you don't need this) and a *usingProxy* boolean (you might need this)
  */
 async function fetchWithProxies(url) {
     const proxies = config.PROXIES || [];
@@ -96,7 +96,7 @@ async function fetchWithProxies(url) {
 
 
 /**
- * Literálisan egy darab ua-t ad vissza
+ * Literally returns a random user agent from a predefined list.
  * @returns string
  */
 function userAgent() {
