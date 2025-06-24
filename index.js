@@ -97,6 +97,9 @@ async function main() {
     const emojiResolver = require('./initializers/emojiResolver');
     await emojiResolver();
 
+    const leaveUnknownServers = require('./initializers/leaveUnknownServers');
+    await leaveUnknownServers(discordClient);
+
     // announce commands to servers
     const announceCommands = require('./commands/setCommands');
     await announceCommands(discordClient);
