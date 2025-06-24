@@ -3,9 +3,8 @@
         Copyright (C) 2025 Anchietae
 */
 
-const log = require('./betterLogs')
 let spinner = null;
-// i got two colors one for the plug and one for the load
+// I got two colors one for the plug and one for the load
 const darkGray = '\x1b[90m';
 const reset = '\x1b[0m';
 

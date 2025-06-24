@@ -123,7 +123,7 @@ const server = Bun.serve({
     },
     websocket: {
         open(ws) {
-            wsConn(ws);
+            wsConn(ws).then();
         },
         message(ws, message) {
             ws.isAlive = true;
@@ -134,10 +134,10 @@ const server = Bun.serve({
                     log(`Received message from client (This shouldn't happen): ${JSON.stringify(parsedMessage)}`, 'warn', 'webui.js (WebSocket)');
                 }
         },
-        pong(ws, data) {
+        pong(ws) {
             ws.isAlive = true;
         },
-        close(ws, code, reason) {
+        close(ws) {
             state.wsClients.delete(ws);
         },
         error(ws, error) {
@@ -151,11 +151,9 @@ const server = Bun.serve({
 log(`WebUI listening at http://localhost:${config.WEBUI_PORT}`, 'info', 'webui.js');
 log("WebUI is not secured, do not expose the port.", 'warn', 'webui.js');
 
-if (!statsInterval) {
-    log('Initializing WebSocket broadcast...', 'info', 'webui.js');
-    statsInterval = setInterval(() => broadcastStats(server), 2000);
-    log('WebSocket broadcast initialized', 'info', 'webui.js');
-}
+log('Initializing WebSocket broadcast...', 'info', 'webui.js');
+statsInterval = setInterval(() => broadcastStats(server), 2000);
+log('WebSocket broadcast initialized', 'info', 'webui.js');
 
 process.on('SIGINT', () => {
     log('Shutting down WebUI', 'info', 'webui.js');

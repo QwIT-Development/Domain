@@ -1,5 +1,4 @@
 const getCurrentStats = require("./getCurrentStats");
-const log = require("../../utils/betterLogs");
 const state = require("../../initializers/state");
 
 const wsConn = async (ws) => {

@@ -73,8 +73,8 @@ function getCaller() {
  *
  * @example
  * log("szia"); // "szia" from index.js
- * log("jaj ne", "warn"); // warn from index.js
- * log(new Error("rósz hiba"), "error", "kettospontharom.js"); // error from specific source
+ * log("oh no", "warn"); // warn from index.js
+ * log(new Error("bad error"), "error", "somefile.js"); // error from specific source
  */
 function log(messageOrError, type = "info", thread = "index.js") {
     let consoleMessageString;

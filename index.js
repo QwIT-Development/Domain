@@ -190,6 +190,6 @@ main().then().catch(error => {
     console.error(`Unhandled error in main: ${JSON.stringify(error, null, 2)}`);
     console.error('Stack trace:', error.stack);
     console.error(state.locationHelper.init);
-    stopSpinner(false, 'Bot crashed during startup.');
+    stopSpinner(false, 'Bot crashed during startup.').then();
     process.exit(1);
 });

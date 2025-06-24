@@ -4,7 +4,7 @@
 */
 
 
-const {GoogleGenAI, Type} = require("@google/genai");
+const {GoogleGenAI} = require("@google/genai");
 const {loadConfig} = require('../initializers/configuration');
 const config = loadConfig();
 const {makePrompt} = require('../functions/makePrompt');
@@ -40,6 +40,6 @@ async function model(history, showLog = true) {
     return models;
 }
 
-// i think this should be exported, then we use it later
+// I think this should be exported, then we use it later
 const genAI = new GoogleGenAI({apiKey: config.GEMINI_API_KEY});
 module.exports = {model, genAI};

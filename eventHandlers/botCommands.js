@@ -24,7 +24,7 @@ if (!fs.existsSync(tmpDir)) {
     log(`Created temporary directory: ${tmpDir}`, 'info', 'botCommands.js');
 }
 
-async function parseBotCommands(toolCalls, message, gemini) {
+async function parseBotCommands(toolCalls, message) {
     const reactionsToAdd = new Set();
     const generatedSvgFiles = [];
     const toolResponses = [];
@@ -137,8 +137,7 @@ async function parseBotCommands(toolCalls, message, gemini) {
                 const { query: searchQuery } = args;
                 if (searchQuery) {
                     try {
-                        const searchResult = await searchHandler(searchQuery);
-                        response.content = searchResult;
+                        response.content = await searchHandler(searchQuery);
                         reactionsToAdd.add(state.emojis["search"]);
                     } catch (searchError) {
                         console.error(`Search handler failed for query "${searchQuery}": ${searchError}`);

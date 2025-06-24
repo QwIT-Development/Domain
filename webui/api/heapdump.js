@@ -1,7 +1,7 @@
 const path = require('path');
 const v8 = require('v8');
 
-const heapdump = async (req) => {
+const heapdump = async () => {
     // Heap-${yyyymmdd}-${hhmmss}-${pid}-${thread_id}.heapsnapshot
     const heapFileName = `Heap-${new Date().toISOString().replace(/:/g, '-')}-${process.pid}.heapsnapshot`;
     const heapPath = path.join(global.dirname, 'data', 'running', 'tmp', heapFileName);

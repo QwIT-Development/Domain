@@ -2,7 +2,6 @@ const broadcastStats = require("../func/broadcastStats");
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const state = require("../../initializers/state");
-const {log} = require('../../utils/betterLogs');
 
 const repSave = async (req) => {
     let id, score;

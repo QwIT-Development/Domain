@@ -64,7 +64,6 @@ async function broadcastStats() {
                 } catch (e) {
                     console.error(`Error sending ping to client: ${e.message}`);
                     deadClients.add(client);
-                    return;
                 }
             }
         });

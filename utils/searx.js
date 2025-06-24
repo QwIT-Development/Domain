@@ -107,8 +107,7 @@ async function search(query, genAI) {
             return "Search completed but no detailed context could be extracted.";
         }
 
-        const finalSummary = await summarizer(genAI, query, successfulResults);
-        return finalSummary;
+        return await summarizer(genAI, query, successfulResults);
 
     } catch (e) {
         console.error(`Search error: ${e.message}`);
@@ -136,7 +135,7 @@ try {
             temperature: 0.5, topP: 0.8, maxOutputTokens: 200
         });
 
-        // remove markdown formatting if gemini is edging
+        // remove Markdown formatting if gemini is edging
         let jsonText = responseText.trim();
         const markdownMatcher = /```(?:json)?\s*(\[[\s\S]*?\])\s*```/;
         const jsonMatch = markdownMatcher.exec(jsonText);
@@ -186,8 +185,7 @@ Instructions:
 
 Extract the relevant information:`;
     try {
-        const extractedContent = await callGemini(genAI, prompt);
-        return extractedContent;
+        return await callGemini(genAI, prompt);
 
     } catch (e) {
         log(`Error enhancing context for ${url}: ${e.message}`, 'warn', 'searx.js');
@@ -199,7 +197,7 @@ async function summarizer(genAI, query, results) {
     const prompt = `Create a comprehensive answer based on these search results for the query: "${query}"
 
 Search Results:
-${results.map((result, index) =>
+${results.map((result) =>
         `Result ${result.rank}: ${result.title}\nURL: ${result.url}\nSummary: ${result.content}\n\nDetailed Content:\n${result.context}\n\n---`
     ).join('\n')}
 
@@ -225,12 +223,10 @@ Provide a comprehensive answer to: "${query}"`;
     } catch (e) {
         console.warn(`Error creating search summary: ${e.message}`);
 
-        const fallbackSummary = `Search results for "${query}":\n\n` +
+        return `Search results for "${query}":\n\n` +
             results.map((result, index) =>
                 `${index + 1}. ${result.title}\n${result.url}\n${result.content}\n\nContent: ${result.context}\n`
             ).join('\n---\n');
-
-        return fallbackSummary;
     }
 }
 

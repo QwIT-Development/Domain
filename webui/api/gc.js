@@ -1,6 +1,6 @@
 const getCurrentStats = require('../func/getCurrentStats');
 
-const gc = async (req) => {
+const gc = async () => {
     const before = await getCurrentStats();
     const beforeUsed = before.ram.used;
     const beforeTotal = before.ram.total;

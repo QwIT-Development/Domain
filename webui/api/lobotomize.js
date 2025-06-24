@@ -1,7 +1,7 @@
 const state = require("../../initializers/state");
 const broadcastStats = require("../func/broadcastStats");
 
-const lobotomize = async (req) => {
+const lobotomize = async () => {
     for (const channel in state.history) {
         state.history[channel] = [];
         state.resetCounts += 1;

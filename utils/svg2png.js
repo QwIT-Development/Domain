@@ -1,5 +1,4 @@
 const sharp = require('sharp');
-const { Readable } = require('stream');
 
 const svgToPng = async (svgCode) => {
     // get resolution from code via the best thing, regex!!1!
@@ -17,12 +16,10 @@ const svgToPng = async (svgCode) => {
     if (isNaN(width)) width = 500;
     if (isNaN(height)) height = 500;
 
-    const pngBuffer = await sharp(Buffer.from(svgCode))
+    return await sharp(Buffer.from(svgCode))
         .resize(width, height)
         .png()
         .toBuffer();
-
-    return pngBuffer;
 };
 
 module.exports = { svgToPng };

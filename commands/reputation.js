@@ -5,7 +5,6 @@
 
 const {SlashCommandBuilder} = require('discord.js');
 const {reputation} = require('../utils/reputation');
-const {log} = require('../utils/betterLogs');
 const state = require('../initializers/state');
 
 module.exports = {

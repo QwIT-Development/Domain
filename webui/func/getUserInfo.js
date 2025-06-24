@@ -1,5 +1,3 @@
-const log = require("../../utils/betterLogs");
-
 const discordClient = global.discordClient;
 async function getUserInfo(userId) {
     // client should be already initialized when webui is fired up

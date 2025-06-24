@@ -5,9 +5,6 @@
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const log = require('../utils/betterLogs');
-const {loadConfig} = require('../initializers/configuration');
-const config = loadConfig();
 
 /**
  * getter and setter func

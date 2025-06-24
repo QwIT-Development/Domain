@@ -2,7 +2,6 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const state = require("../../initializers/state");
 const usersCache = state.usersCache;
-const {log} = require('../../utils/betterLogs');
 
 const ban = async (req) => {
     let id, reason;

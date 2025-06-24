@@ -131,7 +131,7 @@ async function handleGeminiError(e, message, client, gemini) {
     }
 }
 
-async function processResponse(responseMsg, message, repliedTo) {
+async function processResponse(responseMsg, message) {
     responseMsg = responseMsg.replaceAll('@everyone', '[blocked]');
     responseMsg = responseMsg.replaceAll('@here', '[blocked]');
 
@@ -234,18 +234,18 @@ async function messageHandler(message, client, gemini) {
         let responseMsg = finalResponse.text || '';
         responseMsg = await processResponse(responseMsg, message, repliedTo);
 
-        addToHistory('model', responseMsg, channelId);
+        await addToHistory('model', responseMsg, channelId);
         await trimHistory(channelId);
-        bondUpdater(message.author.id);
+        await bondUpdater(message.author.id);
         return chunkedMsg(message, responseMsg);
     }
 
     let responseMsg = response.text || '';
     responseMsg = await processResponse(responseMsg, message, repliedTo);
 
-    addToHistory('model', responseMsg, channelId);
+    await addToHistory('model', responseMsg, channelId);
     await trimHistory(channelId);
-    bondUpdater(message.author.id);
+    await bondUpdater(message.author.id);
     return chunkedMsg(message, responseMsg);
 }
 
