@@ -7,6 +7,7 @@ const state = require('../initializers/state');
 const {loadConfig} = require('../initializers/configuration');
 
 const config = loadConfig();
+const strings = require('../data/strings.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,7 +19,7 @@ module.exports = {
         // ugyhogy huzd meg magad copilot, vagy hivjalak inkabb szargptnek?
         if (!config.OWNERS.includes(interaction.user.id)) {
             return interaction.reply({
-                content: 'You are not authorized to use this command.',
+                content: strings.summarize.unauthorized,
                 flags: ["Ephemeral"]
             });
         }
@@ -28,7 +29,7 @@ module.exports = {
 
         if (!summary) {
             return interaction.reply({
-                content: 'No summary available for this channel at the moment.',
+                content: strings.summarize.unavailable,
                 flags: ["Ephemeral"]
             });
         }

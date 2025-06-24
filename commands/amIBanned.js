@@ -6,6 +6,9 @@
 const {SlashCommandBuilder} = require('discord.js');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const strings = require('../data/strings.json');
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -28,7 +31,7 @@ module.exports = {
             }
         } catch (error) {
             await interaction.reply({
-                content: "Couldn't check your status. Please try again later.",
+                content: strings.amIBanned.couldntCheck,
                 flags: ["Ephemeral"]
             });
             // "Handle this exception or don't catch it at all."
@@ -40,16 +43,14 @@ module.exports = {
 
         if (!banned) {
             await interaction.reply({
-                content: `Your account can use the bot.`,
+                content: strings.amIBanned.canUse,
                 flags: [
                     "Ephemeral"
                 ]
             });
         } else {
             await interaction.reply({
-                content: `Your account is banned from using the bot.
-Reason: \`${reason}\`
-TOS: https://mnus.moe/codex/domain/`,
+                content: strings.amIBanned.banned.replace("{REASON}", reason).replace("{TOS}", config.TOS_URL),
                 flags: [
                     "Ephemeral"
                 ]

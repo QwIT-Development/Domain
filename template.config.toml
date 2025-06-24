@@ -50,6 +50,10 @@ NEEDS_SETUP = true
 # classic, noise, worse
 CUMULATIVE_MODE = "classic"
 
+# tos url
+# example: https://anchietae.cc/docs/domain-tos
+TOS_URL = ""
+
 # channels to be tracked
 [CHANNELS]
 # "12312312324312123" = { prompt = "default.md", wikis = [] }

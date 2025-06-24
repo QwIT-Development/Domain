@@ -6,12 +6,13 @@
 
 const { ActivityType: {Custom} } = require("discord.js");
 const state = require("../initializers/state");
+const strings = require("../data/strings.json");
 
 async function botReady(client) {
     state.locationHelper.init = "botReady.js/botReady";
     await client.user.setPresence({
         activities: [{
-            name: 'Mention me or reply to my message!',
+            name: strings.motd,
             type: Custom
         }],
         status: 'online'

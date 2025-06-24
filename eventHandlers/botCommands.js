@@ -68,7 +68,7 @@ async function parseBotCommands(toolCalls, message, gemini) {
 
                 if (!userIdToMute || !time || time <= 0) {
                     log(`Invalid mute parameters: ${JSON.stringify(args)}`, 'warn', 'botCommands.js');
-                    response.content = '[Rossz mute format]';
+                    response.content = 'Wrong mute format, invalid parameters.';
                     break;
                 }
 
@@ -102,7 +102,7 @@ async function parseBotCommands(toolCalls, message, gemini) {
                     } catch (e) {
                         if (e.code === 10007 || e.code === 10013) {
                             log(`Mute failed: Member ${userIdToMute} not found in guild.`, 'warn', 'botCommands.js');
-                            response.content = string.cantFindUser;
+                            response.content = strings.cantFindUser;
                         } else if (e.code === 50013) {
                             console.error(`Mute failed: Missing permissions to mute ${userIdToMute}. ${e}`);
                             response.content = strings.muting.notEnoughPerms;
@@ -118,7 +118,7 @@ async function parseBotCommands(toolCalls, message, gemini) {
                 const { code: svgCode } = args;
                 if (!svgCode) {
                     log(`Empty SVG code found.`, 'warn', 'botCommands.js');
-                    response.content = "[Empty SVG code]";
+                    response.content = "Empty SVG code";
                     break;
                 }
 
@@ -127,7 +127,7 @@ async function parseBotCommands(toolCalls, message, gemini) {
                     const artifactPath = path.join(tmpDir, `artifact_svg_${message.id}_${Date.now()}.png`);
                     fs.writeFileSync(artifactPath, pngBuffer);
                     generatedSvgFiles.push(artifactPath);
-                    response.content = "[SVG generated and will be sent]";
+                    response.content = "SVG generated and will be sent";
                 } catch (e) {
                     console.error(`Failed to convert SVG to PNG: ${e}`);
                     response.content = strings.svgConverionError;

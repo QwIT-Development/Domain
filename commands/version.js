@@ -13,7 +13,7 @@ module.exports = {
 
     async execute(interaction) {
         await interaction.reply({
-            content: `Version in package.json: ${state.version}`,
+            content: state.version,
             flags: [
                 "Ephemeral"
             ]

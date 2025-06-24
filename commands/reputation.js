@@ -6,6 +6,8 @@
 const {SlashCommandBuilder} = require('discord.js');
 const {reputation} = require('../utils/reputation');
 const {log} = require('../utils/betterLogs');
+const strings = require('../data/strings.json');
+const { StringSchemaSchema } = require('@modelcontextprotocol/sdk/types.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -17,19 +19,19 @@ module.exports = {
         score = Number(score);
         if (isNaN(score)) {
             await interaction.reply({
-                content: "Couldn't fetch your reputation score. Please try again later.",
+                content: strings.reputation.couldntFetch,
                 flags: ["Ephemeral"]
             });
             console.error(`Error fetching reputation score for user ${interaction.user.id} (NaN)`);
             return;
         }
 
-        let content = `Reputation score: ${score.toString()}\n`;
+        let content = strings.reputation.score.replace("{SCORE}", score.toString());
         if (score < 0) {
-            content += `You need ${Math.abs(score).toString()} more points for a healthy score!\n`;
+            content += strings.reputation.youNeed0.replace("{SCORE}", Math.abs(score).toString());
         }
-        content += `You need ${(1000 - score).toString()} points until you 100% the bot.\n`;
-        content += `Current completion: ${Math.floor((score / 1000) * 100).toString()}%`;
+        content += strings.reputation.percent100.replace("{SCORE}", (1000 - score).toString());
+        content += strings.reputation.currentPercent.replace("{SCORE}", Math.floor((score / 1000) * 100).toString());
 
         await interaction.reply({
             content: content,

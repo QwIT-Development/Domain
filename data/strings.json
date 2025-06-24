@@ -40,5 +40,22 @@
   "cantFindUser": "[Couldn't find the user]",
   "svgConverionError": "[There was an error converting the SVG to PNG]",
   "searchFailed": "[Search failed]",
-  "commandRunFailed": "Couldn't run the command"
+  "commandRunFailed": "Couldn't run the command",
+  "amIBanned": {
+    "couldntCheck": "Couldn't check your status. Please try again later.",
+    "canUse": "Your account can use the bot.",
+    "banned": "Your account is banned from using the bot.\nReason: {REASON}\nTOS: {TOS}"
+  },
+  "reputation": {
+    "couldntFetch": "Couldn't fetch your reputation score. Please try again later.",
+    "score": "Reputation score: {SCORE}\n",
+    "youNeed0": "You need {SCORE} more points for a healthy score!\n",
+    "percent100": "You need {SCORE} points until you 100% the bot.\n",
+    "currentPercent": "Current completion: {SCORE}%"
+  },
+  "summarize": {
+    "unauthorized": "You are not authorized to use this command.",
+    "unavailable": "No summary available for this channel at the moment."
+  },
+  "motd": "Mention me or reply to my message!"
 }
