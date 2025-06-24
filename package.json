@@ -1,17 +1,18 @@
 {
   "name": "@qwit-development/domain-unchained",
+  "version": "v0.1.2",
+  "description": "Domain is a feature-rich Discord chatbot powered by Google's Gemini API. It's designed to be highly configurable and extensible, offering a wide array of functionalities to enhance your Discord server.",
+  "homepage": "https://github.com/QwIT-Development/Domain#readme",
   "bugs": {
     "url": "https://github.com/QwIT-Development/Domain/issues"
   },
-  "scripts": {
-    "start": "bun run index.js"
-  },
-  "version": "v0.1.2",
-  "description": "Domain-Unchained, the discord bot that uses gemini api to generate messages",
-  "main": "index.js",
   "license": "AGPL-3.0-or-later",
-  "author": "BalazsManus <contact@mnus.moe> (https://mnus.moe)",
-  "private": true,
+  "author": "Anchietae <contact@anchietae.cc> (https://anchietae.cc)",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QwIT-Development/Domain.git"
+  },
   "dependencies": {
     "@discordjs/rest": "^2.5.1",
     "@google/genai": "^1.6.0",
@@ -30,5 +31,15 @@
     "robots-parser": "^3.0.1",
     "sharp": "^0.34.2",
     "toml": "^3.0.0"
-  }
+  },
+  "engines": {
+    "bun": "*"
+  },
+  "private": true,
+  "scripts": {
+    "start": "bun run index.js",
+    "update": "bun update",
+    "build": "docker buildx build --platform linux/amd64,linux/arm64 ."
+  },
+  "packageManager": "bun@1.2.14"
 }
