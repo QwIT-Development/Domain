@@ -223,7 +223,7 @@ Provide a comprehensive answer to: "${query}"`;
         return summary;
 
     } catch (e) {
-        console.error(`Error creating search summary: ${e.message}`);
+        console.warn(`Error creating search summary: ${e.message}`);
 
         const fallbackSummary = `Search results for "${query}":\n\n` +
             results.map((result, index) =>
@@ -298,7 +298,7 @@ async function getContext(url) {
         return content.trim();
 
     } catch (e) {
-        console.error(`Error getting context from ${url}: ${e.message}`);
+        console.warn(`Error getting context from ${url}: ${e.message}`);
         return "Error getting context for search";
     }
 }

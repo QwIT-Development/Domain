@@ -19,34 +19,6 @@ async function initData() {
         log('Creating data directory', 'info', 'initData.js');
         fs.mkdirSync(dataDir, {recursive: true});
     }
-    // create memories
-    // noinspection JSUnresolvedReference
-    const memoriesPath = path.join(dataDir, 'memories.json');
-    let memories = {};
-    if (!fs.existsSync(memoriesPath)) {
-        log('Creating memories "db"', 'info', 'initData.js');
-        await fs.writeFileSync(memoriesPath, JSON.stringify(memories));
-        // reinit the same blank thing bc yes
-        state.memories = memories;
-    } else {
-        try {
-            memories = JSON.parse(fs.readFileSync(memoriesPath, 'utf8'));
-        } catch (e) {
-            console.error(`Failed to parse memories file: ${e}`);
-        }
-        state.memories = memories;
-    }
-
-    /*
-    memories buildup:
-    {
-        "userid": [
-            "has a pc",
-            "pc blown up at 2025-01-01 13:01:00",
-        ],
-        "userid2": []
-    }
-     */
 }
 
 module.exports = initData;
