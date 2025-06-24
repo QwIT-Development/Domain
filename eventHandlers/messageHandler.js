@@ -83,7 +83,6 @@ async function callGeminiAPI(channelId, gemini) {
 }
 
 async function handleGeminiError(e, message, client, gemini) {
-    // purely for testing, to find out what actually went wrong
     console.error(JSON.stringify(e, null, 2));
 
     const channelId = message.channel.id;
@@ -95,27 +94,42 @@ async function handleGeminiError(e, message, client, gemini) {
     } catch { }
 
     let status;
+    let statusMessage;
+
     try {
-        if (e.error) {
-            status = e.error.code;
+        let errorData = e.error;
+        if (errorData && typeof errorData.message === 'string' && errorData.message.trim().startsWith('{')) {
+            try {
+                const innerError = JSON.parse(errorData.message);
+                if (innerError.error) {
+                    errorData = innerError.error;
+                }
+            } catch (parseError) {
+                console.error("Could not parse inner JSON from error message:", parseError);
+            }
         }
-    } catch { }
+
+        if (errorData) {
+            status = errorData.code;
+            statusMessage = errorData.message;
+        }
+    } catch (extractError) {
+        console.error("Could not extract error details:", extractError);
+    }
+
 
     if (msg && (msg === "SAFETY" || msg === "PROHIBITED_CONTENT" || msg === "OTHER")) {
         return message.channel.send(await RNGArray(state.strings.geminiFiltered));
     } else if (status && (status === 429)) {
         return message.channel.send(await RNGArray(state.strings.geminiTooManyReqs));
-    } else if (status && (status === 503)) {
-        return message.channel.send(await RNGArray(state.strings.geminiGatewayUnavail));
-    } else if (status && (status === 500)) {
-        log(`Gemini returned 500, retrying`, 'warn', 'messageHandler.js');
+    } else if (status && (status === 500 || status === 503)) {
+        log(`Gemini returned ${status} (${statusMessage}), retrying`, 'warn', 'messageHandler.js');
         if (!state.retryCounts[channelId]) {
             state.retryCounts[channelId] = 0;
         }
         state.retryCounts[channelId]++;
-
         if (state.retryCounts[channelId] > 5) {
-            console.error(`Gemini returned 500 error 5 times for channel ${channelId}, dropping task`);
+            console.error(`Gemini returned ${status} error 5 times for channel ${channelId}, dropping task`);
             state.retryCounts[channelId] = 0;
             return message.channel.send("Couldn't get a response, try again later.");
         }
@@ -126,7 +140,10 @@ async function handleGeminiError(e, message, client, gemini) {
         if (state.retryCounts[channelId]) {
             state.retryCounts[channelId] = 0;
         }
-        console.error(e.message + "\n```" + e.stack + "```");
+        console.error(`Unhandled Gemini error. Status: ${status}. Message: ${statusMessage}`);
+        if(e.stack) {
+            console.error(e.stack);
+        }
         return message.channel.send("Unhandled error. (Refer to console)");
     }
 }
