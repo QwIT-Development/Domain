@@ -3,7 +3,7 @@ services:
     container_name: Domain-Unchained
     image: balazsmanus/domain:latest
     ports:
-      - 4500:4500
+      - "4500:4500"
     volumes:
       # you may want to change the configuration
       - ./config.toml:/app/config.toml:ro
