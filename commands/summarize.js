@@ -7,7 +7,6 @@ const state = require('../initializers/state');
 const {loadConfig} = require('../initializers/configuration');
 
 const config = loadConfig();
-const state = require('../initializers/state');
 
 module.exports = {
     data: new SlashCommandBuilder()
