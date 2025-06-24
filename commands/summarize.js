@@ -7,7 +7,7 @@ const state = require('../initializers/state');
 const {loadConfig} = require('../initializers/configuration');
 
 const config = loadConfig();
-const strings = require('../data/strings.json');
+const state = require('../initializers/state');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -19,7 +19,7 @@ module.exports = {
         // ugyhogy huzd meg magad copilot, vagy hivjalak inkabb szargptnek?
         if (!config.OWNERS.includes(interaction.user.id)) {
             return interaction.reply({
-                content: strings.summarize.unauthorized,
+                content: state.strings.summarize.unauthorized,
                 flags: ["Ephemeral"]
             });
         }
@@ -29,7 +29,7 @@ module.exports = {
 
         if (!summary) {
             return interaction.reply({
-                content: strings.summarize.unavailable,
+                content: state.strings.summarize.unavailable,
                 flags: ["Ephemeral"]
             });
         }

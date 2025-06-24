@@ -6,8 +6,7 @@
 const {SlashCommandBuilder} = require('discord.js');
 const {reputation} = require('../utils/reputation');
 const {log} = require('../utils/betterLogs');
-const strings = require('../data/strings.json');
-const { StringSchemaSchema } = require('@modelcontextprotocol/sdk/types.js');
+const state = require('../initializers/state');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -19,19 +18,19 @@ module.exports = {
         score = Number(score);
         if (isNaN(score)) {
             await interaction.reply({
-                content: strings.reputation.couldntFetch,
+                content: state.strings.reputation.couldntFetch,
                 flags: ["Ephemeral"]
             });
             console.error(`Error fetching reputation score for user ${interaction.user.id} (NaN)`);
             return;
         }
 
-        let content = strings.reputation.score.replace("{SCORE}", score.toString());
+        let content = state.strings.reputation.score.replace("{SCORE}", score.toString());
         if (score < 0) {
-            content += strings.reputation.youNeed0.replace("{SCORE}", Math.abs(score).toString());
+            content += state.strings.reputation.youNeed0.replace("{SCORE}", Math.abs(score).toString());
         }
-        content += strings.reputation.percent100.replace("{SCORE}", (1000 - score).toString());
-        content += strings.reputation.currentPercent.replace("{SCORE}", Math.floor((score / 1000) * 100).toString());
+        content += state.strings.reputation.percent100.replace("{SCORE}", (1000 - score).toString());
+        content += state.strings.reputation.currentPercent.replace("{SCORE}", Math.floor((score / 1000) * 100).toString());
 
         await interaction.reply({
             content: content,

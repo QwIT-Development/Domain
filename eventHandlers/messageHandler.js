@@ -13,7 +13,6 @@ const fs = require('fs');
 const path = require('path');
 const { RNGArray } = require('../functions/rng');
 const { getMemories } = require('../functions/memories');
-const strings = require('../data/strings.json');
 const uploadFilesToGemini = require('../eventHandlers/fileUploader');
 const {loadConfig} = require('../initializers/configuration');
 const config = loadConfig();
@@ -103,11 +102,11 @@ async function handleGeminiError(e, message, client, gemini) {
     } catch { }
 
     if (msg && (msg === "SAFETY" || msg === "PROHIBITED_CONTENT" || msg === "OTHER")) {
-        return message.channel.send(await RNGArray(strings.geminiFiltered));
+        return message.channel.send(await RNGArray(state.strings.geminiFiltered));
     } else if (status && (status === 429)) {
-        return message.channel.send(await RNGArray(strings.geminiTooManyReqs));
+        return message.channel.send(await RNGArray(state.strings.geminiTooManyReqs));
     } else if (status && (status === 503)) {
-        return message.channel.send(await RNGArray(strings.geminiGatewayUnavail));
+        return message.channel.send(await RNGArray(state.strings.geminiGatewayUnavail));
     } else if (status && (status === 500)) {
         log(`Gemini returned 500, retrying`, 'warn', 'messageHandler.js');
         if (!state.retryCounts[channelId]) {

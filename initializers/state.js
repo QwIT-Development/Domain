@@ -24,5 +24,7 @@ module.exports = {
     locationHelper: {
         init: "main"
     },
-    summaries: {}
+    summaries: {},
+    strings: {},
+    config: null
 };

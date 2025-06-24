@@ -39,4 +39,29 @@ function loadConfig() {
     return toml.parse(configData);
 }
 
-module.exports = { configurationChecker, loadConfig };
+function loadStrings(config) {
+    const defaultLocale = "en-US";
+    const locale = config.LOCALE || defaultLocale;
+    const stringsPath = path.join(global.dirname, 'data', 'locales', `strings_${locale}.json`);
+    const fallbackStringsPath = path.join(global.dirname, 'data', 'locales', `strings_en-US.json`);
+    
+    let fPath;
+
+    if (fs.existsSync(localePath)) {
+        fPath = localePath;
+        log(`Loading strings for locale: ${locale}`, 'info', 'Localization');
+    } else {
+        fPath = defaultLocalePath;
+        log(`Locale '${locale}' not found. Falling back to '${defaultLocale}'.`, 'warn', 'Localization');
+    }
+
+        if (fs.existsSync(stringsPath)) {
+        const stringsData = fs.readFileSync(stringsPath, 'utf-8');
+        state.strings = JSON.parse(stringsData);
+    } else {
+        log(`Default locale file not found at ${defaultLocalePath}. Strings will be unavailable.`, 'error', 'Localization');
+        state.strings = {};
+    }
+}
+
+module.exports = { configurationChecker, loadConfig, loadStrings };

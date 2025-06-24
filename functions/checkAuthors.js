@@ -7,7 +7,7 @@
 const {loadConfig} = require('../initializers/configuration');
 const config = loadConfig();
 const jailbreaks = require('../data/jailbreaks.json');
-const strings = require('../data/strings.json');
+const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
 const {splitFuzzySearch} = require('../utils/fuzzySearch');
 const { PrismaClient } = require('@prisma/client');
@@ -69,7 +69,7 @@ async function checkAuthors(message, client) {
             }
 
             const member = await guild.members.fetch(userId);
-            await member.timeout(time, strings["jailbreak-attempt"]);
+            await member.timeout(time, state.strings.jailbreak-attempt);
         } catch (e) {
             // ignoralhato hiba, anyways megy a false
             log(`Failed to mute user: ${e}`, 'warn', 'checkAuthors.js');

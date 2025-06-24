@@ -17,7 +17,6 @@ const { unlink } = require("fs/promises");
 const { reputation } = require("../utils/reputation");
 const searchHandler = require("./searchHandler");
 const { svgToPng } = require("../utils/svg2png");
-const strings = require("../data/strings.json");
 
 const tmpDir = path.join(global.dirname, 'data', 'running', 'tmp');
 if (!fs.existsSync(tmpDir)) {
@@ -74,12 +73,12 @@ async function parseBotCommands(toolCalls, message, gemini) {
 
                 const guild = message.guild;
                 if (!guild) {
-                    response.content = strings.muting.onlyServers;
+                    response.content = state.strings.muting.onlyServers;
                     break;
                 }
 
                 if (userIdToMute.toString() !== message.author.id && !config.OWNERS.includes(message.author.id)) {
-                    response.content = strings.muting.cantMuteOthers;
+                    response.content = state.strings.muting.cantMuteOthers;
                 } else {
                     try {
                         const member = await guild.members.fetch(userIdToMute.toString());
@@ -92,23 +91,23 @@ async function parseBotCommands(toolCalls, message, gemini) {
 
                             const user = await message.client.users.fetch(userIdToMute.toString());
                             await user.send({
-                                content: `${strings.muteMessage.replace("[REASON]", reason).replace("[TIME]", time / 1000)}\n${strings.automatedMessage}`
+                                content: `${state.strings.muteMessage.replace("[REASON]", reason).replace("[TIME]", time / 1000)}\n${state.strings.automatedMessage}`
                             });
                             response.content = `User ${userIdToMute} muted successfully.`;
                         } else {
                             log(`Mute failed: Member ${userIdToMute} not found after fetch.`, 'warn', 'botCommands.js');
-                            response.content = strings.cantFindUser;
+                            response.content = state.strings.cantFindUser;
                         }
                     } catch (e) {
                         if (e.code === 10007 || e.code === 10013) {
                             log(`Mute failed: Member ${userIdToMute} not found in guild.`, 'warn', 'botCommands.js');
-                            response.content = strings.cantFindUser;
+                            response.content = state.strings.cantFindUser;
                         } else if (e.code === 50013) {
                             console.error(`Mute failed: Missing permissions to mute ${userIdToMute}. ${e}`);
-                            response.content = strings.muting.notEnoughPerms;
+                            response.content = state.strings.muting.notEnoughPerms;
                         } else {
                             console.error(`Failed to mute user ${userIdToMute}: ${e}`);
-                            response.content = strings.muting.genericFail;
+                            response.content = state.strings.muting.genericFail;
                         }
                     }
                 }
@@ -130,7 +129,7 @@ async function parseBotCommands(toolCalls, message, gemini) {
                     response.content = "SVG generated and will be sent";
                 } catch (e) {
                     console.error(`Failed to convert SVG to PNG: ${e}`);
-                    response.content = strings.svgConverionError;
+                    response.content = state.strings.svgConverionError;
                 }
                 break;
             }
@@ -143,10 +142,10 @@ async function parseBotCommands(toolCalls, message, gemini) {
                         reactionsToAdd.add(state.emojis["search"]);
                     } catch (searchError) {
                         console.error(`Search handler failed for query "${searchQuery}": ${searchError}`);
-                        response.content = strings.searchFailed;
+                        response.content = state.strings.searchFailed;
                     }
                 } else {
-                    response.content = strings.searchFailed;
+                    response.content = state.strings.searchFailed;
                 }
                 break;
             }

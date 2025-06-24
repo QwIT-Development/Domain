@@ -30,7 +30,6 @@ Sentry.init({
   ignoreErrors: []
 });
 require('./utils/betterLogs.js');
-const strings = require('./data/strings.json');
 
 process.on('uncaughtException', (error) => {
   Sentry.captureException(error);
@@ -46,7 +45,7 @@ const {Events} = require("discord.js");
 const state = require('./initializers/state');
 const {botReady, botOffline} = require('./functions/botReady');
 const {initializeSpinner, stopSpinner} = require('./utils/processInfo');
-const { configurationChecker, loadConfig } = require('./initializers/configuration');
+const { configurationChecker, loadConfig, loadStrings } = require('./initializers/configuration');
 
 // async main thread hell yeah
 async function main() {
@@ -58,6 +57,8 @@ async function main() {
         return;
     }
     const config = loadConfig();
+    state.config = config;
+    loadStrings(config);
 
     // Continue with normal bot initialization if setup is complete
     const allowInteraction = !process.argv.includes('--no-interaction');
@@ -152,7 +153,7 @@ async function main() {
             // skizofrenias az intellijm, pont mint en
             // noinspection JSCheckFunctionSignatures,JSDeprecatedSymbols
             await interaction.editReply({
-                content: strings.commandRunFailed,
+                content: state.strings.commandRunFailed,
                 flags: [
                     "Ephemeral"
                 ]
