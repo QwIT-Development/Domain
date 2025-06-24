@@ -46,6 +46,7 @@ const state = require('./initializers/state');
 const {botReady, botOffline} = require('./functions/botReady');
 const {initializeSpinner, stopSpinner} = require('./utils/processInfo');
 const { configurationChecker, loadConfig, loadStrings } = require('./initializers/configuration');
+const { loadAllHistories, saveHistory } = require('./functions/history.js');
 
 // async main thread hell yeah
 async function main() {
@@ -59,6 +60,8 @@ async function main() {
     const config = loadConfig();
     state.config = config;
     loadStrings(config);
+
+    state.history = await loadAllHistories();
 
     // Continue with normal bot initialization if setup is complete
     const allowInteraction = !process.argv.includes('--no-interaction');
@@ -109,6 +112,13 @@ async function main() {
     await generateHistory();
 
     global.geminiModel = await model(state.history);
+    setInterval(async () => {
+        for (const channelId in state.history) {
+            if (Object.hasOwn(state.history, channelId)) {
+                await saveHistory(channelId, state.history[channelId]);
+            }
+        }
+    }, 60000);
 
     await botReady(discordClient);
 
