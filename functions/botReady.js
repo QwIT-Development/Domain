@@ -6,7 +6,6 @@
 
 const { ActivityType: {Custom} } = require("discord.js");
 const state = require("../initializers/state");
-const state = require('../initializers/state');
 
 async function botReady(client) {
     state.locationHelper.init = "botReady.js/botReady";

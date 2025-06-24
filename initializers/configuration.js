@@ -47,19 +47,19 @@ function loadStrings(config) {
     
     let fPath;
 
-    if (fs.existsSync(localePath)) {
+    if (fs.existsSync(stringsPath)) {
         fPath = localePath;
         log(`Loading strings for locale: ${locale}`, 'info', 'Localization');
     } else {
-        fPath = defaultLocalePath;
+        fPath = fallbackStringsPath;
         log(`Locale '${locale}' not found. Falling back to '${defaultLocale}'.`, 'warn', 'Localization');
     }
 
-        if (fs.existsSync(stringsPath)) {
-        const stringsData = fs.readFileSync(stringsPath, 'utf-8');
+    if (fs.existsSync(fPath)) {
+        const stringsData = fs.readFileSync(fPath, 'utf-8');
         state.strings = JSON.parse(stringsData);
     } else {
-        log(`Default locale file not found at ${defaultLocalePath}. Strings will be unavailable.`, 'error', 'Localization');
+        log(`Default locale file not found at ${fallbackStringsPath}. Strings will be unavailable.`, 'error', 'Localization');
         state.strings = {};
     }
 }
