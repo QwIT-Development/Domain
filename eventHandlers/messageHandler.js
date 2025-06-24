@@ -144,6 +144,47 @@ async function processResponse(responseMsg, message) {
 }
 
 async function messageHandler(message, client, gemini) {
+    const channelId = message.channel.id;
+
+    if (!state.messageQueues[channelId]) {
+        state.messageQueues[channelId] = [];
+    }
+
+    state.messageQueues[channelId].push({ message, client, gemini });
+
+    if (state.isProcessing[channelId]) {
+        return;
+    }
+
+    state.isProcessing[channelId] = true;
+
+    try {
+        while (state.messageQueues[channelId] && state.messageQueues[channelId].length > 0) {
+            const task = state.messageQueues[channelId][0];
+            try {
+                await _internalMessageHandler(task.message, task.client, task.gemini);
+            } catch (e) {
+                console.error(`Error processing message in queue for channel ${channelId}: ${e.stack}`);
+                try {
+                    await task.message.channel.send("An unexpected error occurred while processing your message. Please try again later.");
+                } catch (sendError) {
+                    console.error(`Failed to send error message to channel ${channelId}: ${sendError}`);
+                }
+            } finally {
+                if (state.messageQueues[channelId]) {
+                    state.messageQueues[channelId].shift();
+                }
+            }
+        }
+    } finally {
+        state.isProcessing[channelId] = false;
+        if (state.messageQueues[channelId] && state.messageQueues[channelId].length === 0) {
+            delete state.messageQueues[channelId];
+        }
+    }
+}
+
+async function _internalMessageHandler(message, client, gemini) {
     if (!await checkAuthors(message, client)) {
         return;
     }

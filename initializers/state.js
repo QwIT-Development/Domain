@@ -26,5 +26,7 @@ module.exports = {
     },
     summaries: {},
     strings: {},
-    config: null
+    config: null,
+    messageQueues: {},
+    isProcessing: {}
 };
