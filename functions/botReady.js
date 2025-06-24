@@ -11,7 +11,7 @@ async function botReady(client) {
     state.locationHelper.init = "botReady.js/botReady";
     await client.user.setPresence({
         activities: [{
-            name: 'Említs meg, vagy válaszolj egy üzenetemre!',
+            name: 'Mention me or reply to my message!',
             type: Custom
         }],
         status: 'online'

@@ -30,6 +30,7 @@ Sentry.init({
   ignoreErrors: []
 });
 require('./utils/betterLogs.js');
+const strings = require('./data/strings.json');
 
 process.on('uncaughtException', (error) => {
   Sentry.captureException(error);
@@ -151,10 +152,7 @@ async function main() {
             // skizofrenias az intellijm, pont mint en
             // noinspection JSCheckFunctionSignatures,JSDeprecatedSymbols
             await interaction.editReply({
-                content: `Nem sikerült futtatni a parancsot.\n
-\`\`\`
-${error}
-\`\`\``,
+                content: strings.commandRunFailed,
                 flags: [
                     "Ephemeral"
                 ]

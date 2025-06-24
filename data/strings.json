@@ -31,5 +31,14 @@
   ],
   "automatedMessage": "-# this is an automated message, do not reply",
   "muteMessage": "You got muted with the reason: [REASON], for [TIME]s.",
-  "cantFindUser": ""
+  "muting": {
+    "onlyServers": "[Muting only works on servers]",
+    "cantMuteOthers": "[You can't mute others]",
+    "notEnoughPerms": "[I don't have enough permissions to mute]",
+    "genericFail": "[I couldn't mute]"
+  },
+  "cantFindUser": "[Couldn't find the user]",
+  "svgConverionError": "[There was an error converting the SVG to PNG]",
+  "searchFailed": "[Search failed]",
+  "commandRunFailed": "Couldn't run the command"
 }

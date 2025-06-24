@@ -74,12 +74,12 @@ async function parseBotCommands(toolCalls, message, gemini) {
 
                 const guild = message.guild;
                 if (!guild) {
-                    response.content = '[A némítás csak szervereken működik]';
+                    response.content = strings.muting.onlyServers;
                     break;
                 }
 
                 if (userIdToMute.toString() !== message.author.id && !config.OWNERS.includes(message.author.id)) {
-                    response.content = '[Nem némíthatsz el mást]';
+                    response.content = strings.muting.cantMuteOthers;
                 } else {
                     try {
                         const member = await guild.members.fetch(userIdToMute.toString());
@@ -97,18 +97,18 @@ async function parseBotCommands(toolCalls, message, gemini) {
                             response.content = `User ${userIdToMute} muted successfully.`;
                         } else {
                             log(`Mute failed: Member ${userIdToMute} not found after fetch.`, 'warn', 'botCommands.js');
-                            response.content = `[Felhasználó nem található]`;
+                            response.content = strings.cantFindUser;
                         }
                     } catch (e) {
                         if (e.code === 10007 || e.code === 10013) {
                             log(`Mute failed: Member ${userIdToMute} not found in guild.`, 'warn', 'botCommands.js');
-                            response.content = `[Felhasználó nem található]`;
+                            response.content = string.cantFindUser;
                         } else if (e.code === 50013) {
                             console.error(`Mute failed: Missing permissions to mute ${userIdToMute}. ${e}`);
-                            response.content = `[Nincs elég jog a némításhoz (contact admin on server)]`;
+                            response.content = strings.muting.notEnoughPerms;
                         } else {
                             console.error(`Failed to mute user ${userIdToMute}: ${e}`);
-                            response.content = `[Némítás besült]`;
+                            response.content = strings.muting.genericFail;
                         }
                     }
                 }
@@ -130,7 +130,7 @@ async function parseBotCommands(toolCalls, message, gemini) {
                     response.content = "[SVG generated and will be sent]";
                 } catch (e) {
                     console.error(`Failed to convert SVG to PNG: ${e}`);
-                    response.content = `[SVG konvertálási hiba]`;
+                    response.content = strings.svgConverionError;
                 }
                 break;
             }
@@ -143,10 +143,10 @@ async function parseBotCommands(toolCalls, message, gemini) {
                         reactionsToAdd.add(state.emojis["search"]);
                     } catch (searchError) {
                         console.error(`Search handler failed for query "${searchQuery}": ${searchError}`);
-                        response.content = `[Keresés besült]`;
+                        response.content = strings.searchFailed;
                     }
                 } else {
-                    response.content = "[Rossz keresés]";
+                    response.content = strings.searchFailed;
                 }
                 break;
             }
