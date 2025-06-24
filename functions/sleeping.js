@@ -66,7 +66,7 @@ function schedSleep(range, client) {
 async function createSummariesAndClearHistories() {
     log('Creating summaries and clearing histories...', 'info', 'sleeping.js');
     try {
-        const summarizePromptTemplate = fs.readFileSync(path.join(global.dirname, 'prompts', 'summarize.md'), 'utf8');
+        const summarizePromptTemplate = fs.readFileSync(path.join(global.dirname, 'data', 'summarize.md'), 'utf8');
 
         for (const channelId in state.history) {
             if (Object.hasOwn(state.history, channelId)) {

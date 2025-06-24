@@ -19,7 +19,7 @@ module.exports = {
         if (!config.OWNERS.includes(interaction.user.id)) {
             return interaction.reply({
                 content: 'You are not authorized to use this command.',
-                ephemeral: true
+                flags: ["Ephemeral"]
             });
         }
 
@@ -29,13 +29,13 @@ module.exports = {
         if (!summary) {
             return interaction.reply({
                 content: 'No summary available for this channel at the moment.',
-                ephemeral: true
+                flags: ["Ephemeral"]
             });
         }
 
         await interaction.reply({
             content: summary,
-            ephemeral: true
+            flags: ["Ephemeral"]
         });
     }
 };
