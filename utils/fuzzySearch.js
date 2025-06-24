@@ -6,14 +6,14 @@
 const Fuse = require('fuse.js');
 
 /**
- * Fuzzy kereső, ami mondatot szétkapja és szavanként rákeres cucclira
- * @param pattern - string amit szétszed (ezen fog keresni)
- * @param strings - array, amiket keresni fog a *pattern*ben
- * @param options - fuzzy.js beállítások (ignorálható)
+ * Fuzzy searcher, splits the phrase to words and searches
+ * @param pattern - target phrase, we do searches on this
+ * @param strings - array of strings to search for
+ * @param options - fuzzy.js settings (ignorable)
  * @returns {boolean}
  *
  * @desc
- * Ez visszaad majd egy booleant (true/false), attól függ h mennyire van közel találat *(ha betalál az jó)*
+ * This returns a true/false value based on whether the search was successful.
  */
 function splitFuzzySearch(pattern, strings, options = {"includeScore": true}) {
     if (!pattern || !strings || strings.length === 0) {
@@ -27,12 +27,13 @@ function splitFuzzySearch(pattern, strings, options = {"includeScore": true}) {
     let allWordsMatch = false;
 
     for (const word of words) {
-        if (word.length < 3) {
+        const cleanWord = word.replace(/[^\p{L}\p{N}_]/gu, '');
+        if (cleanWord.length < 3) {
             continue;
         }
 
         const fuse = new Fuse(strings, options);
-        const results = fuse.search(word);
+        const results = fuse.search(cleanWord);
 
         if (results.length > 0 && results[0].score <= 0.1) {
             allWordsMatch = true;
@@ -45,19 +46,21 @@ function splitFuzzySearch(pattern, strings, options = {"includeScore": true}) {
 
 
 /**
- * fuzzy kereső, **EGY SZÓRA** lett kitalálva
- * @param pattern - az egy darab szó (ez NEM szedi szét, erre használd inkább a `splitFuzzySearch`-t)
- * @param strings - keresendő szavak (arrayban)
- * @param options - fuzzy.js beállítások (ignorálható)
- * @returns {boolean} - true/false (előre finomhangolt)
+ * fuzzy searcher, **THIS WAS MADE FOR A WORD ONLY**
+ * @param pattern - the word, for phrases, use splitFuzzySearch
+ * @param strings - array of strings to search for
+ * @param options - fuzzy.js settings (ignorable)
+ * @returns {boolean} - true/false (pre-tuned)
  */
 function fuzzySearch(pattern, strings, options = {}) {
     if (!pattern || !strings || strings.length === 0) {
         return false;
     }
 
+    const cleanWord = word.replace(/[^\p{L}\p{N}_]/gu, '');
+
     const fuse = new Fuse(strings, options);
-    const results = fuse.search(pattern);
+    const results = fuse.search(cleanWord);
 
     return results.length > 0 && results[0].score <= 0.1;
 }
