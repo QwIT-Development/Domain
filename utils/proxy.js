@@ -3,7 +3,6 @@
         Copyright (C) 2025 Anchietae
 */
 
-const axios = require('axios');
 const {loadConfig} = require('../initializers/configuration');
 const config = loadConfig();
 const { randomInt } = require('crypto');
@@ -26,9 +25,10 @@ async function fetchWithProxies(url) {
     if (proxies.length === 0) {
         try {
             console.warn('No proxies available, using direct connection.');
-            const response = await axios.get(url);
+            const response = await fetch(url);
+            const data = await response.text();
             return {
-                data: response.data,
+                data: data,
                 proxyUsed: 'none',
                 usingProxy: false
             };
@@ -39,39 +39,23 @@ async function fetchWithProxies(url) {
 
     for (const proxy of proxies) {
         try {
-            const httpsProxyAgent = require('https-proxy-agent');
-            const httpProxyAgent = require('http-proxy-agent');
+            const proxyString = `${proxy.protocol || 'http'}://${proxy.auth.username}:${proxy.auth.password}@${proxy.host}:${proxy.port}`;
 
-            const agentOptions = {
-                host: proxy.host,
-                port: proxy.port,
-                protocol: proxy.protocol || 'http:',
-                auth: `${proxy.auth.username}:${proxy.auth.password}`
-            };
-
-            // noinspection JSCheckFunctionSignatures
-            const httpsAgent = new httpsProxyAgent.HttpsProxyAgent(agentOptions);
-            // noinspection JSCheckFunctionSignatures
-            const httpAgent = new httpProxyAgent.HttpProxyAgent(agentOptions);
-
-            const axiosInstance = axios.create({
-                proxy: false,
+            const response = await fetch(url, {
+                proxy: proxyString,
                 headers: {
                     'User-Agent': userAgent(),
-                    'Proxy-Authorization': `Basic ${Buffer.from(proxy.auth.username + ':' + proxy.auth.password).toString('base64')}`,
                     'X-Forwarded-For': proxy.host,
                     'X-Real-IP': proxy.host
                 },
-                timeout: 10000,
-                httpsAgent: url.startsWith('https') ? httpsAgent : false,
-                httpAgent: url.startsWith('http:') ? httpAgent : false
+                signal: AbortSignal.timeout(10000)
             });
 
-            const response = await axiosInstance.get(url);
+            const data = await response.text();
 
-            if (response.data) {
+            if (data) {
                 return {
-                    data: response.data,
+                    data: data,
                     proxyUsed: `${proxy.host}:${proxy.port}`,
                     usingProxy: true
                 };
@@ -83,9 +67,10 @@ async function fetchWithProxies(url) {
 
     console.warn('No more proxies to try...');
     try {
-        const response = await axios.get(url);
+        const response = await fetch(url);
+        const data = await response.text();
         return {
-            data: response.data,
+            data: data,
             proxyUsed: 'none',
             usingProxy: false
         };

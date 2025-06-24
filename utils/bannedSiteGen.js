@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const axios = require('axios');
 const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
 const {loadConfig} = require('../initializers/configuration');
@@ -48,8 +47,8 @@ async function getBannedSites() {
         let currentListSites = [];
 
         try {
-            const response = await axios.get(listUrl, { responseType: 'arraybuffer' });
-            fetchedContent = Buffer.from(response.data, 'binary').toString('utf8');
+            const response = await fetch(listUrl);
+            fetchedContent = await response.text();
 
             let cachedContent = null;
             try {

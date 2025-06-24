@@ -4,7 +4,6 @@
 */
 
 
-const axios = require('axios');
 const { convert } = require('html-to-text');
 const {loadConfig} = require('../initializers/configuration');
 const config = loadConfig();
@@ -77,16 +76,17 @@ async function search(query, genAI) {
         log(`Starting search for query: "${query}"`, 'info', 'searx.js');
 
         const encodedQuery = encodeURIComponent(query);
-        const response = await axios.get(`${config.SEARX_BASE_URL}/search?q="${encodedQuery}"&format=json`, {
+        let response = await fetch(`${config.SEARX_BASE_URL}/search?q="${encodedQuery}"&format=json`, {
             headers: { "User-Agent": `Mozilla/5.0 (compatible; Domain-Unchained/${state.version}; +https://github.com/QwIT-Development/Domain) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36` }
         });
+        response = await response.json();
 
-        if (!response.data?.results) {
+        if (!response?.results) {
             log('No search results found', 'warn', 'searx.js');
             return "No results found.";
         }
 
-        const rawResults = response.data.results.slice(0, 20);
+        const rawResults = response.results.slice(0, 20);
         const relevantResults = await analyzer(genAI, query, rawResults);
         const topResults = relevantResults.slice(0, 5);
 
@@ -251,14 +251,14 @@ async function getContext(url) {
     try {
         const robotUrl = `${new URL(url).origin}/robots.txt`;
         const userAgent = "Domain-Unchained"; // this shouldn't include the version, so it is easier to block
-        const robots = robotsParser(robotUrl, await axios.get(robotUrl, { responseType: 'text' }).then(res => res.data).catch(() => ""));
+        const robots = robotsParser(robotUrl, await fetch(robotUrl).then(res => res.text()).catch(() => ""));
         if (!robots.isAllowed(url, userAgent)) {
             log(`Skipping site due to robots.txt: ${url}`, 'warn', 'searx.js');
             return "Blocked by robots.txt";
         }
 
-        let response = await axios.get(url, { responseType: 'arraybuffer' });
-        response = Buffer.from(response.data, 'binary').toString('utf8');
+        let response = await fetch(url);
+        response = await response.text();
         const $ = cheerio.load(response);
 
         // stolen content selectors for sites
