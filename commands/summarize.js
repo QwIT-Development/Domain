@@ -2,7 +2,7 @@
         Domain-Unchained, src of the discord bot, that uses gemini api to generate messages
         Copyright (C) 2025 Anchietae
 */
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 const state = require('../initializers/state');
 const {loadConfig} = require('../initializers/configuration');
 
@@ -33,8 +33,11 @@ module.exports = {
             });
         }
 
+        const summaryFile = new AttachmentBuilder(Buffer.from(summary, 'utf-8'), { name: 'summary.txt' });
+
         await interaction.reply({
-            content: summary,
+            content: state.strings.summarize.attached,
+            files: [summaryFile],
             flags: ["Ephemeral"]
         });
     }
