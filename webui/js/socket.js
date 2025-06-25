@@ -214,6 +214,13 @@ function updateRootPathStats(stats) {
     if (stats.botStats) {
         updateDomElement('msgReceived', stats.botStats.msgCount.toString());
         updateDomElement('resetCount', stats.botStats.historyClears.toString());
+        updateDomElement('isSleeping', stats.botStats.isSleeping.toString());
+        updateDomElement('websocketClients', stats.botStats.websocketClients.toString());
+        updateDomElement('retryCount', stats.botStats.retryCount.toString());
+        updateDomElement('messageQueueCount', stats.botStats.messageQueueCount.toString());
+        updateDomElement('processingTaskCount', stats.botStats.processingTaskCount.toString());
+        updateDomElement('historyCount', stats.botStats.historyCount.toString());
+        updateDomElement('version', stats.botStats.version);
     }
 
     if (stats.muteCount != null) {
@@ -338,12 +345,6 @@ function handleStatsUpdate(payload, isDelta) {
     updateBansPathStats(stats);
 }
 
-function handleVersionUpdate(payload) {
-    if (payload.version) {
-        updateDomElement('version', `${payload.version}`);
-    }
-}
-
 socket.onmessage = (event) => {
     try {
         const message = JSON.parse(event.data);
@@ -352,8 +353,6 @@ socket.onmessage = (event) => {
             handlePong();
         } else if (message.type === 'statsUpdate' && message.payload) {
             handleStatsUpdate(message.payload, message.isDelta);
-        } else if (message.type === 'version' && message.payload) {
-            handleVersionUpdate(message.payload);
         }
     } catch (e) {
         console.error('socket parsing error:', e);
