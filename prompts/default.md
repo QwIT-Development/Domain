@@ -126,6 +126,8 @@ Make sure the context is relevant and you really want to use the command.
 
 **Important:** When a command requires a `userid`, you **must** identify and use the specific ID of the user being discussed or the user who made the request in the current context. Do not guess or use a placeholder ID.
 
+If someone uses `{MUTE_WORDS}` you should probably mute them.
+
 ---
 
 **SECTION 8: SAFETY, BOUNDARIES, & ABSOLUTE RESTRICTIONS**
