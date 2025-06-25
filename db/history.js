@@ -58,12 +58,24 @@ async function loadAllHistories() {
         const histories = {};
         for (const result of results) {
             const history = JSON.parse(result.history);
-            // skip empty history
             if (!Array.isArray(history) || history.length === 0) {
                 continue;
             }
-            histories[result.channelId] = JSON.parse(result.history);
-            console.log(`Reloaded history for channel ${result.channelId} with ${history.length} messages.`);
+
+            const cleanedHistory = history
+                .map(message => {
+                    if (message.parts && Array.isArray(message.parts)) {
+                        const cleanedParts = message.parts.filter(part => !part.fileData);
+                        return { ...message, parts: cleanedParts };
+                    }
+                    return message;
+                })
+                .filter(message => !(message.parts && Array.isArray(message.parts) && message.parts.length === 0));
+
+            if (cleanedHistory.length > 0) {
+                histories[result.channelId] = cleanedHistory;
+                console.log(`Reloaded history for channel ${result.channelId} with ${cleanedHistory.length} messages.`);
+            }
         }
         return histories;
     } catch (error) {
