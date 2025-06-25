@@ -12,7 +12,6 @@ const parseBotCommands = require('./botCommands');
 const fs = require('fs');
 const path = require('path');
 const { RNGArray } = require('../functions/rng');
-const { getMemories } = require('../functions/memories');
 const uploadFilesToGemini = require('../eventHandlers/fileUploader');
 const {loadConfig} = require('../initializers/configuration');
 const config = loadConfig();
@@ -26,16 +25,13 @@ function simplifyEmoji(content) {
     const customEmojiRegex = /<:(\w+):\d+>/g;
     // :name:
     content = content.replace(customEmojiRegex, ':$1:');
-
     const animatedEmojiRegex = /<a:(\w+):\d+>/g;
     content = content.replace(animatedEmojiRegex, ':$1:');
-
     return content;
 }
 
 async function formatUserMessage(message, repliedTo, channelId) {
     const score = await reputation(message.author.id);
-    const memories = await getMemories(channelId);
     const date = formatDate(new Date());
     let replyContent = "";
     if (repliedTo) {
@@ -48,11 +44,7 @@ Content:
 ${simplifyEmoji(repliedTo.content)}
 \`\`\``;
     }
-    return `--- System Context ---
-Memories:
-${memories}
-
---- Conversation History ---
+    return `--- Conversation History ---
 ${replyContent}
 
 [Current message]
