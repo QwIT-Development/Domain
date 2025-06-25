@@ -187,6 +187,12 @@ async function gracefulShutdown(signal, client) {
         // mostmar nem kell global
         await botOffline(client);
         await client.destroy();
+        // nagyon fontos, elmentjuk a historyt
+        for (const channelId in state.history) {
+            if (Object.hasOwn(state.history, channelId)) {
+                await saveHistory(channelId, state.history[channelId]);
+            }
+        }
         await deleteArtifacts();
         await deleteUploadedItems();
         await stopSpinner(true, "Domain-Unchained shutting down");
