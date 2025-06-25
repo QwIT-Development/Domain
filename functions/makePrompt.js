@@ -9,6 +9,7 @@ const path = require('path');
 const fs = require('fs');
 const log = require('../utils/betterLogs');
 const { getContext } = require('../utils/searx');
+const { getMemories } = require('../functions/memories');
 
 /**
  * Formats the time to a much better format
@@ -54,19 +55,19 @@ async function makePrompt(channelId, showLog = true) {
     }
 
     // insert aliases to ${ALIASES}
-    if (prompt.includes("${ALIASES}")) {
-        prompt = prompt.replace("${ALIASES}", aliases.join(', '));
+    if (prompt.includes("{ALIASES}")) {
+        prompt = prompt.replace("{ALIASES}", aliases.join(', '));
     }
 
     // set current time in prompt ${CURRENT_TIME}
     // date will look like this: 2025. jan 01. Wednesday 12:00
-    if (prompt.includes("${CURRENT_TIME}")) {
-        prompt = prompt.replace("${CURRENT_TIME}", formatDate(new Date()));
+    if (prompt.includes("{CURRENT_TIME}")) {
+        prompt = prompt.replace("{CURRENT_TIME}", formatDate(new Date()));
     }
 
     // load wiki contents, if possible
     // added ?, so if the channel doesn't have assigned wiki urls it won't crash
-    if (config.CHANNELS[channelId]?.wikis?.length > 0 && prompt.includes("${WIKI_CONTENT}")) {
+    if (config.CHANNELS[channelId]?.wikis?.length > 0 && prompt.includes("{WIKI_CONTENT}")) {
         let content = "";
         for (const url of config.CHANNELS[channelId]?.wikis ?? []) {
             content += `\n${await getContext(url)}`
@@ -74,9 +75,21 @@ async function makePrompt(channelId, showLog = true) {
         if (showLog) {
             log(`Loaded ${config.CHANNELS[channelId].wikis.length} wiki pages`, 'info', 'makeprompt.js');
         }
-        prompt = prompt.replace("${WIKI_CONTENT}", content);
-    } else if (prompt.includes("${WIKI_CONTENT}")) {
-        prompt = prompt.replace("${WIKI_CONTENT}", "");
+        prompt = prompt.replace("{WIKI_CONTENT}", content);
+    } else if (prompt.includes("{WIKI_CONTENT}")) {
+        prompt = prompt.replace("{WIKI_CONTENT}", "");
+    }
+
+    if (prompt.includes("{MEMORIES}")) {
+        const memories = await getMemories(channelId);
+        if (memories.length > 0) {
+            prompt = prompt.replace("{MEMORIES}", memories);
+            if (showLog) {
+                log(`Loaded ${memories.length} memories`, 'info', 'makeprompt.js');
+            }
+        } else {
+            prompt = prompt.replace("{MEMORIES}", "");
+        }
     }
 
     // load mute words, for later use
@@ -92,8 +105,8 @@ async function makePrompt(channelId, showLog = true) {
     }
 
     // add words, what the bot don't like and will mute users on trigger
-    if (prompt.includes("${MUTE_WORDS}")) {
-        prompt = prompt.replace("${MUTE_WORDS}", muteWords.join(', '));
+    if (prompt.includes("{MUTE_WORDS}")) {
+        prompt = prompt.replace("{MUTE_WORDS}", muteWords.join(', '));
     }
 
     return prompt;

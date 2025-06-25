@@ -6,6 +6,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const state = require('../initializers/state');
 const {loadConfig} = require('../initializers/configuration');
+const { deleteHistory } = require('../db/history');
 const config = loadConfig();
 
 module.exports = {
@@ -24,6 +25,7 @@ module.exports = {
             const channel = interaction.channel.id;
 
             state.history[channel] = [];
+            await deleteHistory(channel);
             // add +1 to lobotomization count
             state.resetCounts += 1;
 

@@ -12,7 +12,10 @@ async function generateHistory() {
     state.locationHelper.init = "historyCreator.js/generateHistory";
     await changeSpinnerText("Generating empty history...");
     for (const channel of Object.keys(config.CHANNELS)) {
-        state.history[channel] = [];
+        // since we are reloading history on startup, we only make empty history if it doesn't exist
+        if (!state.history[channel]) {
+            state.history[channel] = [];
+        }
     }
 }
 

@@ -5,7 +5,7 @@
 
 const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
-const { botReady, botSleeping } = require('./botReady');
+const { botReady, botSleeping } = require('./presenceManager');
 const { changeSpinnerText } = require('../utils/processInfo');
 const fs = require('fs');
 const path = require('path');
@@ -74,7 +74,8 @@ async function createSummariesAndClearHistories() {
                 if (history && history.length > 0) {
                     try {
                         const historyText = history.map(h => `${h.role}: ${h.parts[0].text}`).join('\n');
-                        const prompt = summarizePromptTemplate.replace('{history}', historyText);
+                        let prompt = summarizePromptTemplate.replace('{history}', historyText);
+                        prompt = prompt.replace('{bot_prompt}', state.prompts[channelId] || "");
 
                         const summary = await callGemini(genAI, prompt, { model: "gemini-2.5-flash" });
 

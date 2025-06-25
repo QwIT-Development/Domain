@@ -32,6 +32,7 @@ async function model(history, showLog = true) {
             },
             tools
         };
+        state.prompts[channel] = models[channel].systemInstruction;
     }
 
     if (showLog) {

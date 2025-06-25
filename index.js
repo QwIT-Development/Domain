@@ -43,9 +43,10 @@ process.on('unhandledRejection', (reason, promise) => {
 const log = require('./utils/betterLogs');
 const {Events} = require("discord.js");
 const state = require('./initializers/state');
-const {botReady, botOffline} = require('./functions/botReady');
+const {botReady, botOffline} = require('./functions/presenceManager');
 const {initializeSpinner, stopSpinner} = require('./utils/processInfo');
 const { configurationChecker, loadConfig, loadStrings } = require('./initializers/configuration');
+const { loadAllHistories, saveHistory } = require('./db/history.js');
 
 // async main thread hell yeah
 async function main() {
@@ -59,6 +60,8 @@ async function main() {
     const config = loadConfig();
     state.config = config;
     loadStrings(config);
+
+    state.history = await loadAllHistories();
 
     // Continue with normal bot initialization if setup is complete
     const allowInteraction = !process.argv.includes('--no-interaction');
@@ -97,6 +100,9 @@ async function main() {
     const emojiResolver = require('./initializers/emojiResolver');
     await emojiResolver();
 
+    const leaveUnknownServers = require('./initializers/leaveUnknownServers');
+    await leaveUnknownServers(discordClient);
+
     // announce commands to servers
     const announceCommands = require('./commands/setCommands');
     await announceCommands(discordClient);
@@ -106,6 +112,13 @@ async function main() {
     await generateHistory();
 
     global.geminiModel = await model(state.history);
+    setInterval(async () => {
+        for (const channelId in state.history) {
+            if (Object.hasOwn(state.history, channelId)) {
+                await saveHistory(channelId, state.history[channelId]);
+            }
+        }
+    }, 60000);
 
     await botReady(discordClient);
 
@@ -174,6 +187,12 @@ async function gracefulShutdown(signal, client) {
         // mostmar nem kell global
         await botOffline(client);
         await client.destroy();
+        // nagyon fontos, elmentjuk a historyt
+        for (const channelId in state.history) {
+            if (Object.hasOwn(state.history, channelId)) {
+                await saveHistory(channelId, state.history[channelId]);
+            }
+        }
         await deleteArtifacts();
         await deleteUploadedItems();
         await stopSpinner(true, "Domain-Unchained shutting down");

@@ -27,7 +27,8 @@ async function uploadFilesToGemini(message, client) {
                     await message.react(state.emojis['uploading']);
                     const response = await fetch(attachment.url);
                     if (response.ok) {
-                        fs.writeFileSync(fPath, response.data);
+                        const fileBuffer = Buffer.from(await response.arrayBuffer());
+                        fs.writeFileSync(fPath, fileBuffer);
                         const uploadedFile = await uploadToGemini(fPath, attachment.contentType);
                         fs.unlinkSync(fPath);
                         await message.reactions.cache.find(reaction => reaction.emoji.id === state.emojis['uploading'].id)?.users.remove(client.user.id);

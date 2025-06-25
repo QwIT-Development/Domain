@@ -7,12 +7,11 @@
 const { checkAuthors, checkForMentions } = require('../functions/checkAuthors');
 const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
-const { reputation } = require('../utils/reputation');
+const { reputation } = require('../db/reputation');
 const parseBotCommands = require('./botCommands');
 const fs = require('fs');
 const path = require('path');
 const { RNGArray } = require('../functions/rng');
-const { getMemories } = require('../functions/memories');
 const uploadFilesToGemini = require('../eventHandlers/fileUploader');
 const {loadConfig} = require('../initializers/configuration');
 const config = loadConfig();
@@ -21,9 +20,18 @@ const { genAI } = require('../initializers/geminiClient');
 const { bondUpdater } = require('../functions/usageRep');
 const { addToHistory, trimHistory } = require('../utils/historyUtils');
 
+function simplifyEmoji(content) {
+    // discord's custom emoji format: <:name:id>
+    const customEmojiRegex = /<:(\w+):\d+>/g;
+    // :name:
+    content = content.replace(customEmojiRegex, ':$1:');
+    const animatedEmojiRegex = /<a:(\w+):\d+>/g;
+    content = content.replace(animatedEmojiRegex, ':$1:');
+    return content;
+}
+
 async function formatUserMessage(message, repliedTo, channelId) {
     const score = await reputation(message.author.id);
-    const memories = await getMemories(channelId);
     const date = formatDate(new Date());
     let replyContent = "";
     if (repliedTo) {
@@ -33,14 +41,10 @@ Author-Username: ${repliedTo.author.username}
 Author-DisplayName: ${repliedTo.member.displayName}
 Content:
 \`\`\`
-${repliedTo.content}
+${simplifyEmoji(repliedTo.content)}
 \`\`\``;
     }
-    return `--- System Context ---
-Memories:
-${memories}
-
---- Conversation History ---
+    return `--- Conversation History ---
 ${replyContent}
 
 [Current message]
@@ -51,7 +55,7 @@ Timestamp: ${date}
 Reputation: ${score.toString()}
 Content:
 \`\`\`
-${message.content}
+${simplifyEmoji(message.content)}
 \`\`\``;
 }
 
@@ -83,7 +87,6 @@ async function callGeminiAPI(channelId, gemini) {
 }
 
 async function handleGeminiError(e, message, client, gemini) {
-    // purely for testing, to find out what actually went wrong
     console.error(JSON.stringify(e, null, 2));
 
     const channelId = message.channel.id;
@@ -95,38 +98,75 @@ async function handleGeminiError(e, message, client, gemini) {
     } catch { }
 
     let status;
+    let statusMessage;
+    let errorDetails;
+
     try {
-        if (e.error) {
-            status = e.error.code;
+        let errorData = e.error;
+        if (errorData && typeof errorData.message === 'string' && errorData.message.trim().startsWith('{')) {
+            try {
+                const innerError = JSON.parse(errorData.message);
+                if (innerError.error) {
+                    errorData = innerError.error;
+                }
+            } catch (parseError) {
+                console.error("Could not parse inner JSON from error message:", parseError);
+            }
         }
-    } catch { }
+
+        if (errorData) {
+            status = errorData.code;
+            statusMessage = errorData.message;
+            errorDetails = errorData.details;
+        }
+    } catch (extractError) {
+        console.error("Could not extract error details:", extractError);
+    }
+
 
     if (msg && (msg === "SAFETY" || msg === "PROHIBITED_CONTENT" || msg === "OTHER")) {
         return message.channel.send(await RNGArray(state.strings.geminiFiltered));
-    } else if (status && (status === 429)) {
-        return message.channel.send(await RNGArray(state.strings.geminiTooManyReqs));
-    } else if (status && (status === 503)) {
-        return message.channel.send(await RNGArray(state.strings.geminiGatewayUnavail));
-    } else if (status && (status === 500)) {
-        log(`Gemini returned 500, retrying`, 'warn', 'messageHandler.js');
+    } else if (status && (status === 429 || status === 500 || status === 503)) {
+        let retryDelay;
+        if (status === 429) {
+            log(`Gemini returned 429 (Resource Exhausted), attempting to retry after cooldown.`, 'warn', 'messageHandler.js');
+            let delaySeconds = 60;
+            if (errorDetails) {
+                const retryInfo = errorDetails.find(d => d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo');
+                if (retryInfo && retryInfo.retryDelay) {
+                    const parsedSeconds = parseInt(retryInfo.retryDelay.replace('s', ''), 10);
+                    if (!isNaN(parsedSeconds)) {
+                        delaySeconds = parsedSeconds;
+                        log(`Using retry delay from API: ${delaySeconds}s`, 'info', 'messageHandler.js');
+                    }
+                }
+            }
+            retryDelay = delaySeconds * 1000;
+        } else {
+            log(`Gemini returned ${status} (${statusMessage}), retrying`, 'warn', 'messageHandler.js');
+            retryDelay = 3000;
+        }
+
         if (!state.retryCounts[channelId]) {
             state.retryCounts[channelId] = 0;
         }
         state.retryCounts[channelId]++;
-
         if (state.retryCounts[channelId] > 5) {
-            console.error(`Gemini returned 500 error 5 times for channel ${channelId}, dropping task`);
+            console.error(`Gemini returned ${status} error 5 times for channel ${channelId}, dropping task`);
             state.retryCounts[channelId] = 0;
             return message.channel.send("Couldn't get a response, try again later.");
         }
 
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
         return messageHandler(message, client, gemini);
     } else {
         if (state.retryCounts[channelId]) {
             state.retryCounts[channelId] = 0;
         }
-        console.error(e.message + "\n```" + e.stack + "```");
+        console.error(`Unhandled Gemini error. Status: ${status}. Message: ${statusMessage}`);
+        if(e.stack) {
+            console.error(e.stack);
+        }
         return message.channel.send("Unhandled error. (Refer to console)");
     }
 }
@@ -144,6 +184,47 @@ async function processResponse(responseMsg, message) {
 }
 
 async function messageHandler(message, client, gemini) {
+    const channelId = message.channel.id;
+
+    if (!state.messageQueues[channelId]) {
+        state.messageQueues[channelId] = [];
+    }
+
+    state.messageQueues[channelId].push({ message, client, gemini });
+
+    if (state.isProcessing[channelId]) {
+        return;
+    }
+
+    state.isProcessing[channelId] = true;
+
+    try {
+        while (state.messageQueues[channelId] && state.messageQueues[channelId].length > 0) {
+            const task = state.messageQueues[channelId][0];
+            try {
+                await _internalMessageHandler(task.message, task.client, task.gemini);
+            } catch (e) {
+                console.error(`Error processing message in queue for channel ${channelId}: ${e.stack}`);
+                try {
+                    await task.message.channel.send("An unexpected error occurred while processing your message. Please try again later.");
+                } catch (sendError) {
+                    console.error(`Failed to send error message to channel ${channelId}: ${sendError}`);
+                }
+            } finally {
+                if (state.messageQueues[channelId]) {
+                    state.messageQueues[channelId].shift();
+                }
+            }
+        }
+    } finally {
+        state.isProcessing[channelId] = false;
+        if (state.messageQueues[channelId] && state.messageQueues[channelId].length === 0) {
+            delete state.messageQueues[channelId];
+        }
+    }
+}
+
+async function _internalMessageHandler(message, client, gemini) {
     if (!await checkAuthors(message, client)) {
         return;
     }
