@@ -52,8 +52,16 @@ module.exports = {
         if (subcommand === 'channel_history_count') {
             const channel = interaction.channel.id;
             const historyCount = state.history[channel].length || 0;
+            const allHistory = [];
+            for (const channel in state.history) {
+                allHistory.push({
+                    channelId: channel,
+                    count: state.history[channel].length || 0
+                });
+            }
             await interaction.reply({
-                content: `This channel has ${historyCount} messages in history.`,
+                content: `This channel has ${historyCount} messages in history.
+History count for all channels:\n${allHistory.map(item => `${item.channelId}: ${item.count}`).join('\n')}`,
                 flags: ['Ephemeral']
             });
             return;
