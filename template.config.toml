@@ -75,6 +75,10 @@ TOS_URL = ""
 [CHANNELS]
 # "12312312324312123" = { prompt = "default.md", wikis = [] }
 
+# mute count before the user gets automatically banned from using the bot
+# this excludes using slash commands
+BAN_AFTER = 20
+
 # timings, should be in milliseconds
 # these are all undocumented for a reason
 [TIMINGS]

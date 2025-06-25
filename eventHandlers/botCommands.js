@@ -7,7 +7,7 @@
 
 const state = require("../initializers/state");
 const log = require("../utils/betterLogs");
-const {loadConfig} = require('../initializers/configuration');
+const { loadConfig } = require('../initializers/configuration');
 const config = loadConfig();
 const { appendMemory } = require("../functions/memories");
 const path = require("path");
@@ -17,6 +17,9 @@ const { unlink } = require("fs/promises");
 const { reputation } = require("../db/reputation");
 const searchHandler = require("./searchHandler");
 const { svgToPng } = require("../utils/svg2png");
+
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 const tmpDir = path.join(global.dirname, 'data', 'running', 'tmp');
 if (!fs.existsSync(tmpDir)) {
@@ -88,6 +91,21 @@ async function parseBotCommands(toolCalls, message) {
                             log(`User ${userIdToMute} muted for ${time / 1000}s. Reason: ${reason}`, 'info', 'botCommands.js');
                             state.muteCount += 1;
                             reputation(userIdToMute.toString(), "decrease").catch(e => console.error(`Reputation decrease failed: ${e}`));
+
+                            let prismauser = await prisma.user.findUnique({ where: { id: userIdToMute.toString() } });
+                            if (prismauser.muteCount > config.BAN_AFTER) {
+                                await prisma.user.update({
+                                    where: { id: userIdToMute.toString() },
+                                    data: { banned: true, banMessage: `Automated action after ${config.BAN_AFTER.toString()} mutes` }
+                                });
+                                await user.send({
+                                    content: state.strings.muting.autoBan.replace("{COUNT}", config.BAN_AFTER.toString())
+                                });
+                            }
+                            await prisma.user.update({
+                                where: { id: userIdToMute.toString() },
+                                data: { muteCount: { increment: 1 } }
+                            });
 
                             const user = await message.client.users.fetch(userIdToMute.toString());
                             await user.send({
