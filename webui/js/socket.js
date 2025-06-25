@@ -1,9 +1,5 @@
 const socket = new WebSocket(`ws://${window.location.host}`);
 
-const rootPath = (window.location.pathname === '/');
-const reputationPath = (window.location.pathname === '/reputation');
-const bansPath = (window.location.pathname === '/bans');
-
 function createCard(user, cardType) {
     const colDiv = document.createElement('div');
     colDiv.className = 'col-12 col-md-12 col-lg';
@@ -202,8 +198,6 @@ function updateDomElement(id, textContent) {
 }
 
 function updateRootPathStats(stats) {
-    if (!rootPath) return;
-
     if (stats.ram) {
         const ramUsed = (stats.ram.used / 1024 / 1024).toFixed(2);
         const ramTotal = (stats.ram.total / 1024 / 1024).toFixed(2);
@@ -250,8 +244,6 @@ function updateRootPathStats(stats) {
 }
 
 function updateReputationPathStats(stats) {
-    if (!reputationPath) return;
-
     const userCont = document.getElementById('user-cards-container');
     if (!userCont) return;
 
@@ -317,8 +309,6 @@ function updateReputationPathStats(stats) {
 }
 
 function updateBansPathStats(stats) {
-    if (!bansPath) return;
-
     const banCont = document.getElementById('ban-cards-container');
     if (!banCont) return;
 
