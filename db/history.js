@@ -25,8 +25,13 @@ async function loadHistory(channelId) {
         const result = await prisma.history.findUnique({
             where: { channelId },
         });
+        let history;
         if (result) {
-            return JSON.parse(result.history);
+            history = JSON.parse(result.history);
+        }
+        if (Array.isArray(history) && history.length > 0) {
+            console.log(`Reloaded history for channel ${channelId} with ${history.length} messages.`);
+            return history;
         }
         return [];
     } catch (error) {
@@ -52,7 +57,13 @@ async function loadAllHistories() {
         const results = await prisma.history.findMany();
         const histories = {};
         for (const result of results) {
+            const history = JSON.parse(result.history);
+            // skip empty history
+            if (!Array.isArray(history) || history.length === 0) {
+                continue;
+            }
             histories[result.channelId] = JSON.parse(result.history);
+            console.log(`Reloaded history for channel ${result.channelId} with ${history.length} messages.`);
         }
         return histories;
     } catch (error) {
