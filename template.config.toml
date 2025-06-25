@@ -4,37 +4,54 @@
 DISCORD_TOKEN = ""
 
 # gemini api key (https://aistudio.google.com/apikey)
+# yes, it is free with some boundaries
 GEMINI_API_KEY = ""
 
 # gemini model id (https://ai.google.dev/gemini-api/docs/models/#model-variations)
 # GEMINI_MODEL = "gemini-2.5-flash"
-GEMINI_MODEL = "gemini-2.5-flash-preview-04-17"
+GEMINI_MODEL = "gemini-2.5-flash"
 
 # aliases the bot will respond to (exception: the ping and replying)
 # ALIASES = [ "dave", "domain" ]
 ALIASES = []
 
 # locale of the bot (used for date formatting) https://simplelocalize.io/data/locales/
+# this also changes the language of some things, if it got translated
+# help us translate: https://crowdin.com/project/domain-unchained
 LOCALE = "hu-HU"
 
 # webui port
+# you shouldn't allow this port to be accesible from the internet
 WEBUI_PORT = 4500
 
 # administrator user ids, capable of running some commands not available for regular users
+# this excludes running the /debug command
 OWNERS = []
 
-# searx base url
-# SEARX_BASE_URL = "https://search.example.com"
+# searx base url, used every time the bot needs to search something
+# SEARX_BASE_URL = "http://search.local"
 SEARX_BASE_URL = ""
 
-# total number of messages to be stored in memory
+# total number of messages to be stored in the history
+# if it would exceed, the history rollovers
 MAX_MESSAGES = 200
 
-# sleeping range for the bot, during this time it will not respond to anything except commands
+# sleeping range for the bot, during this time it will not respond to anything except slash commands
 # SLEEPINGRANGE = "22:30-6:00"
 SLEEPINGRANGE = ""
 
 # proxies to be used for requests
+# PROXIES = [
+#   {
+#       protocol = "http",
+#       host = "proxy.local",
+#       port = 8080,
+#       auth = {
+#           username = "proxyuser",
+#           password = "proxypass"
+#       }
+#   }
+# ]
 PROXIES = []
 
 # remote blocklists (hosts), must be an url to the plaintext file
@@ -58,16 +75,22 @@ TOS_URL = ""
 [CHANNELS]
 # "12312312324312123" = { prompt = "default.md", wikis = [] }
 
-## timings, should be in milliseconds
+# timings, should be in milliseconds
+# these are all undocumented for a reason
 [TIMINGS]
+# these values should be left as they are
+# and should not be changed
 resetPrompt = 600
 userCacheDuration = 3600000
 
-## emojis, these should be uploaded to a server where the bot is present / on discord's developer portal
+# emojis, these should be uploaded to a server where the bot is present / on discord's developer portal
 [EMOJIS]
+# upload indicators
 uploaded = ""
+uploading = ""
+# releated to reputation
 upvote = ""
 downvote = ""
+# miscellaneous
 search = ""
 mute = ""
-uploading = ""

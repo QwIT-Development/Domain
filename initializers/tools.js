@@ -44,7 +44,7 @@ const tools = [
       },
       {
         "name": "svg",
-        "description": "Generates a PNG image from the provided SVG code and sends it to the channel.",
+        "description": 'Generates a PNG image from the provided SVG code and sends it to the user. Your SVG code **MUST** start with a proper `<svg>` tag containing `width`, `height`, and `xmlns` attributes. `<svg width="..." height="..." xmlns="http://www.w3.org/2000/svg"> ... </svg>` The `width` and `height` attributes **MUST** be positive, non-zero numbers. Use `500` for both `width` and `height` as a reliable default (e.g., `width="500" height="500"`). Every element inside the SVG (like `<path>`, `<circle>`, `<rect>`, `<line>`) **MUST** be self-closing. This means it must end with ` />`.',
         "parameters": {
           "type": "object",
           "properties": {
@@ -74,7 +74,7 @@ const tools = [
       },
       {
         "name": "memory",
-        "description": "Saves a string to the bot's memory, associated with the current channel.",
+        "description": "Stores a string for later recall, enhancing the ability to understand context in future interactions.",
         "parameters": {
           "type": "object",
           "properties": {

@@ -4,6 +4,7 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=QwIT-Development_Domain&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=QwIT-Development_Domain)
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=QwIT-Development_Domain&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=QwIT-Development_Domain)
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=QwIT-Development_Domain&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=QwIT-Development_Domain)
+[![Crowdin](https://badges.crowdin.net/domain-unchained/localized.svg)](https://crowdin.com/project/domain-unchained)
 
 Domain is a feature-rich Discord chatbot powered by Google's Gemini API. It's designed to be highly configurable and extensible, offering a wide array of functionalities to enhance your Discord server.
 
