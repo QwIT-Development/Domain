@@ -35,7 +35,8 @@
     "onlyServers": "[Muting only works on servers]",
     "cantMuteOthers": "[You can't mute others]",
     "notEnoughPerms": "[I don't have enough permissions to mute]",
-    "genericFail": "[I couldn't mute]"
+    "genericFail": "[I couldn't mute]",
+    "autoBan": "You got automatically banned for getting muted for too many times ({COUNT})."
   },
   "cantFindUser": "[Couldn't find the user]",
   "svgConverionError": "[There was an error converting the SVG to PNG]",
