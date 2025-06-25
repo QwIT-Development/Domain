@@ -6,7 +6,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { loadConfig } = require('../initializers/configuration');
 const config = loadConfig();
-const client = global.discordClient;
 const state = require('../initializers/state');
 
 module.exports = {
@@ -36,17 +35,17 @@ module.exports = {
 
         if (subcommand === 'show_servers') {
             let response = "The server the bot present in:\n";
-            client.guilds.cache.forEach(guild => {
+            global.discordClient.guilds.cache.forEach(guild => {
                 const channels = guild.channels.cache.map(channel => channel.id);
                 let configChannelIds = Object.keys(config.CHANNELS);
                 const guildShouldBeLeft = !channels.some(channelId => configChannelIds.includes(channelId));
 
-                if (guildShouldBeLeft) {
-                    response += `${guild.name} (${guild.id}) - Unknown guild.\n`;
-                } else {
-                    response += `${guild.name} (${guild.id}) - Known guild.\n`;
-                }
+                response += `${guild.name} (${guild.id}) - ${guildShouldBeLeft ? "Unknown guild" : "Known guild"}.\n`;
+            });
             response += `-# This information might not be up to date.`;
+            await interaction.reply({
+                content: response,
+                flags: ['Ephemeral']
             });
         }
 
