@@ -58,5 +58,6 @@
     "unavailable": "No summary available for this channel at the moment.",
     "attached": "The summary of this channel is attached."
   },
-  "motd": "Mention me or reply to my message!"
+  "motd": "Mention me or reply to my message!",
+  "sleeping": "Sleeping until {TIME}"
 }
