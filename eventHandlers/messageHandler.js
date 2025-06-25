@@ -133,7 +133,7 @@ async function handleGeminiError(e, message, client, gemini) {
             let delaySeconds = 60;
             if (errorDetails) {
                 const retryInfo = errorDetails.find(d => d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo');
-                if (retryInfo && retryInfo.retryDelay) {
+                if (retryInfo?.retryDelay) {
                     const parsedSeconds = parseInt(retryInfo.retryDelay.replace('s', ''), 10);
                     if (!isNaN(parsedSeconds)) {
                         delaySeconds = parsedSeconds;
