@@ -28,5 +28,6 @@ module.exports = {
     strings: {},
     config: null,
     messageQueues: {},
-    isProcessing: {}
+    isProcessing: {},
+    prompts: {}
 };
