@@ -21,6 +21,18 @@ const { genAI } = require('../initializers/geminiClient');
 const { bondUpdater } = require('../functions/usageRep');
 const { addToHistory, trimHistory } = require('../utils/historyUtils');
 
+function simplifyEmoji(content) {
+    // discord's custom emoji format: <:name:id>
+    const customEmojiRegex = /<:(\w+):\d+>/g;
+    // :name:
+    content = content.replace(customEmojiRegex, ':$1:');
+
+    const animatedEmojiRegex = /<a:(\w+):\d+>/g;
+    content = content.replace(animatedEmojiRegex, ':$1:');
+
+    return content;
+}
+
 async function formatUserMessage(message, repliedTo, channelId) {
     const score = await reputation(message.author.id);
     const memories = await getMemories(channelId);
@@ -33,7 +45,7 @@ Author-Username: ${repliedTo.author.username}
 Author-DisplayName: ${repliedTo.member.displayName}
 Content:
 \`\`\`
-${repliedTo.content}
+${simplifyEmoji(repliedTo.content)}
 \`\`\``;
     }
     return `--- System Context ---
@@ -51,7 +63,7 @@ Timestamp: ${date}
 Reputation: ${score.toString()}
 Content:
 \`\`\`
-${message.content}
+${simplifyEmoji(message.content)}
 \`\`\``;
 }
 
