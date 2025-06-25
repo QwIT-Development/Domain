@@ -107,6 +107,7 @@ async function handleGeminiError(e, message, client, gemini) {
 
     let status;
     let statusMessage;
+    let errorDetails;
 
     try {
         let errorData = e.error;
@@ -124,6 +125,7 @@ async function handleGeminiError(e, message, client, gemini) {
         if (errorData) {
             status = errorData.code;
             statusMessage = errorData.message;
+            errorDetails = errorData.details;
         }
     } catch (extractError) {
         console.error("Could not extract error details:", extractError);
@@ -132,10 +134,27 @@ async function handleGeminiError(e, message, client, gemini) {
 
     if (msg && (msg === "SAFETY" || msg === "PROHIBITED_CONTENT" || msg === "OTHER")) {
         return message.channel.send(await RNGArray(state.strings.geminiFiltered));
-    } else if (status && (status === 429)) {
-        return message.channel.send(await RNGArray(state.strings.geminiTooManyReqs));
-    } else if (status && (status === 500 || status === 503)) {
-        log(`Gemini returned ${status} (${statusMessage}), retrying`, 'warn', 'messageHandler.js');
+    } else if (status && (status === 429 || status === 500 || status === 503)) {
+        let retryDelay;
+        if (status === 429) {
+            log(`Gemini returned 429 (Resource Exhausted), attempting to retry after cooldown.`, 'warn', 'messageHandler.js');
+            let delaySeconds = 60;
+            if (errorDetails) {
+                const retryInfo = errorDetails.find(d => d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo');
+                if (retryInfo && retryInfo.retryDelay) {
+                    const parsedSeconds = parseInt(retryInfo.retryDelay.replace('s', ''), 10);
+                    if (!isNaN(parsedSeconds)) {
+                        delaySeconds = parsedSeconds;
+                        log(`Using retry delay from API: ${delaySeconds}s`, 'info', 'messageHandler.js');
+                    }
+                }
+            }
+            retryDelay = delaySeconds * 1000;
+        } else {
+            log(`Gemini returned ${status} (${statusMessage}), retrying`, 'warn', 'messageHandler.js');
+            retryDelay = 3000;
+        }
+
         if (!state.retryCounts[channelId]) {
             state.retryCounts[channelId] = 0;
         }
@@ -146,7 +165,7 @@ async function handleGeminiError(e, message, client, gemini) {
             return message.channel.send("Couldn't get a response, try again later.");
         }
 
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
         return messageHandler(message, client, gemini);
     } else {
         if (state.retryCounts[channelId]) {
