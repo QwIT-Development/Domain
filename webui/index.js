@@ -101,12 +101,6 @@ const server = Bun.serve({
                 response = await handleStaticFile(pathname, staticJSPath, '/js/');
             } else if (pathname === '/') {
                 response = await handleEjsTemplate('index.ejs');
-            } else if (pathname === '/reputation') {
-                response = await handleEjsTemplate('reputation.ejs');
-            } else if (pathname === '/bans') {
-                response = await handleEjsTemplate('bans.ejs');
-            } else if (pathname === '/configuration') {
-                response = await handleEjsTemplate('configuration.ejs');
             } else if (pathname.startsWith('/api/')) {
                 response = await handleApiRoutes(req, pathname);
             }
