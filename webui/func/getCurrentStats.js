@@ -18,7 +18,14 @@ async function getCurrentStats() {
         },
         botStats: {
             msgCount: state.msgCount,
-            historyClears: state.resetCounts
+            historyClears: state.resetCounts,
+            isSleeping: state.isSleeping,
+            websocketClients: state.wsClients.size,
+            retryCount: Object.keys(state.retryCounts).length,
+            messageQueueCount: Object.keys(state.messageQueues).length,
+            processingTaskCount: Object.keys(state.isProcessing).length,
+            version: state.version,
+            historyCount: Object.keys(state.history).length
         },
         users: userEntries.map(entry => ({
             id: entry.id,

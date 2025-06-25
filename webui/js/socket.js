@@ -1,9 +1,5 @@
 const socket = new WebSocket(`ws://${window.location.host}`);
 
-const rootPath = (window.location.pathname === '/');
-const reputationPath = (window.location.pathname === '/reputation');
-const bansPath = (window.location.pathname === '/bans');
-
 function createCard(user, cardType) {
     const colDiv = document.createElement('div');
     colDiv.className = 'col-12 col-md-12 col-lg';
@@ -202,8 +198,6 @@ function updateDomElement(id, textContent) {
 }
 
 function updateRootPathStats(stats) {
-    if (!rootPath) return;
-
     if (stats.ram) {
         const ramUsed = (stats.ram.used / 1024 / 1024).toFixed(2);
         const ramTotal = (stats.ram.total / 1024 / 1024).toFixed(2);
@@ -214,6 +208,13 @@ function updateRootPathStats(stats) {
     if (stats.botStats) {
         updateDomElement('msgReceived', stats.botStats.msgCount.toString());
         updateDomElement('resetCount', stats.botStats.historyClears.toString());
+        updateDomElement('isSleeping', stats.botStats.isSleeping.toString());
+        updateDomElement('websocketClients', stats.botStats.websocketClients.toString());
+        updateDomElement('retryCount', stats.botStats.retryCount.toString());
+        updateDomElement('messageQueueCount', stats.botStats.messageQueueCount.toString());
+        updateDomElement('processingTaskCount', stats.botStats.processingTaskCount.toString());
+        updateDomElement('historyCount', stats.botStats.historyCount.toString());
+        updateDomElement('version', stats.botStats.version);
     }
 
     if (stats.muteCount != null) {
@@ -243,8 +244,6 @@ function updateRootPathStats(stats) {
 }
 
 function updateReputationPathStats(stats) {
-    if (!reputationPath) return;
-
     const userCont = document.getElementById('user-cards-container');
     if (!userCont) return;
 
@@ -310,8 +309,6 @@ function updateReputationPathStats(stats) {
 }
 
 function updateBansPathStats(stats) {
-    if (!bansPath) return;
-
     const banCont = document.getElementById('ban-cards-container');
     if (!banCont) return;
 
@@ -338,12 +335,6 @@ function handleStatsUpdate(payload, isDelta) {
     updateBansPathStats(stats);
 }
 
-function handleVersionUpdate(payload) {
-    if (payload.version) {
-        updateDomElement('version', `${payload.version}`);
-    }
-}
-
 socket.onmessage = (event) => {
     try {
         const message = JSON.parse(event.data);
@@ -352,8 +343,6 @@ socket.onmessage = (event) => {
             handlePong();
         } else if (message.type === 'statsUpdate' && message.payload) {
             handleStatsUpdate(message.payload, message.isDelta);
-        } else if (message.type === 'version' && message.payload) {
-            handleVersionUpdate(message.payload);
         }
     } catch (e) {
         console.error('socket parsing error:', e);

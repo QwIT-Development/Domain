@@ -1,28 +1,76 @@
 <%- include('partials/head') %>
-<main class="container mt-4">
-    <div class="row">
-        <div class="col col-md col-lg">
-            <div class="card">
-                <p class="card-header"><span class="material-symbols-rounded">monitoring</span> Statistics</p>
+    <main class="container mt-4">
+        <div class="row">
+            <div class="col col-md col-lg">
+                <div class="card">
+                    <p class="card-header"><span class="material-symbols-rounded">monitoring</span> Statistics</p>
 
-                <div class="card-body">
-                    <p class="card-text"><span class="material-symbols-rounded">memory</span> Ram usage: <span id="heapused"></span>/<span id="heaptotal"></span></p><br>
-                    <p class="card-text"><span class="material-symbols-rounded">chat_bubble</span> Messages received: <span id="msgReceived"></span></p><br>
-                    <p class="card-text"><span class="material-symbols-rounded">restart_alt</span> Reset count: <span id="resetCount"></span></p><br>
-                    <p class="card-text"><span class="material-symbols-rounded">group</span> Tracked users: <span id="userNumber"></span></p><br>
-                    <p class="card-text"><span class="material-symbols-rounded">voice_over_off</span> Timeout count: <span id="muteCount"></span></p><br>
-                    <a class="card-text" href="/bans"><p class="card-text"><span class="material-symbols-rounded">gavel</span> Banned users: <span id="banCount"></span></p></a>
+                    <div class="card-body">
+                        <p class="card-text"><span class="material-symbols-rounded">memory</span> Ram usage: <span
+                                id="heapused"></span>/<span id="heaptotal"></span></p><br>
+                        <p class="card-text"><span class="material-symbols-rounded">chat_bubble</span> Messages
+                            received: <span id="msgReceived"></span></p><br>
+                        <p class="card-text"><span class="material-symbols-rounded">restart_alt</span> Reset count:
+                            <span id="resetCount"></span></p><br>
+                        <p class="card-text"><span class="material-symbols-rounded">group</span> Tracked users: <span
+                                id="userNumber"></span></p><br>
+                        <p class="card-text"><span class="material-symbols-rounded">voice_over_off</span> Timeout count:
+                            <span id="muteCount"></span></p><br>
+                        <p class="card-text"><span class="material-symbols-rounded">bedtime</span> Is sleeping: <span id="isSleeping"></span></p><br>
+                        <p class="card-text"><span class="material-symbols-rounded">hub</span> Websocket clients: <span id="websocketClients"></span></p><br>
+                        <p class="card-text"><span class="material-symbols-rounded">replay</span> Retry count: <span id="retryCount"></span></p><br>
+                        <p class="card-text"><span class="material-symbols-rounded">queue</span> Message queues: <span id="messageQueueCount"></span></p><br>
+                        <p class="card-text"><span class="material-symbols-rounded">sync</span> Processing tasks: <span id="processingTaskCount"></span></p><br>
+                        <p class="card-text"><span class="material-symbols-rounded">info</span> Version: <span id="version"></span></p><br>
+                        <p class="card-text"><span class="material-symbols-rounded">history</span> History count: <span id="historyCount"></span></p><br>
+                        <a class="card-text" href="#bans">
+                            <p class="card-text"><span class="material-symbols-rounded">gavel</span> Banned users: <span
+                                    id="banCount"></span></p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col col-md col-lg-8">
+                <div class="card" style="max-height: 750px; overflow-y: scroll; overflow-x: scroll; -ms-overflow-style: none; scrollbar-width: none">
+                    <p class="card-header"><span class="material-symbols-rounded">bug_report</span> Logs</p>
+                    <div class="card-body">
+                        <div id="logs"></div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col col-md col-lg-8">
-            <div class="card" style="max-height: 750px; overflow-y: scroll; overflow-x: scroll;">
-                <p class="card-header"><span class="material-symbols-rounded">bug_report</span> Logs</p>
-                <div class="card-body">
-                    <div id="logs"></div>
+        <div class="row mt-4">
+            <div class="col-12 col-lg-6" id="bans">
+                <h1>Bans</h1>
+                <div class="card mb-4">
+                    <div class="card-header"><span class="material-symbols-rounded">gavel</span> Ban user</div>
+                    <div class="card-body">
+                        <form>
+                            <div class="mb-3">
+                                <label for="ban-userid" class="form-label">user ID</label>
+                                <input type="text" class="form-control" id="ban-userid" name="userId"
+                                    placeholder="000000000000000000" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="ban-reason" class="form-label">Reason</label>
+                                <input type="text" class="form-control" id="ban-reason" name="reason"
+                                    placeholder="Lorem ipsum dolor sit." required>
+                            </div>
+                        </form>
+                        <button onclick="ban()" class="btn btn-primary">Ban user</button>
+                        <script src="/js/ban.js"></script>
+                    </div>
+                </div>
+                <div class="row" id="ban-cards-container">
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-6" id="reputation">
+                <h1>Reputation</h1>
+                <p>We encourage fair game, but yes, you can cheat.</p>
+                <div class="row" id="user-cards-container">
                 </div>
             </div>
         </div>
-    </div>
-</main>
+    </main>
 <%- include('partials/footer') %>

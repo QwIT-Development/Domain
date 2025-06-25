@@ -65,7 +65,6 @@ module.exports = {
 History count for all channels:\n${allHistory.map(item => `${item.channelId}: ${item.count}`).join('\n')}`,
                 flags: ['Ephemeral']
             });
-            return;
         }
     }
 

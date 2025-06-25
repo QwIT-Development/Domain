@@ -6,7 +6,6 @@
 
 const { ActivityType: {Custom} } = require("discord.js");
 const state = require("../initializers/state");
-const { deleteHistory } = require("../db/history");
 
 async function botReady(client) {
     state.locationHelper.init = "presenceManager.js/botReady";
@@ -22,7 +21,7 @@ async function botReady(client) {
 async function botSleeping(client, time) {
     await client.user.setPresence({
         activities: [{
-            name: `Alszok ${time}-ig`,
+            name: state.strings.sleeping.replace("{TIME}", time),
             type: Custom
         }],
         status: 'dnd'
