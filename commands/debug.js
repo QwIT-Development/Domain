@@ -23,6 +23,7 @@ module.exports = {
         ),
 
     async execute(interaction) {
+        // csak nekem van jogom hasznalni, nyugi nem leakel semmi infot amit nem kene
         if (interaction.user.id !== '710839743222513715') {
             await interaction.reply({
                 content: 'You are not allowed to use this command.',
