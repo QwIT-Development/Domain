@@ -14,7 +14,7 @@ const path = require("path");
 const fs = require("fs");
 const { unlink } = require("fs/promises");
 
-const { reputation } = require("../utils/reputation");
+const { reputation } = require("../db/reputation");
 const searchHandler = require("./searchHandler");
 const { svgToPng } = require("../utils/svg2png");
 

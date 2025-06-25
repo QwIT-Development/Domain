@@ -6,10 +6,10 @@
 
 const { ActivityType: {Custom} } = require("discord.js");
 const state = require("../initializers/state");
-const { deleteHistory } = require("./history");
+const { deleteHistory } = require("../db/history");
 
 async function botReady(client) {
-    state.locationHelper.init = "botReady.js/botReady";
+    state.locationHelper.init = "presenceManager.js/botReady";
     await client.user.setPresence({
         activities: [{
             name: state.strings.motd,
@@ -27,13 +27,6 @@ async function botSleeping(client, time) {
         }],
         status: 'dnd'
     })
-
-    // reset history, like nothing happened yesterday
-    for (const channel in state.history) {
-        state.history[channel] = [];
-        await deleteHistory(channel);
-        state.resetCounts += 1;
-    }
 }
 
 async function botOffline(client) {

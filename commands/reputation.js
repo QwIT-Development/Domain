@@ -4,7 +4,7 @@
 */
 
 const {SlashCommandBuilder} = require('discord.js');
-const {reputation} = require('../utils/reputation');
+const {reputation} = require('../db/reputation');
 const state = require('../initializers/state');
 
 module.exports = {

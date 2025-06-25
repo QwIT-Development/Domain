@@ -43,10 +43,10 @@ process.on('unhandledRejection', (reason, promise) => {
 const log = require('./utils/betterLogs');
 const {Events} = require("discord.js");
 const state = require('./initializers/state');
-const {botReady, botOffline} = require('./functions/botReady');
+const {botReady, botOffline} = require('./functions/presenceManager');
 const {initializeSpinner, stopSpinner} = require('./utils/processInfo');
 const { configurationChecker, loadConfig, loadStrings } = require('./initializers/configuration');
-const { loadAllHistories, saveHistory } = require('./functions/history.js');
+const { loadAllHistories, saveHistory } = require('./db/history.js');
 
 // async main thread hell yeah
 async function main() {

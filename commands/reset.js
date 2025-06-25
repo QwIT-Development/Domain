@@ -6,7 +6,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const state = require('../initializers/state');
 const {loadConfig} = require('../initializers/configuration');
-const { deleteHistory } = require('../functions/history');
+const { deleteHistory } = require('../db/history');
 const config = loadConfig();
 
 module.exports = {

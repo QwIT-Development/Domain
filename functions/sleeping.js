@@ -5,7 +5,7 @@
 
 const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
-const { botReady, botSleeping } = require('./botReady');
+const { botReady, botSleeping } = require('./presenceManager');
 const { changeSpinnerText } = require('../utils/processInfo');
 const fs = require('fs');
 const path = require('path');
