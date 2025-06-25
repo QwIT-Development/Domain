@@ -6,9 +6,14 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const log = require('../utils/betterLogs');
+// compress stuff
 const lzstring = require('lz-string');
 
 async function saveHistory(channelId, history) {
+    if (!Array.isArray(history) || history.length === 0) {
+        // ignore empty histories
+        return;
+    }
     try {
         const historyString = lzstring.compressToBase64(JSON.stringify(history));
         await prisma.history.upsert({
