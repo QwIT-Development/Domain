@@ -6,10 +6,11 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const log = require('../utils/betterLogs');
+const lzstring = require('lz-string');
 
 async function saveHistory(channelId, history) {
     try {
-        const historyString = JSON.stringify(history);
+        const historyString = lzstring.compressToBase64(JSON.stringify(history));
         await prisma.history.upsert({
             where: { channelId },
             update: { history: historyString },
@@ -27,7 +28,7 @@ async function loadHistory(channelId) {
         });
         let history;
         if (result) {
-            history = JSON.parse(result.history);
+            history = JSON.parse(lzstring.decompressFromBase64(result.history));
         }
         if (Array.isArray(history) && history.length > 0) {
             console.log(`Reloaded history for channel ${channelId} with ${history.length} messages.`);
@@ -57,7 +58,7 @@ async function loadAllHistories() {
         const results = await prisma.history.findMany();
         const histories = {};
         for (const result of results) {
-            const history = JSON.parse(result.history);
+            const history = JSON.parse(lzstring.decompressFromBase64(result.history));
             if (!Array.isArray(history) || history.length === 0) {
                 continue;
             }
