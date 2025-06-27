@@ -15,7 +15,7 @@ async function getMemories(channelId) {
         },
     });
     // this returns a markdown formatted codeblock for each memory
-    return memories.map(m => `- \`\`\`\n${m.content}\n\`\`\``).join("\n");
+    return memories.map(m => `- ${m.content}`).join("\n");
 }
 
 async function appendMemory(str, channelId) {

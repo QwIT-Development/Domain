@@ -90,7 +90,9 @@ async function createSummariesAndClearHistories() {
             }
         }
         // Clear all histories
-        state.history = {};
+        for (const channel in state.history) {
+            state.history[channel] = [];
+        }
         log('Finished creating summaries and cleared all histories.', 'info', 'sleeping.js');
     } catch (e) {
         log(`Error in createSummariesAndClearHistories: ${e}`, 'error', 'sleeping.js');

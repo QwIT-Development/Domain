@@ -30,7 +30,7 @@ function simplifyEmoji(content) {
     return content;
 }
 
-async function formatUserMessage(message, repliedTo, channelId) {
+async function formatUserMessage(message, repliedTo) {
     const score = await reputation(message.author.id);
     const date = formatDate(new Date());
     let replyContent = "";
@@ -102,8 +102,9 @@ async function handleGeminiError(e, message, client, gemini) {
     let errorDetails;
 
     try {
-        let errorData = e.error;
-        if (errorData && typeof errorData.message === 'string' && errorData.message.trim().startsWith('{')) {
+        let errorData = e.error instanceof Object ? e.error : e;
+
+        if (errorData instanceof Object && typeof errorData.message === 'string' && errorData.message.trim().startsWith('{')) {
             try {
                 const innerError = JSON.parse(errorData.message);
                 if (innerError.error) {
@@ -114,10 +115,12 @@ async function handleGeminiError(e, message, client, gemini) {
             }
         }
 
-        if (errorData) {
+        if (errorData instanceof Object) {
             status = errorData.code;
             statusMessage = errorData.message;
             errorDetails = errorData.details;
+        } else if (errorData) {
+            statusMessage = String(errorData);
         }
     } catch (extractError) {
         console.error("Could not extract error details:", extractError);
