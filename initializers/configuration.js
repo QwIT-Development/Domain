@@ -48,7 +48,7 @@ function loadStrings(config) {
     let fPath;
 
     if (fs.existsSync(stringsPath)) {
-        fPath = localePath;
+        fPath = stringsPath;
         log(`Loading strings for locale: ${locale}`, 'info', 'Localization');
     } else {
         fPath = fallbackStringsPath;
