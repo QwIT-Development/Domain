@@ -71,13 +71,13 @@ CUMULATIVE_MODE = "classic"
 # example: https://anchietae.cc/docs/domain-tos
 TOS_URL = ""
 
-# channels to be tracked
-[CHANNELS]
-# "12312312324312123" = { prompt = "default.md", wikis = [] }
-
 # mute count before the user gets automatically banned from using the bot
 # this excludes using slash commands
 BAN_AFTER = 20
+
+# channels to be tracked
+[CHANNELS]
+# "12312312324312123" = { prompt = "default.md", wikis = [] }
 
 # timings, should be in milliseconds
 # these are all undocumented for a reason
