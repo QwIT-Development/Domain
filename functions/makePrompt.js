@@ -10,6 +10,7 @@ const fs = require('fs');
 const log = require('../utils/betterLogs');
 const { getContext } = require('../utils/searx');
 const { getMemories } = require('../functions/memories');
+const knowledgePath = global.dirname + '/knowledge';
 
 /**
  * Formats the time to a much better format
@@ -65,15 +66,21 @@ async function makePrompt(channelId, showLog = true) {
         prompt = prompt.replace("{CURRENT_TIME}", formatDate(new Date()));
     }
 
+
+    
+    const knowledgeFiles = fs.readdirSync(knowledgePath).filter(file => file.endsWith('.md') || file.endsWith('.txt'));
     // load wiki contents, if possible
     // added ?, so if the channel doesn't have assigned wiki urls it won't crash
-    if (config.CHANNELS[channelId]?.wikis?.length > 0 && prompt.includes("{WIKI_CONTENT}")) {
+    if ((config.CHANNELS[channelId]?.wikis?.length > 0 || knowledgeFiles.length > 0) && prompt.includes("{WIKI_CONTENT}")) {
         let content = "";
         for (const url of config.CHANNELS[channelId]?.wikis ?? []) {
             content += `\n${await getContext(url)}`
         }
+        for (const file of knowledgeFiles) {
+            content += `\n${fs.readFileSync(path.join(knowledgePath, file), 'utf-8')}`
+        }
         if (showLog) {
-            log(`Loaded ${config.CHANNELS[channelId].wikis.length} wiki pages`, 'info', 'makeprompt.js');
+            log(`Loaded ${config.CHANNELS[channelId]?.wikis?.length ?? 0} wiki pages and ${knowledgeFiles.length} knowledge files`, 'info', 'makeprompt.js');
         }
         prompt = prompt.replace("{WIKI_CONTENT}", content);
     } else if (prompt.includes("{WIKI_CONTENT}")) {

@@ -87,8 +87,14 @@ async function callGeminiAPI(channelId, gemini) {
 }
 
 async function handleGeminiError(e, message, client, gemini) {
-    console.error(JSON.stringify(e, null, 2));
+    // current shitty test handling
+    console.log("=== shitty error handling begin (handleGeminiError) ===");
+    console.log(`JSON output: ${JSON.stringify(e, null, 2)}`);
+    console.log(`=== json end ===`);
+    console.log(`Error normally: ${e}`);
+    console.log(`=== shitty error handling end ===`);
 
+    // beggining of the currently non working handling (https://github.com/googleapis/js-genai/issues/728)
     const channelId = message.channel.id;
     let msg;
     try {
@@ -247,7 +253,7 @@ async function _internalMessageHandler(message, client, gemini) {
         message.content += '[Attachment]';
     }
 
-    const formattedMessage = await formatUserMessage(message, repliedTo, channelId);
+    const formattedMessage = await formatUserMessage(message, repliedTo);
 
     if (!await checkForMentions(message, client)) {
         state.msgCount += 1;
