@@ -41,22 +41,35 @@ async function parseBotCommands(toolCalls, message) {
             case 'reputation': {
                 const { type } = args;
                 const userId = message.author.id;
-                if (type === 'increase') {
-                    reputation(userId, "increase").catch(e => console.error(`Reputation increase failed: ${e}`));
-                    reactionsToAdd.add(state.emojis["upvote"]);
-                    response.content = "Reputation increased.";
-                } else if (type === 'decrease') {
-                    reputation(userId, "decrease").catch(e => console.error(`Reputation decrease failed: ${e}`));
-                    reactionsToAdd.add(state.emojis["downvote"]);
-                    response.content = "Reputation decreased.";
+                try {
+                    if (type === 'increase') {
+                        await reputation(userId, "increase");
+                        reactionsToAdd.add(state.emojis["upvote"]);
+                        response.content = "Reputation increased.";
+                    } else if (type === 'decrease') {
+                        await reputation(userId, "decrease");
+                        reactionsToAdd.add(state.emojis["downvote"]);
+                        response.content = "Reputation decreased.";
+                    } else {
+                        response.content = "Invalid reputation type specified.";
+                        log(`Invalid reputation type: ${type}`, 'warn', 'botCommands.js');
+                    }
+                } catch (e) {
+                    console.error(`Reputation command failed (type: ${type}, userId: ${userId}): ${e}`);
+                    response.content = `Failed to update reputation: ${e.message || "Unknown error"}`;
                 }
                 break;
             }
             case 'memory': {
                 const { string: memStr } = args;
                 if (memStr) {
-                    appendMemory(memStr, message.channel.id).catch(e => console.error(`Failed to save memory: "${memStr}" - ${e}`));
-                    response.content = "Memory saved.";
+                    try {
+                        await appendMemory(memStr, message.channel.id);
+                        response.content = "Memory saved.";
+                    } catch (e) {
+                        console.error(`Failed to save memory: "${memStr}" - ${e}`);
+                        response.content = `Failed to save memory: ${e.message || "Unknown error"}`;
+                    }
                 } else {
                     log(`Skipped empty memory command.`, 'warn', 'botCommands.js');
                     response.content = "Empty memory not saved.";
