@@ -8,6 +8,9 @@
 
 Domain is a feature-rich Discord chatbot powered by Google's Gemini API. It's designed to be highly configurable and extensible, offering a wide array of functionalities to enhance your Discord server.
 
+> [!IMPORTANT]
+> For people coming from SoM, since resources are limited and we have a whitelist where the bot works, we strongly encourage users to selfhost the bot
+
 ## Features
 
 *   **AI-Powered Conversations:** Utilizes Google's Gemini API for intelligent and context-aware chat responses.
