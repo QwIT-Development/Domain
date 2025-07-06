@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const { RNGArray } = require('../functions/rng');
 const uploadFilesToGemini = require('../eventHandlers/fileUploader');
-const {loadConfig} = require('../initializers/configuration');
+const { loadConfig } = require('../initializers/configuration');
 const config = loadConfig();
 const { formatDate } = require('../functions/makePrompt');
 const { genAI } = require('../initializers/geminiClient');
@@ -87,26 +87,10 @@ async function callGeminiAPI(channelId, gemini) {
 }
 
 async function handleGeminiError(e, message, client, gemini) {
-    // current shitty test handling
-    console.log("=== shitty error handling begin (handleGeminiError) ===");
-    console.log(`JSON output: ${JSON.stringify(e, null, 2)}`);
-    console.log(`=== json end ===`);
-    console.log(`Error normally: ${e}`);
-    console.log(`=== shitty error handling end ===`);
+    const errorJSON = JSON.parse(JSON.stringify(e));
+    let status = errorJSON?.status || null;
 
-    // beggining of the currently non working handling (https://github.com/googleapis/js-genai/issues/728)
-    const channelId = message.channel.id;
-    let msg;
-    try {
-        if (e.response.promptFeedback.blockReason) {
-            msg = e.response.promptFeedback.blockReason;
-        }
-    } catch { }
-
-    let status;
     let statusMessage;
-    let errorDetails;
-
     try {
         let errorData = e.error instanceof Object ? e.error : e;
 
@@ -117,45 +101,44 @@ async function handleGeminiError(e, message, client, gemini) {
                     errorData = innerError.error;
                 }
             } catch (parseError) {
-                console.error("Could not parse inner JSON from error message:", parseError);
+                console.warn("Could not parse inner JSON from error message:", parseError);
             }
         }
 
         if (errorData instanceof Object) {
             status = errorData.code;
-            statusMessage = errorData.message;
-            errorDetails = errorData.details;
+            statusMessage = errorData.message.error.message; // weird ass json
         } else if (errorData) {
             statusMessage = String(errorData);
         }
     } catch (extractError) {
-        console.error("Could not extract error details:", extractError);
+        console.warn("Could not extract error details:", extractError);
     }
 
+    // old handling, DO NOT REMOVE COMMENT
+    /*const channelId = message.channel.id;
+    let msg;
+    try {
+        if (e.response.promptFeedback.blockReason) {
+            msg = e.response.promptFeedback.blockReason;
+        }
+    } catch { }
 
     if (msg && (msg === "SAFETY" || msg === "PROHIBITED_CONTENT" || msg === "OTHER")) {
         return message.channel.send(await RNGArray(state.strings.geminiFiltered));
-    } else if (status && (status === 429 || status === 500 || status === 503)) {
+    }*/
+
+    // beggining of the new error handling
+    if (status && (status === 429 || status === 500 || status === 503)) {
         let retryDelay;
         if (status === 429) {
             log(`Gemini returned 429 (Resource Exhausted), attempting to retry after cooldown.`, 'warn', 'messageHandler.js');
             let delaySeconds = 60;
-            if (errorDetails) {
-                const retryInfo = errorDetails.find(d => d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo');
-                if (retryInfo?.retryDelay) {
-                    const parsedSeconds = parseInt(retryInfo.retryDelay.replace('s', ''), 10);
-                    if (!isNaN(parsedSeconds)) {
-                        delaySeconds = parsedSeconds;
-                        log(`Using retry delay from API: ${delaySeconds}s`, 'info', 'messageHandler.js');
-                    }
-                }
-            }
             retryDelay = delaySeconds * 1000;
         } else {
             log(`Gemini returned ${status} (${statusMessage}), retrying`, 'warn', 'messageHandler.js');
             retryDelay = 3000;
         }
-
         if (!state.retryCounts[channelId]) {
             state.retryCounts[channelId] = 0;
         }
@@ -172,8 +155,8 @@ async function handleGeminiError(e, message, client, gemini) {
         if (state.retryCounts[channelId]) {
             state.retryCounts[channelId] = 0;
         }
-        console.error(`Unhandled Gemini error. Status: ${status}. Message: ${statusMessage}`);
-        if(e.stack) {
+        console.error(`Unhandled Gemini error. Status: ${status}. Message: ${statusMessage || 'No message provided'}`);
+        if (e.stack) {
             console.error(e.stack);
         }
         return message.channel.send("Unhandled error. (Refer to console)");
