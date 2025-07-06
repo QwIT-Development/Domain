@@ -105,8 +105,14 @@ async function parseBotCommands(toolCalls, message) {
                             state.muteCount += 1;
                             reputation(userIdToMute.toString(), "decrease").catch(e => console.error(`Reputation decrease failed: ${e}`));
 
-                            let prismauser = await prisma.user.findUnique({ where: { id: userIdToMute.toString() } });
-                            if (prismauser.muteCount > config.BAN_AFTER) {
+                            const user = await message.client.users.fetch(userIdToMute.toString());
+
+                            const updatedUser = await prisma.user.update({
+                                where: { id: userIdToMute.toString() },
+                                data: { muteCount: { increment: 1 } },
+                            });
+
+                            if (updatedUser.muteCount > config.BAN_AFTER) {
                                 await prisma.user.update({
                                     where: { id: userIdToMute.toString() },
                                     data: { banned: true, banMessage: `Automated action after ${config.BAN_AFTER.toString()} mutes` }
@@ -115,16 +121,12 @@ async function parseBotCommands(toolCalls, message) {
                                     content: state.strings.muting.autoBan.replace("{COUNT}", config.BAN_AFTER.toString())
                                 });
                             }
-                            await prisma.user.update({
-                                where: { id: userIdToMute.toString() },
-                                data: { muteCount: { increment: 1 } }
-                            });
 
-                            const user = await message.client.users.fetch(userIdToMute.toString());
                             await user.send({
-                                content: `${state.strings.muteMessage.replace("[REASON]", reason).replace("[TIME]", time / 1000)}\n${state.strings.automatedMessage}`
+                                content: `${state.strings.muteMessage.replace("[REASON]", reason).replace("[TIME]", time / 1000)}
+${state.strings.automatedMessage}`
                             });
-                            response.content = `User ${userIdToMute} muted successfully.`;
+                            response.content = `User ${user.username} muted successfully.`;
                         } else {
                             log(`Mute failed: Member ${userIdToMute} not found after fetch.`, 'warn', 'botCommands.js');
                             response.content = state.strings.cantFindUser;
