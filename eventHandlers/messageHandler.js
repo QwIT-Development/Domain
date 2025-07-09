@@ -270,26 +270,40 @@ async function _internalMessageHandler(message, client, gemini) {
         parts: msgParts
     });
 
-    let response;
+    let initialResponse;
     try {
-        response = await callGeminiAPI(channelId, gemini);
+        initialResponse = await callGeminiAPI(channelId, gemini);
     } catch (e) {
         return handleGeminiError(e, message, client, gemini);
     }
 
-    if (response.functionCalls && response.functionCalls.length > 0) {
+    const hasInitialText = initialResponse.text && initialResponse.text.trim().length > 0;
+    const hasFunctionCalls = initialResponse.functionCalls && initialResponse.functionCalls.length > 0;
+
+    if (hasFunctionCalls) {
+        if (hasInitialText) {
+            let processedInitialThought = await processResponse(initialResponse.text, message);
+            await addToHistory('model', processedInitialThought, channelId);
+        }
+
         state.history[channelId].push({
             role: 'model',
-            parts: response.functionCalls.map(fc => ({ functionCall: fc }))
+            parts: initialResponse.functionCalls.map(fc => ({ functionCall: fc }))
         });
 
-        const toolResponses = await parseBotCommands(response.functionCalls, message, gemini);
+        let toolResponses;
+        try {
+            toolResponses = await parseBotCommands(initialResponse.functionCalls, message, gemini);
+        } catch (e) {
+            console.error(`Error executing parseBotCommands: ${e.stack}`);
+            toolResponses = initialResponse.functionCalls.map(fc => ({
+                name: fc.name,
+                response: { content: `An internal error occurred while attempting to execute the tool: ${fc.name}.` }
+            }));
+        }
 
         const functionResponseParts = toolResponses.map(toolResponse => ({
-            functionResponse: {
-                name: toolResponse.name,
-                response: toolResponse.response,
-            },
+            functionResponse: { name: toolResponse.name, response: toolResponse.response, }
         }));
 
         state.history[channelId].push({
@@ -297,29 +311,34 @@ async function _internalMessageHandler(message, client, gemini) {
             parts: functionResponseParts,
         });
 
-        let finalResponse;
+        let subsequentResponse;
         try {
-            finalResponse = await callGeminiAPI(channelId, gemini);
+            subsequentResponse = await callGeminiAPI(channelId, gemini);
         } catch (e) {
             return handleGeminiError(e, message, client, gemini);
         }
-
-        let responseMsg = finalResponse.text || '';
-        responseMsg = await processResponse(responseMsg, message);
-
-        await addToHistory('model', responseMsg, channelId);
+        let subsequentText = subsequentResponse.text || '';
+        if (subsequentText.trim().length > 0) {
+            subsequentText = await processResponse(subsequentText, message);
+            await addToHistory('model', subsequentText, channelId);
+            await chunkedMsg(message, subsequentText);
+        }
         await trimHistory(channelId);
         await bondUpdater(message.author.id);
-        return chunkedMsg(message, responseMsg);
+        return;
+    } else if (hasInitialText) {
+        let processedInitialText = await processResponse(initialResponse.text, message);
+        await addToHistory('model', processedInitialText, channelId);
+        await chunkedMsg(message, processedInitialText);
+        await trimHistory(channelId);
+        await bondUpdater(message.author.id);
+        return;
+    } else {
+        await addToHistory('model', '', channelId);
+        await trimHistory(channelId);
+        await bondUpdater(message.author.id);
+        return;
     }
-
-    let responseMsg = response.text || '';
-    responseMsg = await processResponse(responseMsg, message);
-
-    await addToHistory('model', responseMsg, channelId);
-    await trimHistory(channelId);
-    await bondUpdater(message.author.id);
-    return chunkedMsg(message, responseMsg);
 }
 
 // longest function with 55 "Cognitive Complexity", good to go for now, also we need to take mute command apart, might be making a different module

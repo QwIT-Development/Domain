@@ -17,6 +17,7 @@ const { unlink } = require("fs/promises");
 const { reputation } = require("../db/reputation");
 const searchHandler = require("./searchHandler");
 const { svgToPng } = require("../utils/svg2png");
+const {fuzzySearch} = require("../utils/fuzzySearch");
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
@@ -78,10 +79,17 @@ async function parseBotCommands(toolCalls, message) {
             }
             case 'mute': {
                 const { userID: userIdToMute, seconds, reason: muteReason } = args;
+                const messageUID = message.author.id;
+                const userIdToMuteStr = userIdToMute.toString();
+                let muteID = userIdToMuteStr;
+                // this was put here, to prevent accidental typos made by the bot
+                if (fuzzySearch(userIdToMuteStr, [messageUID], 0.3)) {
+                    muteID = messageUID;
+                }
                 const time = seconds ? seconds * 1000 : 0;
                 const reason = muteReason || 'No reason provided.';
 
-                if (!userIdToMute || !time || time <= 0) {
+                if (!muteID || !time || time <= 0) {
                     log(`Invalid mute parameters: ${JSON.stringify(args)}`, 'warn', 'botCommands.js');
                     response.content = 'Wrong mute format, invalid parameters.';
                     break;
@@ -92,56 +100,62 @@ async function parseBotCommands(toolCalls, message) {
                     response.content = state.strings.muting.onlyServers;
                     break;
                 }
-
-                if (userIdToMute.toString() !== message.author.id && !config.OWNERS.includes(message.author.id)) {
+                if (muteID !== message.author.id && !config.OWNERS.includes(message.author.id)) {
                     response.content = state.strings.muting.cantMuteOthers;
-                } else {
+                    break;
+                }
+
+                try {
+                    const member = await guild.members.fetch(muteID);
+                    if (!member) {
+                        log(`Mute failed: Member ${muteID} not found after fetch.`, 'warn', 'botCommands.js');
+                        response.content = state.strings.cantFindUser;
+                        break;
+                    }
+
+                    await member.timeout(time, reason);
+                    log(`User ${muteID} muted for ${time / 1000}s. Reason: ${reason}`, 'info', 'botCommands.js');
+                    reactionsToAdd.add(state.emojis["mute"]);
+                    const user = await message.client.users.fetch(muteID);
+                    response.content = `User ${user.username} muted successfully.`; // Default success
+
                     try {
-                        const member = await guild.members.fetch(userIdToMute.toString());
-                        if (member) {
-                            await member.timeout(time, reason);
-                            reactionsToAdd.add(state.emojis["mute"]);
-                            log(`User ${userIdToMute} muted for ${time / 1000}s. Reason: ${reason}`, 'info', 'botCommands.js');
-                            state.muteCount += 1;
-                            reputation(userIdToMute.toString(), "decrease").catch(e => console.error(`Reputation decrease failed: ${e}`));
+                        state.muteCount += 1;
+                        await reputation(muteID, "decrease");
 
-                            const user = await message.client.users.fetch(userIdToMute.toString());
+                        const updatedUser = await prisma.user.update({
+                            where: { id: muteID },
+                            data: { muteCount: { increment: 1 } },
+                        });
 
-                            const updatedUser = await prisma.user.update({
-                                where: { id: userIdToMute.toString() },
-                                data: { muteCount: { increment: 1 } },
+                        if (updatedUser.muteCount > config.BAN_AFTER) {
+                            await prisma.user.update({
+                                where: { id: muteID },
+                                data: { banned: true, banMessage: `Automated action after ${config.BAN_AFTER.toString()} mutes` }
                             });
-
-                            if (updatedUser.muteCount > config.BAN_AFTER) {
-                                await prisma.user.update({
-                                    where: { id: userIdToMute.toString() },
-                                    data: { banned: true, banMessage: `Automated action after ${config.BAN_AFTER.toString()} mutes` }
-                                });
-                                await user.send({
-                                    content: state.strings.muting.autoBan.replace("{COUNT}", config.BAN_AFTER.toString())
-                                });
-                            }
-
                             await user.send({
-                                content: `${state.strings.muteMessage.replace("[REASON]", reason).replace("[TIME]", time / 1000)}
-${state.strings.automatedMessage}`
+                                content: state.strings.muting.autoBan.replace("{COUNT}", config.BAN_AFTER.toString())
                             });
-                            response.content = `User ${user.username} muted successfully.`;
-                        } else {
-                            log(`Mute failed: Member ${userIdToMute} not found after fetch.`, 'warn', 'botCommands.js');
-                            response.content = state.strings.cantFindUser;
                         }
-                    } catch (e) {
-                        if (e.code === 10007 || e.code === 10013) {
-                            log(`Mute failed: Member ${userIdToMute} not found in guild.`, 'warn', 'botCommands.js');
-                            response.content = state.strings.cantFindUser;
-                        } else if (e.code === 50013) {
-                            console.error(`Mute failed: Missing permissions to mute ${userIdToMute}. ${e}`);
-                            response.content = state.strings.muting.notEnoughPerms;
-                        } else {
-                            console.error(`Failed to mute user ${userIdToMute}: ${e}`);
-                            response.content = state.strings.muting.genericFail;
-                        }
+
+                        await user.send({
+                            content: `${state.strings.muteMessage.replace("[REASON]", reason).replace("[TIME]", time / 1000)}\n${state.strings.automatedMessage}`
+                        });
+
+                    } catch (postMuteError) {
+                        console.error(`Mute for ${muteID} succeeded, but post-mute actions (DB/DM) failed: ${postMuteError}`);
+                    }
+
+                } catch (e) {
+                    if (e.code === 10007 || e.code === 10013) {
+                        log(`Mute failed: Member ${muteID} not found in guild. Error: ${e.message}`, 'warn', 'botCommands.js');
+                        response.content = state.strings.cantFindUser;
+                    } else if (e.code === 50013) {
+                        console.error(`Mute failed for ${muteID}: Missing permissions. Error: ${e.message}`);
+                        response.content = state.strings.muting.notEnoughPerms;
+                    } else {
+                        console.error(`Failed to mute user ${muteID}: ${e.stack}`);
+                        response.content = state.strings.muting.genericFail;
                     }
                 }
                 break;
