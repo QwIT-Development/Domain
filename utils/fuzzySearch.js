@@ -57,7 +57,7 @@ function fuzzySearch(pattern, strings, options = {}) {
         return false;
     }
 
-    const cleanWord = word.replace(/[^\p{L}\p{N}_]/gu, '');
+    const cleanWord = pattern.replace(/[^\p{L}\p{N}_]/gu, '');
 
     const fuse = new Fuse(strings, options);
     const results = fuse.search(cleanWord);
