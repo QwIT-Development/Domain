@@ -357,9 +357,10 @@ async function _internalMessageHandler(message, client, gemini) {
         await addToHistory('model', '', channelId); // Add empty model message for history consistency
 
         // Call these once after empty response path
-    await trimHistory(channelId);
-    await bondUpdater(message.author.id);
+        await trimHistory(channelId);
+        await bondUpdater(message.author.id);
         return; // End of empty response path
+    }
 }
 
 // longest function with 55 "Cognitive Complexity", good to go for now, also we need to take mute command apart, might be making a different module
