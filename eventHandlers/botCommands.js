@@ -17,6 +17,7 @@ const { unlink } = require("fs/promises");
 const { reputation } = require("../db/reputation");
 const searchHandler = require("./searchHandler");
 const { svgToPng } = require("../utils/svg2png");
+const {fuzzySearch} = require("../utils/fuzzySearch");
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
@@ -78,10 +79,17 @@ async function parseBotCommands(toolCalls, message) {
             }
             case 'mute': {
                 const { userID: userIdToMute, seconds, reason: muteReason } = args;
+                const messageUID = message.author.id;
+                const userIdToMuteStr = userIdToMute.toString();
+                let muteID = userIdToMuteStr;
+                // this was put here, to prevent accidental typos made by the bot
+                if (fuzzySearch(userIdToMuteStr, messageUID)) {
+                    muteID = messageUID;
+                }
                 const time = seconds ? seconds * 1000 : 0;
                 const reason = muteReason || 'No reason provided.';
 
-                if (!userIdToMute || !time || time <= 0) {
+                if (!muteID || !time || time <= 0) {
                     log(`Invalid mute parameters: ${JSON.stringify(args)}`, 'warn', 'botCommands.js');
                     response.content = 'Wrong mute format, invalid parameters.';
                     break;
@@ -94,41 +102,41 @@ async function parseBotCommands(toolCalls, message) {
                 }
 
                 // Policy check: Non-owners can only mute themselves.
-                if (userIdToMute.toString() !== message.author.id && !config.OWNERS.includes(message.author.id)) {
+                if (muteID !== message.author.id && !config.OWNERS.includes(message.author.id)) {
                     response.content = state.strings.muting.cantMuteOthers;
                     break;
                 }
                 // If the above passes, either owner is muting anyone, or user is muting self.
 
                 try {
-                    const member = await guild.members.fetch(userIdToMute.toString());
+                    const member = await guild.members.fetch(muteID);
                     if (!member) {
-                        log(`Mute failed: Member ${userIdToMute} not found after fetch.`, 'warn', 'botCommands.js');
+                        log(`Mute failed: Member ${muteID} not found after fetch.`, 'warn', 'botCommands.js');
                         response.content = state.strings.cantFindUser;
                         break; // Exit if member not found
                     }
 
                     await member.timeout(time, reason); // Attempt mute
                     // If timeout succeeds, primary action is done.
-                    log(`User ${userIdToMute} muted for ${time / 1000}s. Reason: ${reason}`, 'info', 'botCommands.js');
+                    log(`User ${muteID} muted for ${time / 1000}s. Reason: ${reason}`, 'info', 'botCommands.js');
                     reactionsToAdd.add(state.emojis["mute"]);
                     // Set success message for Gemini *early*
-                    const user = await message.client.users.fetch(userIdToMute.toString());
+                    const user = await message.client.users.fetch(muteID);
                     response.content = `User ${user.username} muted successfully.`; // Default success
 
                     // Subsequent actions (DB, DM) are best-effort and can append to/modify response or just log errors.
                     try {
                         state.muteCount += 1; // Local counter
-                        await reputation(userIdToMute.toString(), "decrease");
+                        await reputation(muteID, "decrease");
 
                         const updatedUser = await prisma.user.update({
-                            where: { id: userIdToMute.toString() },
+                            where: { id: muteID },
                             data: { muteCount: { increment: 1 } },
                         });
 
                         if (updatedUser.muteCount > config.BAN_AFTER) {
                             await prisma.user.update({
-                                where: { id: userIdToMute.toString() },
+                                where: { id: muteID },
                                 data: { banned: true, banMessage: `Automated action after ${config.BAN_AFTER.toString()} mutes` }
                             });
                             await user.send({ // DM about auto-ban
@@ -142,7 +150,7 @@ async function parseBotCommands(toolCalls, message) {
                         });
 
                     } catch (postMuteError) {
-                        console.error(`Mute for ${userIdToMute} succeeded, but post-mute actions (DB/DM) failed: ${postMuteError}`);
+                        console.error(`Mute for ${muteID} succeeded, but post-mute actions (DB/DM) failed: ${postMuteError}`);
                         // Modify response to indicate partial success if desired, e.g.:
                         // response.content = `User ${user.username} muted, but there was an issue with post-mute processing.`;
                         // For now, we'll keep the simple success message for the mute itself.
@@ -150,13 +158,13 @@ async function parseBotCommands(toolCalls, message) {
 
                 } catch (e) { // Catches errors from initial fetch or .timeout()
                     if (e.code === 10007 || e.code === 10013) { // Unknown Member or User
-                        log(`Mute failed: Member ${userIdToMute} not found in guild. Error: ${e.message}`, 'warn', 'botCommands.js');
+                        log(`Mute failed: Member ${muteID} not found in guild. Error: ${e.message}`, 'warn', 'botCommands.js');
                         response.content = state.strings.cantFindUser;
                     } else if (e.code === 50013) { // Missing Permissions
-                        console.error(`Mute failed for ${userIdToMute}: Missing permissions. Error: ${e.message}`);
+                        console.error(`Mute failed for ${muteID}: Missing permissions. Error: ${e.message}`);
                         response.content = state.strings.muting.notEnoughPerms;
                     } else {
-                        console.error(`Failed to mute user ${userIdToMute}: ${e.stack}`);
+                        console.error(`Failed to mute user ${muteID}: ${e.stack}`);
                         response.content = state.strings.muting.genericFail;
                     }
                 }

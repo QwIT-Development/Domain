@@ -47,7 +47,7 @@ function splitFuzzySearch(pattern, strings, options = {"includeScore": true}) {
 
 /**
  * fuzzy searcher, **THIS WAS MADE FOR A WORD ONLY**
- * @param pattern - the word, for phrases, use splitFuzzySearch
+ * @param pattern - the word, *for phrases, use splitFuzzySearch*
  * @param strings - array of strings to search for
  * @param options - fuzzy.js settings (ignorable)
  * @returns {boolean} - true/false (pre-tuned)
