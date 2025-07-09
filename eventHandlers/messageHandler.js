@@ -270,20 +270,52 @@ async function _internalMessageHandler(message, client, gemini) {
         parts: msgParts
     });
 
-    let response;
+    let initialResponse;
     try {
-        response = await callGeminiAPI(channelId, gemini);
+        initialResponse = await callGeminiAPI(channelId, gemini);
     } catch (e) {
         return handleGeminiError(e, message, client, gemini);
     }
 
-    if (response.functionCalls && response.functionCalls.length > 0) {
+    // Handle initial text if present
+    let initialText = initialResponse.text || '';
+    if (initialText.trim().length > 0) {
+        let processedInitialText = await processResponse(initialText, message);
+        await addToHistory('model', processedInitialText, channelId); // Add initial text to history
+        await chunkedMsg(message, processedInitialText);
+        // Note: We might need to consider if bondUpdater and trimHistory should run here as well,
+        // or if it's fine to run them only after the potential function call sequence.
+        // For now, keeping them at the end of sequences.
+    }
+
+    if (initialResponse.functionCalls && initialResponse.functionCalls.length > 0) {
         state.history[channelId].push({
             role: 'model',
-            parts: response.functionCalls.map(fc => ({ functionCall: fc }))
+            parts: initialResponse.functionCalls.map(fc => ({ functionCall: fc }))
         });
 
-        const toolResponses = await parseBotCommands(response.functionCalls, message, gemini);
+        let toolResponses;
+        try {
+            toolResponses = await parseBotCommands(initialResponse.functionCalls, message, gemini);
+        } catch (e) {
+            console.error(`Error executing parseBotCommands: ${e.stack}`);
+            // Send a generic error message to the user
+            try {
+                await message.channel.send("I encountered an unexpected issue while trying to perform that action. Please try again later.");
+            } catch (sendError) {
+                console.error(`Failed to send error message to channel: ${sendError}`);
+            }
+
+            // Construct a generic error response for each attempted function call to send back to Gemini
+            toolResponses = initialResponse.functionCalls.map(fc => ({
+                name: fc.name,
+                response: {
+                    content: `An internal error occurred while attempting to execute the tool: ${fc.name}.`
+                }
+            }));
+            // Note: The flow will continue to the next callGeminiAPI with these error responses.
+            // This allows Gemini to potentially respond to the user about the failure.
+        }
 
         const functionResponseParts = toolResponses.map(toolResponse => ({
             functionResponse: {
@@ -293,30 +325,104 @@ async function _internalMessageHandler(message, client, gemini) {
         }));
 
         state.history[channelId].push({
-            role: 'user',
+            role: 'user', // This should be 'function' or 'tool' role if API supports, user for now.
             parts: functionResponseParts,
         });
 
-        let finalResponse;
+        let subsequentResponse;
         try {
-            finalResponse = await callGeminiAPI(channelId, gemini);
+            subsequentResponse = await callGeminiAPI(channelId, gemini);
         } catch (e) {
             return handleGeminiError(e, message, client, gemini);
         }
 
-        let responseMsg = finalResponse.text || '';
-        responseMsg = await processResponse(responseMsg, message);
+        let subsequentText = subsequentResponse.text || '';
+        if (subsequentText.trim().length > 0) { // Only send if there's actual text
+            subsequentText = await processResponse(subsequentText, message);
+            await addToHistory('model', subsequentText, channelId);
+            await trimHistory(channelId);
+            await bondUpdater(message.author.id);
+            return chunkedMsg(message, subsequentText);
+        } else if (initialText.trim().length > 0) {
+            // If there was initial text but no subsequent text after function calls,
+            // we've already sent the initial text. We should ensure history is trimmed
+            // and bond is updated.
+            await trimHistory(channelId);
+            await bondUpdater(message.author.id);
+            return; // Functions executed, initial text sent, nothing more to send.
+        }
+        // If no initial text and no subsequent text, do nothing further.
+        return;
 
-        await addToHistory('model', responseMsg, channelId);
+    } else if (initialText.trim().length > 0) {
+        // This case is when there was initial text but NO function calls.
+        // The initial text has already been processed and sent by the block above.
+        // We just need to ensure history trimming and bond update happens.
         await trimHistory(channelId);
         await bondUpdater(message.author.id);
-        return chunkedMsg(message, responseMsg);
+        return;
     }
+    // If no initial text and no function calls, effectively a no-op, though callGeminiAPI should ideally not return empty.
+    // However, if it does, we ensure history and bond are updated.
+    // This also covers the original "else" block's functionality implicitly.
+    // If `initialText` was empty and there were no function calls, `processResponse` would have been called on empty string.
+    // The previous `addToHistory` and `chunkedMsg` would run on this empty/processed string.
+    // The new logic ensures `addToHistory` is only called if `initialText` was non-empty.
 
-    let responseMsg = response.text || '';
-    responseMsg = await processResponse(responseMsg, message);
+    // Fallback for any state updates if no messages were sent but history might have been touched
+    // (e.g. by function call processing that results in no text output)
+    // This part ensures that bondUpdater and trimHistory are called if function calls happened
+    // but didn't result in a textual response.
+    if (initialResponse.functionCalls && initialResponse.functionCalls.length > 0) {
+        // This path is taken if function calls occurred but `subsequentText.trim().length == 0`
+        await trimHistory(channelId);
+        await bondUpdater(message.author.id);
+    } else if (!initialText.trim()) {
+        // If there was no initial text and no function calls,
+        // this is like the original else path where response.text was empty.
+        // We should still update history and bond.
+        // An empty model message might be added if we called addToHistory unconditionally.
+        // Let's ensure addToHistory('model', '', channelId) is called if no text at all.
+        // However, the original code would call processResponse('') which results in '',
+        // then addToHistory('model', '', channelId).
+        // The current logic: initialText is empty, no function calls. The first `if (initialText.trim().length > 0)` is false.
+        // The `else if (initialText.trim().length > 0)` after function call check is also false.
+        // This means if Gemini returns nothing (no text, no functions), nothing is sent,
+        // and history/bondUpdater are not explicitly called here.
+        // This seems acceptable; if Gemini truly sends nothing, there's nothing to record or bill.
+        // The original code would have added an empty model message to history.
+        // Let's refine to ensure `addToHistory` is called if there were no function calls and no initial text,
+        // to maintain parity with original behavior of adding an empty model message.
 
-    await addToHistory('model', responseMsg, channelId);
+        // If there were no function calls and initialText was empty or whitespace:
+        // This means Gemini returned no actionable content.
+        // The original code would still call:
+        // let responseMsg = response.text || ''; // responseMsg is ''
+        // responseMsg = await processResponse(responseMsg, message); // responseMsg is still ''
+        // await addToHistory('model', responseMsg, channelId); // Adds an empty model message
+        // await trimHistory(channelId);
+        // await bondUpdater(message.author.id);
+        // return chunkedMsg(message, responseMsg); // Which does nothing for empty response
+        // So, to replicate:
+        if (!(initialResponse.functionCalls && initialResponse.functionCalls.length > 0) && !initialText.trim()) {
+            await addToHistory('model', '', channelId); // Add empty model message
+            await trimHistory(channelId);
+            await bondUpdater(message.author.id);
+            // chunkedMsg('') does nothing, so no need to call it.
+        }
+    }
+    // If initialText was sent, and no function calls, trimHistory and bondUpdater were already called.
+    // If initialText was sent, and function calls ran and produced more text, they were called.
+    // If initialText was sent, and function calls ran and produced NO more text, they were called.
+    // This final block covers the case where no text was ever produced by Gemini (neither initial nor subsequent)
+    // AND there were no function calls.
+    else {
+        // This 'else' corresponds to the original 'else' block that handled 'no function calls'.
+        // If initialText was present, it's already handled and sent.
+        // If initialText was NOT present and no function calls, we need to add empty history and update bond.
+        let responseMsg = initialResponse.text || ''; // This will be empty if initialText was empty
+        responseMsg = await processResponse(responseMsg, message); // Still empty
+        await addToHistory('model', responseMsg, channelId); // Adds empty msg
     await trimHistory(channelId);
     await bondUpdater(message.author.id);
     return chunkedMsg(message, responseMsg);
