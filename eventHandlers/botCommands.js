@@ -83,7 +83,7 @@ async function parseBotCommands(toolCalls, message) {
                 const userIdToMuteStr = userIdToMute.toString();
                 let muteID = userIdToMuteStr;
                 // this was put here, to prevent accidental typos made by the bot
-                if (fuzzySearch(userIdToMuteStr, messageUID)) {
+                if (fuzzySearch(userIdToMuteStr, [messageUID])) {
                     muteID = messageUID;
                 }
                 const time = seconds ? seconds * 1000 : 0;
