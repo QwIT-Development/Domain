@@ -281,14 +281,11 @@ async function _internalMessageHandler(message, client, gemini) {
     const hasFunctionCalls = initialResponse.functionCalls && initialResponse.functionCalls.length > 0;
 
     if (hasFunctionCalls) {
-        // If there are function calls, we prioritize the function call flow.
-        // Add initial text to history if it exists (for context), but DO NOT send it to the user yet.
         if (hasInitialText) {
             let processedInitialThought = await processResponse(initialResponse.text, message);
             await addToHistory('model', processedInitialThought, channelId);
         }
 
-        // Add the function call itself to history
         state.history[channelId].push({
             role: 'model',
             parts: initialResponse.functionCalls.map(fc => ({ functionCall: fc }))
@@ -299,11 +296,6 @@ async function _internalMessageHandler(message, client, gemini) {
             toolResponses = await parseBotCommands(initialResponse.functionCalls, message, gemini);
         } catch (e) {
             console.error(`Error executing parseBotCommands: ${e.stack}`);
-            try {
-                await message.channel.send("I encountered an unexpected issue while trying to perform that action. Please try again later.");
-            } catch (sendError) {
-                console.error(`Failed to send error message to channel: ${sendError}`);
-            }
             toolResponses = initialResponse.functionCalls.map(fc => ({
                 name: fc.name,
                 response: { content: `An internal error occurred while attempting to execute the tool: ${fc.name}.` }
@@ -314,52 +306,38 @@ async function _internalMessageHandler(message, client, gemini) {
             functionResponse: { name: toolResponse.name, response: toolResponse.response, }
         }));
 
-        // Add function responses to history
         state.history[channelId].push({
-            role: 'user', // Note: This should ideally be 'function' or 'tool' role if API supports
+            role: 'user',
             parts: functionResponseParts,
         });
 
         let subsequentResponse;
         try {
-            subsequentResponse = await callGeminiAPI(channelId, gemini); // Get response after function execution
+            subsequentResponse = await callGeminiAPI(channelId, gemini);
         } catch (e) {
             return handleGeminiError(e, message, client, gemini);
         }
-
         let subsequentText = subsequentResponse.text || '';
         if (subsequentText.trim().length > 0) {
             subsequentText = await processResponse(subsequentText, message);
             await addToHistory('model', subsequentText, channelId);
-            await chunkedMsg(message, subsequentText); // Send the FINAL text from the function call flow
+            await chunkedMsg(message, subsequentText);
         }
-        // If subsequentText is empty, nothing more is sent from this path.
-        // The initial text (if any) was only added to history, not sent.
-
-        // Call these once after the function call path is complete
         await trimHistory(channelId);
         await bondUpdater(message.author.id);
-        return; // End of function call path
-
+        return;
     } else if (hasInitialText) {
-        // Path for: No function calls, but there IS initial text.
         let processedInitialText = await processResponse(initialResponse.text, message);
         await addToHistory('model', processedInitialText, channelId);
-        await chunkedMsg(message, processedInitialText); // Send the initial text
-
-        // Call these once after text-only path is complete
+        await chunkedMsg(message, processedInitialText);
         await trimHistory(channelId);
         await bondUpdater(message.author.id);
-        return; // End of text-only path
-
+        return;
     } else {
-        // Path for: No function calls AND no initial text (empty/silent response from Gemini)
-        await addToHistory('model', '', channelId); // Add empty model message for history consistency
-
-        // Call these once after empty response path
+        await addToHistory('model', '', channelId);
         await trimHistory(channelId);
         await bondUpdater(message.author.id);
-        return; // End of empty response path
+        return;
     }
 }
 
