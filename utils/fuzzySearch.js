@@ -15,7 +15,7 @@ const Fuse = require('fuse.js');
  * @desc
  * This returns a true/false value based on whether the search was successful.
  */
-function splitFuzzySearch(pattern, strings, options = {"includeScore": true}) {
+function splitFuzzySearch(pattern, strings, minscore = 0.1) {
     if (!pattern || !strings || strings.length === 0) {
         return false;
     }
@@ -32,10 +32,10 @@ function splitFuzzySearch(pattern, strings, options = {"includeScore": true}) {
             continue;
         }
 
-        const fuse = new Fuse(strings, options);
+        const fuse = new Fuse(strings, {includeScore: true});
         const results = fuse.search(cleanWord);
 
-        if (results.length > 0 && results[0].score <= 0.1) {
+        if (results.length > 0 && results[0].score <= minscore) {
             allWordsMatch = true;
             break;
         }
@@ -52,17 +52,18 @@ function splitFuzzySearch(pattern, strings, options = {"includeScore": true}) {
  * @param options - fuzzy.js settings (ignorable)
  * @returns {boolean} - true/false (pre-tuned)
  */
-function fuzzySearch(pattern, strings, options = {}) {
+function fuzzySearch(pattern, strings, minscore = 0.1) {
     if (!pattern || !strings || strings.length === 0) {
         return false;
     }
 
     const cleanWord = pattern.replace(/[^\p{L}\p{N}_]/gu, '');
 
-    const fuse = new Fuse(strings, options);
+    const fuse = new Fuse(strings, {includeScore: true});
     const results = fuse.search(cleanWord);
 
-    return results.length > 0 && results[0].score <= 0.1;
+    console.log(results)
+    return results.length > 0 && results[0].score <= minscore;
 }
 
 module.exports = {fuzzySearch, splitFuzzySearch};
