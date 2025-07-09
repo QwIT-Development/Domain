@@ -100,33 +100,27 @@ async function parseBotCommands(toolCalls, message) {
                     response.content = state.strings.muting.onlyServers;
                     break;
                 }
-
-                // Policy check: Non-owners can only mute themselves.
                 if (muteID !== message.author.id && !config.OWNERS.includes(message.author.id)) {
                     response.content = state.strings.muting.cantMuteOthers;
                     break;
                 }
-                // If the above passes, either owner is muting anyone, or user is muting self.
 
                 try {
                     const member = await guild.members.fetch(muteID);
                     if (!member) {
                         log(`Mute failed: Member ${muteID} not found after fetch.`, 'warn', 'botCommands.js');
                         response.content = state.strings.cantFindUser;
-                        break; // Exit if member not found
+                        break;
                     }
 
-                    await member.timeout(time, reason); // Attempt mute
-                    // If timeout succeeds, primary action is done.
+                    await member.timeout(time, reason);
                     log(`User ${muteID} muted for ${time / 1000}s. Reason: ${reason}`, 'info', 'botCommands.js');
                     reactionsToAdd.add(state.emojis["mute"]);
-                    // Set success message for Gemini *early*
                     const user = await message.client.users.fetch(muteID);
                     response.content = `User ${user.username} muted successfully.`; // Default success
 
-                    // Subsequent actions (DB, DM) are best-effort and can append to/modify response or just log errors.
                     try {
-                        state.muteCount += 1; // Local counter
+                        state.muteCount += 1;
                         await reputation(muteID, "decrease");
 
                         const updatedUser = await prisma.user.update({
@@ -139,28 +133,24 @@ async function parseBotCommands(toolCalls, message) {
                                 where: { id: muteID },
                                 data: { banned: true, banMessage: `Automated action after ${config.BAN_AFTER.toString()} mutes` }
                             });
-                            await user.send({ // DM about auto-ban
+                            await user.send({
                                 content: state.strings.muting.autoBan.replace("{COUNT}", config.BAN_AFTER.toString())
                             });
-                            // Potentially append to response.content: e.g., response.content += " User also auto-banned."
                         }
 
-                        await user.send({ // DM about mute
+                        await user.send({
                             content: `${state.strings.muteMessage.replace("[REASON]", reason).replace("[TIME]", time / 1000)}\n${state.strings.automatedMessage}`
                         });
 
                     } catch (postMuteError) {
                         console.error(`Mute for ${muteID} succeeded, but post-mute actions (DB/DM) failed: ${postMuteError}`);
-                        // Modify response to indicate partial success if desired, e.g.:
-                        // response.content = `User ${user.username} muted, but there was an issue with post-mute processing.`;
-                        // For now, we'll keep the simple success message for the mute itself.
                     }
 
-                } catch (e) { // Catches errors from initial fetch or .timeout()
-                    if (e.code === 10007 || e.code === 10013) { // Unknown Member or User
+                } catch (e) {
+                    if (e.code === 10007 || e.code === 10013) {
                         log(`Mute failed: Member ${muteID} not found in guild. Error: ${e.message}`, 'warn', 'botCommands.js');
                         response.content = state.strings.cantFindUser;
-                    } else if (e.code === 50013) { // Missing Permissions
+                    } else if (e.code === 50013) {
                         console.error(`Mute failed for ${muteID}: Missing permissions. Error: ${e.message}`);
                         response.content = state.strings.muting.notEnoughPerms;
                     } else {

@@ -62,7 +62,6 @@ function fuzzySearch(pattern, strings, minscore = 0.1) {
     const fuse = new Fuse(strings, {includeScore: true});
     const results = fuse.search(cleanWord);
 
-    console.log(results)
     return results.length > 0 && results[0].score <= minscore;
 }
 
