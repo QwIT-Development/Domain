@@ -15,11 +15,11 @@
   },
   "dependencies": {
     "@discordjs/rest": "^2.5.1",
-    "@google/genai": "^1.8.0",
+    "@google/genai": "^1.9.0",
     "@google/generative-ai": "^0.24.1",
-    "@modelcontextprotocol/sdk": "^1.15.0",
+    "@modelcontextprotocol/sdk": "^1.15.1",
     "@prisma/client": "^6.11.1",
-    "@sentry/bun": "^9.35.0",
+    "@sentry/bun": "^9.38.0",
     "cheerio": "^1.1.0",
     "discord-api-types": "^0.38.15",
     "discord.js": "^14.21.0",
@@ -30,7 +30,7 @@
     "ora": "^8.2.0",
     "prisma": "^6.11.1",
     "robots-parser": "^3.0.1",
-    "sharp": "^0.34.2",
+    "sharp": "^0.34.3",
     "toml": "^3.0.0"
   },
   "overrides": {
