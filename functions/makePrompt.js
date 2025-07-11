@@ -11,6 +11,7 @@ const log = require('../utils/betterLogs');
 const { getContext } = require('../utils/searx');
 const { getMemories } = require('../functions/memories');
 const knowledgePath = global.dirname + '/knowledge';
+const state = require('../initializers/state');
 
 /**
  * Formats the time to a much better format
@@ -35,7 +36,13 @@ function formatDate(date) {
  * @returns {Promise<string>}
  */
 async function makePrompt(channelId, showLog = true) {
-    const promptPath = config.CHANNELS[channelId]?.prompt;
+    let promptPath;
+    // i really hope this will work
+    if (Object.hasOwn(state.tempChannels, channelId)) {
+        promptPath = config.DEFAULT_PROMPT;
+    } else {
+        promptPath = config.CHANNELS[channelId]?.prompt;
+    }
     // noinspection JSUnresolvedReference
     const aliases = config.ALIASES;
     let prompt;
