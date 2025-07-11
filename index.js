@@ -114,6 +114,10 @@ async function main() {
     global.geminiModel = await model(state.history);
     setInterval(async () => {
         for (const channelId in state.history) {
+            // prevent tempchannels from being saved
+            if (Object.hasOwn(state.tempChannels, channelId)) {
+                continue;
+            }
             if (Object.hasOwn(state.history, channelId)) {
                 await saveHistory(channelId, state.history[channelId]);
             }

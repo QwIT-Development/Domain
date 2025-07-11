@@ -29,5 +29,6 @@ module.exports = {
     config: null,
     messageQueues: {},
     isProcessing: {},
-    prompts: {}
+    prompts: {},
+    tempChannels: {},
 };

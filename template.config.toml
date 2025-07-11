@@ -75,6 +75,9 @@ TOS_URL = ""
 # this excludes using slash commands
 BAN_AFTER = 20
 
+# the default prompt that will be used when using the /call command
+DEFAULT_PROMPT = "default.md"
+
 # channels to be tracked
 [CHANNELS]
 # "12312312324312123" = { prompt = "default.md", wikis = [] }
