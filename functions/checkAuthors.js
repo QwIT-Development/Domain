@@ -81,19 +81,7 @@ async function checkAuthors(message, client) {
     }
 
     // return true if checks didn't get triggered
-    const channelId = message.channel.id;
-    const channelConfig = config.CHANNELS[channelId];
-    // contextual respond thingy
-    if (channelConfig?.contextRespond) {
-        const history = state.history[channelId] || [];
-        const prompt = await makePrompt(channelId, false);
-        const response = await shouldRespond(message, client, history, prompt);
-        const should = response.includes('true');
-        console.log(`Should respond: ${should} for channel ${channelId} with message: ${message.content}`);
-        return should;
-    } else {
-        return true;
-    }
+    return true;
 }
 
 /**
@@ -106,8 +94,14 @@ async function checkAuthors(message, client) {
 async function checkForMentions(message, client) {
     const channelId = message.channel.id;
     const channelConfig = config.CHANNELS[channelId];
-    // no fucking matter if the bot is mentioned, it will respond based on the context
-    if (channelConfig?.contextRespond) return true;
+   // contextual respond thingy
+    if (channelConfig?.contextRespond) {
+        const history = state.history[channelId] || [];
+        const prompt = await makePrompt(channelId, false);
+        const response = await shouldRespond(message, client, history, prompt);
+        const should = response.includes('true');
+        return should;
+    }
 
     // check if bot is mentioned
     const mentioned = message.mentions.users.has(client.user.id);
