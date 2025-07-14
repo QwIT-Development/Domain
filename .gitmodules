@@ -1,3 +1,4 @@
 [submodule "webui/css"]
 	path = webui/css
-	url = https://git.mnus.moe/balazsmanus/kitten.git
+	url = https://git.anchietae.cc/anchietae/kitten.git
+	branch = master
