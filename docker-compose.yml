@@ -6,13 +6,13 @@ services:
       - "4500:4500"
     volumes:
       # you may want to change the configuration
-      - ./config.toml:/app/config.toml:ro
+      - ./config.toml:/app/config.toml:ro,z
       # this should stay modifiable
-      - ./data:/app/data/running
+      - ./data:/app/data/running:z
       # path to u r prompts
-      - ./prompts:/app/prompts:ro
+      - ./prompts:/app/prompts:ro,z
       # pass timezone and localtime to container
       # mar felfogom magam kotni ha nem jo
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro,z
+      - /etc/localtime:/etc/localtime:ro,z
     restart: unless-stopped
