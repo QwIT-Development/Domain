@@ -20,7 +20,7 @@ const task = async () => {
 
         for (const user of users) {
             if (user.lastInteraction < sevenDaysAgo && !user.decayed) {
-                const newRep = user.repPoint - 10;
+                const newRep = user.repPoint - 2; // was 10, but it would be too much
                 await prisma.user.update({
                     where: { id: user.id },
                     data: { repPoint: newRep, decayed: true },
