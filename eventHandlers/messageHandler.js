@@ -159,7 +159,8 @@ async function handleGeminiError(e, message, client, gemini) {
         if (e.stack) {
             console.error(e.stack);
         }
-        return message.channel.send("Unhandled error. (Refer to console)");
+        await message.channel.send("Unhandled error. (Refer to console)");
+        return;
     }
 }
 

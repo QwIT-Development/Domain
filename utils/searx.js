@@ -30,12 +30,17 @@ const options = {
 };
 
 async function callGemini(genAI, prompt, configOverride = {}, history = []) {
+    let promptText = "";
+    if (history.length > 0) {
+        promptText = prompt;
+    }
     const defaultConfig = {
         temperature: 0.7,
         topP: 0.95,
         topK: 40,
         maxOutputTokens: 8192,
-        responseMimeType: 'text/plain'
+        responseMimeType: 'text/plain',
+        systemInstruction: promptText,
     };
 
     const mergedConfig = { ...defaultConfig, ...configOverride };
@@ -66,6 +71,10 @@ async function callGemini(genAI, prompt, configOverride = {}, history = []) {
             }
             return responseText;
         } catch (error) {
+            console.error('Error in callGemini:', error);
+            if (error.response?.data) {
+                console.error('Gemini API response data:', error.response.data);
+            }
             if (error.message?.includes('500')) {
                 if (i < maxRetries - 1) {
                     await new Promise(resolve => setTimeout(resolve, 1000));
