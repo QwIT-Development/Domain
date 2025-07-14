@@ -21,7 +21,7 @@
     "@prisma/client": "^6.11.1",
     "@sentry/bun": "^9.38.0",
     "cheerio": "^1.1.0",
-    "discord-api-types": "^0.38.15",
+    "discord-api-types": "^0.38.16",
     "discord.js": "^14.21.0",
     "ejs": "^3.1.10",
     "fuse.js": "^7.1.0",
