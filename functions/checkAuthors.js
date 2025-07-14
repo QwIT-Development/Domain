@@ -94,14 +94,6 @@ async function checkAuthors(message, client) {
 async function checkForMentions(message, client) {
     const channelId = message.channel.id;
     const channelConfig = config.CHANNELS[channelId];
-   // contextual respond thingy
-    if (channelConfig?.contextRespond) {
-        const history = state.history[channelId] || [];
-        const prompt = await makePrompt(channelId, false);
-        const response = await shouldRespond(message, client, history, prompt);
-        const should = response.includes('true');
-        return should;
-    }
 
     // check if bot is mentioned
     const mentioned = message.mentions.users.has(client.user.id);
@@ -115,7 +107,16 @@ async function checkForMentions(message, client) {
     if (replied) return true;
 
     // noinspection RedundantIfStatementJS
-    return (splitFuzzySearch(message.content, config.ALIASES));
+    if (splitFuzzySearch(message.content, config.ALIASES)) return true;
+
+    // contextual respond thingy
+    if (channelConfig?.contextRespond) {
+        const history = state.history[channelId] || [];
+        const prompt = await makePrompt(channelId, false);
+        const response = await shouldRespond(message, client, history, prompt);
+        const should = response.includes('true');
+        return should;
+    }
 }
 
 module.exports = { checkAuthors, checkForMentions };
