@@ -68,6 +68,12 @@ async function createSummariesAndClearHistories() {
     try {
         const summarizePromptTemplate = fs.readFileSync(path.join(global.dirname, 'data', 'summarize.md'), 'utf8');
 
+        // pretty good at night cleaning
+        for (const channelId of Object.keys(state.tempChannels)) {
+            delete state.history[channelId];
+        }
+        state.tempChannels = {};
+
         for (const channelId in state.history) {
             if (Object.hasOwn(state.history, channelId)) {
                 const history = state.history[channelId];

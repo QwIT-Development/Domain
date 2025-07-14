@@ -25,16 +25,22 @@ module.exports = {
 
             const channel = interaction.channel.id;
 
-            if (state.tempChannels[channel]) {
-                await interaction.editReply('This channel is already tracked by the bot.');
+            // Check if channel is already in permanent config
+            if (Object.keys(config.CHANNELS).includes(channel)) {
+                await interaction.editReply('This channel is configured as a tracked channel. No need to call the bot here.');
                 return;
             }
 
-            state.tempChannels[channel] = true;
-            state.history[channel] = [];
-            global.geminiModel = await model(state.history, false);
-
-            await interaction.editReply('The bot is now tracking this channel.');
+            if (state.tempChannels[channel]) {
+                delete state.tempChannels[channel];
+                delete state.history[channel];
+                await interaction.editReply('The bot will no longer track this channel.');
+            } else {
+                state.tempChannels[channel] = true;
+                state.history[channel] = [];
+                global.geminiModel = await model(state.history, false); // reinit model
+                await interaction.editReply('The bot is now tracking this channel.');
+            }
         } else {
             await interaction.reply({
                 content: 'You have no permission to use this command.',
