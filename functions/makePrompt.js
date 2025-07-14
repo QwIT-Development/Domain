@@ -41,7 +41,7 @@ async function makePrompt(channelId, showLog = true) {
     if (Object.hasOwn(state.tempChannels, channelId)) {
         promptPath = config.DEFAULT_PROMPT;
     } else {
-        promptPath = config.CHANNELS[channelId]?.prompt;
+        promptPath = config.CHANNELS[channelId]?.prompt || config.DEFAULT_PROMPT;
     }
     // noinspection JSUnresolvedReference
     const aliases = config.ALIASES;
