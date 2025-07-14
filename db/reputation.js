@@ -31,14 +31,14 @@ async function reputation(id, type = "") {
         if (newRep > maxValue) {
             newRep = maxValue;
         }
-        await prisma.user.update({ where: { id }, data: { repPoint: newRep } });
+        await prisma.user.update({ where: { id }, data: { repPoint: newRep, lastInteraction: new Date(), decayed: false } });
         return newRep;
     } else if (type === "decrease") {
         let newRep = user.repPoint - 1;
         if (newRep < -maxValue) {
             newRep = -maxValue;
         }
-        await prisma.user.update({ where: { id }, data: { repPoint: newRep } });
+        await prisma.user.update({ where: { id }, data: { repPoint: newRep, lastInteraction: new Date(), decayed: false } });
         return newRep;
     } else {
         return user.repPoint;
@@ -64,7 +64,7 @@ async function reputationSet(id, value) {
     if (newRep > maxValue) {
         newRep = maxValue;
     }
-    await prisma.user.update({ where: { id }, data: { repPoint: newRep } });
+    await prisma.user.update({ where: { id }, data: { repPoint: newRep, lastInteraction: new Date(), decayed: false } });
     return newRep;
 }
 

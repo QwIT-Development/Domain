@@ -25,6 +25,9 @@ module.exports = {
         }
 
         let content = state.strings.reputation.score.replace("{SCORE}", score.toString());
+        if (user.decayed) {
+            content += state.strings.reputation.decayed + '\n';
+        }
         if (score < 0) {
             content += state.strings.reputation.youNeed0.replace("{SCORE}", Math.abs(score).toString());
         }

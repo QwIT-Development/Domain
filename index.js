@@ -141,6 +141,7 @@ async function main() {
     state.locationHelper.init = "init complete";
 
     require('./cronJobs/cronReset'); // this should be run after bot is ready
+    require('./cronJobs/repDecay');
     require('./webui/index');
 
     discordClient.on(Events.MessageCreate, async message => {

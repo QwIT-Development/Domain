@@ -16,6 +16,8 @@ model User {
   totalMsgCount Int @default(0)
   bondLvl Int @default(0)
   muteCount Int @default(0)
+  lastInteraction DateTime @default(now())
+  decayed Boolean @default(false)
 }
 
 model Memory {
