@@ -104,6 +104,8 @@ async function checkAuthors(message, client) {
  * @async
  */
 async function checkForMentions(message, client) {
+    const channelId = message.channel.id;
+    const channelConfig = config.CHANNELS[channelId];
     // no fucking matter if the bot is mentioned, it will respond based on the context
     if (channelConfig?.contextRespond) return true;
 
