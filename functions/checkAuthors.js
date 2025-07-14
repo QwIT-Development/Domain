@@ -4,13 +4,15 @@
 */
 
 
-const {loadConfig} = require('../initializers/configuration');
+const { loadConfig } = require('../initializers/configuration');
 const config = loadConfig();
 const jailbreaks = require('../data/jailbreaks.json');
 const state = require('../initializers/state');
 const log = require('../utils/betterLogs');
-const {splitFuzzySearch} = require('../utils/fuzzySearch');
+const { splitFuzzySearch } = require('../utils/fuzzySearch');
 const { PrismaClient } = require('@prisma/client');
+const { shouldRespond } = require('./shouldRespond');
+const { makePrompt } = require('./makePrompt');
 const prisma = new PrismaClient();
 
 
@@ -69,7 +71,7 @@ async function checkAuthors(message, client) {
             }
 
             const member = await guild.members.fetch(userId);
-            await member.timeout(time, state.strings.jailbreak-attempt);
+            await member.timeout(time, state.strings.jailbreak - attempt);
         } catch (e) {
             // ignoralhato hiba, anyways megy a false
             log(`Failed to mute user: ${e}`, 'warn', 'checkAuthors.js');
@@ -79,7 +81,16 @@ async function checkAuthors(message, client) {
     }
 
     // return true if checks didn't get triggered
-    return true;
+    const channelId = message.channel.id;
+    const channelConfig = config.CHANNELS[channelId] || state.tempChannels[channelId];
+    // contextual respond thingy
+    if (channelConfig?.contextRespond) {
+        const history = state.history[channelId] || [];
+        const prompt = await makePrompt(message, client);
+        return await shouldRespond(message, client, history, prompt);
+    } else {
+        return true;
+    }
 }
 
 /**
@@ -105,4 +116,4 @@ async function checkForMentions(message, client) {
     return (splitFuzzySearch(message.content, config.ALIASES));
 }
 
-module.exports = {checkAuthors, checkForMentions};
+module.exports = { checkAuthors, checkForMentions };

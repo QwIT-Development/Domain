@@ -80,7 +80,11 @@ DEFAULT_PROMPT = "default.md"
 
 # channels to be tracked
 [CHANNELS]
-# "12312312324312123" = { prompt = "default.md", wikis = [] }
+# prompt: prompt file to be used
+# wikis: list of wiki urls to be used in the channel, can be useful for context
+# contextRespond: if true, the bot will use a context-aware response system
+
+# "12312312324312123" = { prompt = "default.md", wikis = [], contextRespond = false }
 
 # timings, should be in milliseconds
 # these are all undocumented for a reason

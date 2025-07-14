@@ -5,7 +5,7 @@
 
 
 const { convert } = require('html-to-text');
-const {loadConfig} = require('../initializers/configuration');
+const { loadConfig } = require('../initializers/configuration');
 const config = loadConfig();
 const state = require('../initializers/state');
 const log = require('./betterLogs');
@@ -29,7 +29,7 @@ const options = {
     ]
 };
 
-async function callGemini(genAI, prompt, configOverride = {}) {
+async function callGemini(genAI, prompt, configOverride = {}, history = []) {
     const defaultConfig = {
         temperature: 0.7,
         topP: 0.95,
@@ -43,11 +43,20 @@ async function callGemini(genAI, prompt, configOverride = {}) {
     const maxRetries = 5;
     for (let i = 0; i < maxRetries; i++) {
         try {
-            const response = await genAI.models.generateContentStream({
-                model: 'gemini-2.0-flash-lite',
-                config: mergedConfig,
-                contents: [{ role: 'user', parts: [{ text: prompt }] }]
-            });
+            let response;
+            if (history.length > 0) {
+                response = await genAI.models.generateContentStream({
+                    model: 'gemini-2.0-flash-lite',
+                    config: mergedConfig,
+                    contents: history
+                });
+            } else {
+                response = await genAI.models.generateContentStream({
+                    model: 'gemini-2.0-flash-lite',
+                    config: mergedConfig,
+                    contents: [{ role: 'user', parts: [{ text: prompt }] }]
+                });
+            }
 
             let responseText = '';
             for await (const chunk of response) {
@@ -115,7 +124,8 @@ async function search(query, genAI) {
     }
 }
 
-async function analyzer(genAI, query, results) {    const prompt = `Analyze these search results for the query: "${query}"
+async function analyzer(genAI, query, results) {
+    const prompt = `Analyze these search results for the query: "${query}"
 
 Search Results:
 ${results.map((result, index) =>
@@ -130,7 +140,7 @@ Rank these results by relevance to the query. Consider:
 Return ONLY a JSON array of result indices (1-based) in order of relevance. No explanations, no markdown formatting, just the raw JSON array.
 Example format: [3, 1, 7, 2, 5]
 Include at most 8 results in your ranking.`;
-try {
+    try {
         const responseText = await callGemini(genAI, prompt, {
             temperature: 0.5, topP: 0.8, maxOutputTokens: 200
         });
