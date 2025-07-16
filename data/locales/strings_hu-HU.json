@@ -43,7 +43,7 @@
   "searchFailed": "[Nem sikerült keresni]",
   "commandRunFailed": "Nem sikerült futtatni a parancsot",
   "amIBanned": {
-    "couldntCheck": "Nem tudtam lekérdezni a jogosltságod. Kérlek próbáld újra később.",
+    "couldntCheck": "Couldn't check your status. Please try again later.",
     "canUse": "A fiókod használhatja a botot.",
     "banned": "El lettél tiltva a bottól.\nOk: {REASON}\nÁSZF:{TOS}"
   },
@@ -60,6 +60,6 @@
     "unavailable": "Nem elérhető összesítő erre a csatornára.",
     "attached": "A csatorna összesítője csatolva."
   },
-  "motd": "Pingelj, vagy válaszolj az üzenetemre!",
+  "motd": "Pingelj, vagy válaszolj az egyik üzenetemre!",
   "sleeping": "Alvás eddig: {TIME}"
 }
