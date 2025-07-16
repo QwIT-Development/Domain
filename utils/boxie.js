@@ -45,10 +45,4 @@ async function runCommandInSandbox(commandList) {
     }
 }
 
-runCommandInSandbox(commandToRun).then(result => {
-    if (result.error) {
-        console.error('Execution failed:', result);
-    } else {
-        console.log('STDOUT:', result.stdout);
-    }
-});
+module.exports = {runCommandInSandbox};
