@@ -18,6 +18,7 @@ const { reputation } = require("../db/reputation");
 const searchHandler = require("./searchHandler");
 const { svgToPng } = require("../utils/svg2png");
 const {fuzzySearch} = require("../utils/fuzzySearch");
+const {runCommandInSandbox} = require("../utils/boxie");
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
@@ -192,6 +193,32 @@ async function parseBotCommands(toolCalls, message) {
                     }
                 } else {
                     response.content = state.strings.searchFailed;
+                }
+                break;
+            }
+            case 'terminal': {
+                const { command_string: commandString } = args;
+                if (commandString) {
+                    try {
+                        const commandList = commandString.split(' ');
+                        const result = await runCommandInSandbox(commandList);
+                        let output = '';
+                        if (result.stdout) {
+                            output += `stdout:\n${result.stdout}\n`;
+                        }
+                        if (result.stderr) {
+                            output += `stderr:\n${result.stderr}\n`;
+                        }
+                        if (result.error) {
+                            output += `error:\n${result.error}\n`;
+                        }
+                        response.content = output;
+                    } catch (e) {
+                        console.error(`Terminal command failed for: "${commandString}" - ${e}`);
+                        response.content = `Failed to execute command: ${e.message || "Unknown error"}`;
+                    }
+                } else {
+                    response.content = "Empty command not executed.";
                 }
                 break;
             }
