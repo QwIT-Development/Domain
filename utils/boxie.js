@@ -5,16 +5,16 @@ const config = loadConfig();
 
 /**
  * Executes a command in a boxie container.
- * @param {string[]} commandList - the command and arguments in a list example: ['zypper', '--non-interactive', 'info', 'htop']
+ * @param {string} commandString - the command and arguments in a list example: ['zypper', '--non-interactive', 'info', 'htop']
  * @returns {Promise<object>} - execution result
  */
-async function runCommandInSandbox(commandList) {
+async function runCommandInSandbox(commandString) {
     // check for flag
     if (!config.ALLOW_SANDBOX) {
         return { error: 'Sandbox execution is disabled in the configuration.' };
     }
 
-    const payload = { command: commandList };
+    const payload = { command: commandString };
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 90000);
 

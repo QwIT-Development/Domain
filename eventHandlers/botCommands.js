@@ -200,8 +200,7 @@ async function parseBotCommands(toolCalls, message) {
                 const { command_string: commandString } = args;
                 if (commandString) {
                     try {
-                        const commandList = commandString.split(' ');
-                        const result = await runCommandInSandbox(commandList);
+                        const result = await runCommandInSandbox(commandString);
                         let output = '';
                         if (result.stdout) {
                             output += `stdout:\n${result.stdout}\n`;
