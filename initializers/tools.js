@@ -1,3 +1,6 @@
+const { loadConfig } = require('../initializers/configuration');
+const config = loadConfig();
+
 const tools = [
   {
     functionDeclarations: [
@@ -86,8 +89,23 @@ const tools = [
             "string"
           ]
         }
-      }
-    ]
+      },
+      config.ALLLOW_SANDBOX ? {
+        "name": "terminal",
+        "description": "Executes a shell command in an openSUSE Linux environment. This is useful for file system operations (creating, reading, writing files), running scripts, and other command-line tasks. The command's standard output and error will be returned.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command_string": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "command_string"
+          ]
+        }
+      } : null,
+    ].filter(Boolean)
   }
 ]
 
