@@ -59,6 +59,8 @@ REMOTE_LISTS = []
 
 # enables the thinking capabilities of the model (if it supports it)
 ENABLE_THINKING = true
+# let's the bot think more about the question (bumps the 8000 thinking budget to 20000)
+DEEPER_THINKING = true
 
 # set to false, so it doesn't "bootloop"
 NEEDS_SETUP = true

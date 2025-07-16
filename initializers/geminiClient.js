@@ -14,6 +14,11 @@ const state = require('./state');
 const tools = require('./tools');
 
 async function model(history, showLog = true) {
+    let tbudget = 0;
+    if (config.ENABLE_THINKING) {
+        tbudget = config.DEEPER_THINKING ? 20000 : 8000;
+    }
+
     state.locationHelper.init = "geminiClient.js/model";
     await changeSpinnerText("Creating gemini models...");
     const models = {};
@@ -28,7 +33,7 @@ async function model(history, showLog = true) {
             responseMimeType: 'text/plain',
             systemInstruction: await makePrompt(channel, showLog),
             thinkingConfig: {
-                thinkingBudget: config.ENABLE_THINKING ? 8000 : 0,
+                thinkingBudget: tbudget,
             },
             tools
         };
