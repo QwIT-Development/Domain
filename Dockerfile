@@ -1,11 +1,11 @@
 # https://hub.docker.com/r/oven/bun/tags
-FROM oven/bun:alpine AS deps
+FROM docker.io/oven/bun:alpine AS deps
 WORKDIR /app
 COPY ./package.json bun.lock ./
 RUN --mount=type=cache,target=/root/.bun/install/cache \
 bun install --frozen-lockfile
 
-FROM oven/bun:alpine AS final
+FROM docker.io/oven/bun:alpine AS final
 WORKDIR /app
 
 ENV DATABASE_URL="file:/app/data/running/db.sqlite"
