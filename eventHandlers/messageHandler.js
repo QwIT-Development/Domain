@@ -239,9 +239,9 @@ async function _internalMessageHandler(message, client, gemini) {
 
     const formattedMessage = await formatUserMessage(message, repliedTo);
 
+    addToHistory('user', formattedMessage, channelId);
     if (!await checkForMentions(message, client)) {
         state.msgCount += 1;
-        return addToHistory('user', formattedMessage, channelId);
     }
 
     const cronReset = require('../cronJobs/cronReset');
