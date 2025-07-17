@@ -30,10 +30,11 @@ function simplifyEmoji(content) {
     return content;
 }
 
-async function formatUserMessage(message, repliedTo) {
+async function formatUserMessage(message, repliedTo, replyReason = '') {
     const score = await reputation(message.author.id);
     const date = formatDate(new Date());
     let replyContent = "";
+    let systemContext = "";
     if (repliedTo) {
         replyContent = `[Parent message from reply]
 Author-ID: ${repliedTo.author.id}
@@ -44,7 +45,12 @@ Content:
 ${simplifyEmoji(repliedTo.content)}
 \`\`\``;
     }
-    return `--- Conversation History ---
+    if (replyReason?.length > 0) {
+        systemContext = `--- System Context ---
+${replyReason}\n`;
+    }
+    return `${systemContext}
+--- Conversation History ---
 ${replyContent}
 
 [Current message]
@@ -70,14 +76,16 @@ async function callGeminiAPI(channelId, gemini) {
     });
 
     for await (const chunk of response) {
-        if (chunk.functionCalls) {
+        for (const part of chunk.candidates[0].content.parts) {
+        if (part.functionCalls) {
             if (!functionCalls) {
                 functionCalls = [];
             }
             functionCalls.push(...chunk.functionCalls);
-        } else if (chunk.text) {
+        } else if (part.text) {
             responseMsg += chunk.text;
         }
+    }
     }
 
     if (functionCalls) {
@@ -160,7 +168,6 @@ async function handleGeminiError(e, message, client, gemini) {
             console.error(e.stack);
         }
         await message.channel.send("Unhandled error. (Refer to console)");
-        return;
     }
 }
 
@@ -239,9 +246,18 @@ async function _internalMessageHandler(message, client, gemini) {
 
     const formattedMessage = await formatUserMessage(message, repliedTo);
 
+    // add to history, bc contextual responding needs it
     addToHistory('user', formattedMessage, channelId);
-    if (!await checkForMentions(message, client)) {
+    const mentioned = await checkForMentions(message, client);
+
+    if (mentioned.shouldRespond) {
+        // remove last message from history for better looks
+        if (state.history[channelId] && state.history[channelId].length > 0) {
+            state.history[channelId].pop();
+        }
+    } else {
         state.msgCount += 1;
+        return;
     }
 
     const cronReset = require('../cronJobs/cronReset');
@@ -262,7 +278,7 @@ async function _internalMessageHandler(message, client, gemini) {
         });
     }
     msgParts.push({
-        text: formattedMessage
+        text: await formatUserMessage(message, repliedTo, mentioned.respondReason)
     });
 
     await trimHistory(channelId);
@@ -322,15 +338,14 @@ async function _internalMessageHandler(message, client, gemini) {
         if (subsequentText.trim().length > 0) {
             subsequentText = await processResponse(subsequentText, message);
             await addToHistory('model', subsequentText, channelId);
-            await chunkedMsg(message, subsequentText);
+            await chunkedMsg(message, subsequentText, mentioned.reply);
         }
         await trimHistory(channelId);
         await bondUpdater(message.author.id);
-        return;
     } else if (hasInitialText) {
         let processedInitialText = await processResponse(initialResponse.text, message);
         await addToHistory('model', processedInitialText, channelId);
-        await chunkedMsg(message, processedInitialText);
+        await chunkedMsg(message, processedInitialText, mentioned.reply);
         await trimHistory(channelId);
         await bondUpdater(message.author.id);
         return;
@@ -343,7 +358,7 @@ async function _internalMessageHandler(message, client, gemini) {
 }
 
 // longest function with 55 "Cognitive Complexity", good to go for now, also we need to take mute command apart, might be making a different module
-async function chunkedMsg(message, response) {
+async function chunkedMsg(message, response, reply = true) {
     // check if response empty
     if (response.trim().length === 0) {
         return;
@@ -374,13 +389,20 @@ async function chunkedMsg(message, response) {
     if (response.length <= chunkSize && response.trim().length > 0) {
         if (codeBlock.trim().length > 0) {
             try {
-                await message.reply({
-                    content: response,
-                    files: [artifactPath]
-                });
+                if (reply) {
+                    await message.reply({
+                        content: response,
+                        files: [artifactPath]
+                    });
+                } else {
+                    await message.channel.send({
+                        content: response,
+                        files: [artifactPath]
+                    });
+                }
                 fs.unlinkSync(artifactPath);
             } catch (e) {
-                log(`Failed to reply to message (it may have been deleted): ${e}`, 'warn', 'messageHandler.js');
+                log(`Failed to send/reply to message (it may have been deleted): ${e}`, 'warn', 'messageHandler.js');
                 if (fs.existsSync(artifactPath)) {
                     fs.unlinkSync(artifactPath);
                 }
@@ -388,9 +410,13 @@ async function chunkedMsg(message, response) {
             }
         } else {
             try {
-                await message.reply(response);
+                if (reply) {
+                    await message.reply(response);
+                } else {
+                    await message.channel.send(response);
+                }
             } catch (e) {
-                log(`Failed to reply to message (it may have been deleted): ${e}`, 'warn', 'messageHandler.js');
+                log(`Failed to send/reply to message (it may have been deleted): ${e}`, 'warn', 'messageHandler.js');
                 return;
             }
         }
@@ -427,9 +453,13 @@ async function chunkedMsg(message, response) {
 
     if (chunks.length > 0) {
         try {
-            await message.reply(chunks[0]);
+            if (reply) {
+                await message.reply(chunks[0]);
+            } else {
+                await message.channel.send(chunks[0]);
+            }
         } catch (e) {
-            log(`Failed to reply to message with the first chunk (it may have been deleted): ${e}`, 'warn', 'messageHandler.js');
+            log(`Failed to send/reply to message with the first chunk (it may have been deleted): ${e}`, 'warn', 'messageHandler.js');
             if (codeBlock.trim().length > 0 && fs.existsSync(artifactPath)) {
                 fs.unlinkSync(artifactPath);
             }

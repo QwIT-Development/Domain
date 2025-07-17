@@ -94,30 +94,36 @@ async function checkAuthors(message, client) {
 async function checkForMentions(message, client) {
     const channelId = message.channel.id;
     const channelConfig = config.CHANNELS[channelId];
+    const generic = { shouldRespond: true, respondReason: 'Bot was mentioned', reply: true };
 
     // check if bot is mentioned
     const mentioned = message.mentions.users.has(client.user.id);
-    if (mentioned) return true;
+    if (mentioned) return generic;
 
     // check if user is replying to the bot
     // noinspection JSUnresolvedReference
     const replied = message.reference?.messageId &&
         (await message.channel.messages.fetch(message.reference.messageId))
             .author.id === client.user.id;
-    if (replied) return true;
+    if (replied) return generic;
 
     // noinspection RedundantIfStatementJS
-    if (splitFuzzySearch(message.content, config.ALIASES)) return true;
+    if (splitFuzzySearch(message.content, config.ALIASES)) return generic;
 
     // contextual respond thingy
     if (channelConfig?.contextRespond) {
-        console.log('contextual responding') //TODO: remove this
         const history = state.history[channelId] || [];
         const prompt = await makePrompt(channelId, false);
-        const response = await shouldRespond(message, client, history, prompt);
-        const should = response.includes('true');
-        return should;
+        let response = await shouldRespond(message, client, history, prompt);
+        const should = response.shouldRespond;
+        if (should === true) return {
+            shouldRespond: true,
+            respondReason: response.respondReason,
+            reply: false
+        };
     }
+
+    return { shouldRespond: false, respondReason: 'No mention or context', reply: false };
 }
 
 module.exports = { checkAuthors, checkForMentions };

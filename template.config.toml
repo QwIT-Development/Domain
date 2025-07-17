@@ -58,6 +58,7 @@ PROXIES = []
 REMOTE_LISTS = []
 
 # enables the thinking capabilities of the model (if it supports it)
+# supported models are anything that is above gemini 2.5 *
 ENABLE_THINKING = true
 
 # the gemini api key for Contextual Responding, useful if your bot gets a lot of messages
