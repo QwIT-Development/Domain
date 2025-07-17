@@ -202,19 +202,31 @@ async function parseBotCommands(toolCalls, message) {
                     try {
                         const result = await runCommandInSandbox(commandString);
                         let output = '';
-                        if (result.stdout) {
-                            output += `stdout:\n${result.stdout}\n`;
-                        }
-                        if (result.stderr) {
-                            output += `stderr:\n${result.stderr}\n`;
-                        }
+
                         if (result.error) {
-                            output += `error:\n${result.error}\n`;
+                            output += `Error: ${result.error}\n`;
+                            if (result.status) {
+                                output += `Status: ${result.status}\n`;
+                            }
+                            if (result.details) {
+                                const detailsString = typeof result.details === 'object' ? JSON.stringify(result.details, null, 2) : result.details;
+                                output += `Details: ${detailsString}\n`;
+                            }
+                        } else {
+                            if (result.stdout) {
+                                output += `stdout:\n${result.stdout}\n`;
+                            }
+                            if (result.stderr) {
+                                output += `stderr:\n${result.stderr}\n`;
+                            }
+                            if (result.cwd) {
+                                output += `cwd: ${result.cwd}\n`;
+                            }
                         }
-                        response.content = output;
+                        response.content = output.trim();
                     } catch (e) {
                         console.error(`Terminal command failed for: "${commandString}" - ${e}`);
-                        response.content = `Failed to execute command: ${e.message || "Unknown error"}`;
+                        response.content = `Failed to execute command: An unexpected error occurred.`;
                     }
                 } else {
                     response.content = "Empty command not executed.";

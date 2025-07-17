@@ -32,16 +32,16 @@ async function runCommandInSandbox(commandString) {
 
         if (!response.ok) {
             const details = await response.json().catch(() => response.text());
-            return { error: 'API Error', status: response.status, details };
+            return { error: '(sand)Boxie error', status: response.status, details };
         }
 
         return await response.json();
     } catch (error) {
         clearTimeout(timeoutId);
         if (error.name === 'AbortError') {
-            return { error: 'Timeout Error', details: 'Request timed out.' };
+            return { error: 'Timeout Error', details: 'An error occured while trying to contact Boxie.' };
         }
-        return { error: 'Network Error', details: 'Could not connect to the sandbox API.' };
+        return { error: 'Network Error', details: 'An error occured while trying to contact Boxie.' };
     }
 }
 
