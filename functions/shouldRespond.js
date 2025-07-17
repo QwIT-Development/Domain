@@ -5,8 +5,14 @@
 
 
 const { callGemini } = require('../utils/searx');
-const { genAI } = require('../initializers/geminiClient');
+const {GoogleGenAI} = require("@google/genai");
+const {loadConfig} = require('../initializers/configuration');
+const config = loadConfig();
 
+let genAI = new GoogleGenAI({apiKey: config.GEMINI_API_KEY});
+if (config.CR_GEMINI_API_KEY?.length > 0) {
+    genAI = new GoogleGenAI({apiKey: config.CR_GEMINI_API_KEY});
+}
 
 async function shouldRespond(message, client, history, prompt) {
     const newPrompt = `Your primary task is to act as a decision-making module for a Discord bot named ${client.user.username}.

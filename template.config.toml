@@ -62,6 +62,11 @@ ENABLE_THINKING = true
 # let's the bot think more about the question (bumps the 8000 thinking budget to 20000)
 DEEPER_THINKING = true
 
+# the gemini api key for Contextual Responding, useful if your bot gets a lot of messages
+# you may use a different account's key here
+# we don't recommend using different accounts, as it may lead to issues with the tos
+CR_GEMINI_API_KEY = ""
+
 # set to false, so it doesn't "bootloop"
 NEEDS_SETUP = true
 
@@ -79,6 +84,11 @@ BAN_AFTER = 20
 
 # the default prompt that will be used when using the /call command
 DEFAULT_PROMPT = "default.md"
+
+# this allows the bot to use a boxie environment with it's terminal tool
+# we don't recommend using this as it is not very useful/secure
+# i mean if you run the bot in a different, seperated and isolated virtual machine/environment, then it is fine
+ALLOW_SANDBOX = false
 
 # channels to be tracked
 [CHANNELS]
