@@ -90,6 +90,13 @@ Your response will be a function call to the 'respond' tool.`;
                 functionCalls.push(...chunk.functionCalls);
             }
         }
+        if (!functionCalls || functionCalls.length === 0) {
+            console.error('No function calls found in the response.');
+            return {
+                shouldRespond: false,
+                respondReason: 'No function calls found in the response.'
+            };
+        }
         const args = functionCalls[0].args;
         return args;
     } catch (error) {
@@ -97,7 +104,10 @@ Your response will be a function call to the 'respond' tool.`;
         if (error.response?.data) {
             console.error('Gemini API response data:', error.response.data);
         }
-        return "false";
+        return {
+            shouldRespond: false,
+            respondReason: 'An error occurred while processing the request.'
+        };
     }
 }
 
