@@ -1,20 +1,21 @@
+# Firebase Studio my beloved
 { pkgs, ... }: {
   channel = "unstable";
 
   packages = [
     pkgs.bun
-    # pkgs.go
-    # pkgs.python311
-    # pkgs.python311Packages.pip
-    # pkgs.nodejs_20
-    # pkgs.nodePackages.nodemon
   ];
 
   env = {};
   idx = {
     # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
     extensions = [
-      # "vscodevim.vim"
+      "oven.bun-vscode"
+      "mgmcdermott.vscode-language-babel"
+      "tamasfe.even-better-toml"
+      "Prisma.prisma"
+      "SonarSource.sonarlint-vscode"
+      "BlueGlassBlock.better-json5"
     ];
 
     previews = {
@@ -27,10 +28,7 @@
         bun-install = "bun install";
         bun-update = "bun update";
       };
-      onStart = {
-        # Example: start a background task to watch and re-build backend code
-        # watch-backend = "npm run watch-backend";
-      };
+      onStart = {};
     };
   };
 }
