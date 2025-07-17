@@ -111,6 +111,7 @@ async function checkForMentions(message, client) {
 
     // contextual respond thingy
     if (channelConfig?.contextRespond) {
+        console.log('contextual responding') //TODO: remove this
         const history = state.history[channelId] || [];
         const prompt = await makePrompt(channelId, false);
         const response = await shouldRespond(message, client, history, prompt);

@@ -5,14 +5,40 @@
 
 
 const { callGemini } = require('../utils/searx');
-const {GoogleGenAI} = require("@google/genai");
-const {loadConfig} = require('../initializers/configuration');
+const { GoogleGenAI } = require("@google/genai");
+const { loadConfig } = require('../initializers/configuration');
 const config = loadConfig();
 
-let genAI = new GoogleGenAI({apiKey: config.GEMINI_API_KEY});
+let genAI = new GoogleGenAI({ apiKey: config.GEMINI_API_KEY });
 if (config.CR_GEMINI_API_KEY?.length > 0) {
-    genAI = new GoogleGenAI({apiKey: config.CR_GEMINI_API_KEY});
+    genAI = new GoogleGenAI({ apiKey: config.CR_GEMINI_API_KEY });
 }
+
+const tools = [
+    {
+        functionDeclarations: [
+            {
+                "name": "respond",
+                "description": "You always need to use this tool to respond, no matter what. respondReason is the reason why you want / not want to respond.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "shouldRespond": {
+                            "type": "boolean"
+                        },
+                        "respondReason": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "shouldRespond",
+                        "respondReason"
+                    ]
+                }
+            }
+        ]
+    }
+]
 
 async function shouldRespond(message, client, history, prompt) {
     const newPrompt = `Your primary task is to act as a decision-making module for a Discord bot named ${client.user.username}.
@@ -40,7 +66,7 @@ Your final and ONLY output must be a single, lowercase word in English. It must 
 
     try {
         const historyCopy = [...history];
-        const text = await callGemini(genAI, newPrompt, { model: "gemini-2.0-flash" }, historyCopy);
+        const text = await callGemini(genAI, newPrompt, {}, historyCopy);
         return text.toLowerCase().toString().trim();
     } catch (error) {
         console.error('Error in shouldRespond:', error);
