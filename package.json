@@ -43,8 +43,8 @@
   "scripts": {
     "start": "bun run index.js --smol",
     "update": "bun update",
-    "build-all": "docker buildx build --platform linux/amd64,linux/arm64 --tag balazsmanus/domain:latest --push .",
-    "build": "docker buildx build --platform linux/amd64 --tag balazsmanus/domain:latest --push ."
+    "build-all": "podman buildx build --all-platforms --tag balazsmanus/domain:latest --push .",
+    "build": "podman buildx build --platform linux/amd64 --tag balazsmanus/domain:latest --push ."
   },
   "packageManager": "bun@1.2.14",
   "devDependencies": {
