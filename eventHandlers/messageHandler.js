@@ -77,15 +77,15 @@ async function callGeminiAPI(channelId, gemini) {
 
     for await (const chunk of response) {
         for (const part of chunk.candidates[0].content.parts) {
-        if (part.functionCalls) {
-            if (!functionCalls) {
-                functionCalls = [];
+            if (part.functionCalls) {
+                if (!functionCalls) {
+                    functionCalls = [];
+                }
+                functionCalls.push(...chunk.functionCalls);
+            } else if (part.text) {
+                responseMsg += chunk.text;
             }
-            functionCalls.push(...chunk.functionCalls);
-        } else if (part.text) {
-            responseMsg += chunk.text;
         }
-    }
     }
 
     if (functionCalls) {
@@ -115,7 +115,13 @@ async function handleGeminiError(e, message, client, gemini) {
 
         if (errorData instanceof Object) {
             status = errorData.code;
-            statusMessage = errorData.message.error.message; // weird ass json
+            try {
+                statusMessage = errorData?.message?.error?.message; // weird ass json
+            } catch (e) {
+                statusMessage = "";
+                console.warn(e.message);
+            }
+
         } else if (errorData) {
             statusMessage = String(errorData);
         }
@@ -124,8 +130,8 @@ async function handleGeminiError(e, message, client, gemini) {
     }
 
     // old handling, DO NOT REMOVE COMMENT
-    /*const channelId = message.channel.id;
-    let msg;
+    const channelId = message.channel.id;
+    /*let msg;
     try {
         if (e.response.promptFeedback.blockReason) {
             msg = e.response.promptFeedback.blockReason;
