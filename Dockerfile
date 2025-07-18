@@ -22,12 +22,9 @@ RUN chmod -R a+rw /app/prisma \
 && chown -R bun:bun /app/prisma \
 && mkdir -p /app/data/running \
 && chown -R bun:bun /app/data/running \
-&& chmod a+rw /app/data/running
-
-COPY ./entry.sh /usr/local/bin/entry.sh
-COPY ./wrapper.sh /usr/local/bin/wrapper.sh
-RUN chmod +x /usr/local/bin/entry.sh \
-&& chmod +x /usr/local/bin/wrapper.sh
+&& chmod a+rw /app/data/running \
+&& chmod +x /app/entry.sh \
+&& chmod +x /app/wrapper.sh
 
 EXPOSE 4500/tcp
 
@@ -35,5 +32,5 @@ LABEL org.opencontainers.image.source=https://github.com/QwIT-Development/Domain
 LABEL org.opencontainers.image.licenses=AGPL-3.0-or-later
 
 USER root
-ENTRYPOINT ["/usr/local/bin/wrapper.sh"]
+ENTRYPOINT ["/app/wrapper.sh"]
 CMD ["bun", "start"]
