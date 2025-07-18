@@ -15,11 +15,11 @@
   },
   "dependencies": {
     "@discordjs/rest": "^2.5.1",
-    "@google/genai": "^1.10.0",
+    "@google/genai": "^1.9.0",
     "@google/generative-ai": "^0.24.1",
     "@modelcontextprotocol/sdk": "^1.15.1",
     "@prisma/client": "^6.12.0",
-    "@sentry/bun": "^9.40.0",
+    "@sentry/bun": "^9.39.0",
     "cheerio": "^1.1.0",
     "discord-api-types": "^0.38.16",
     "discord.js": "^14.21.0",
@@ -43,13 +43,8 @@
   "scripts": {
     "start": "bun run index.js --smol",
     "update": "bun update",
-    "build-all": "podman buildx build --all-platforms --tag balazsmanus/domain:latest --push .",
-    "build": "podman buildx build --platform linux/amd64 --tag balazsmanus/domain:latest --push ."
+    "build-all": "docker buildx build --platform linux/amd64,linux/arm64 --tag balazsmanus/domain:latest --push .",
+    "build": "docker buildx build --platform linux/amd64 --tag balazsmanus/domain:latest --push ."
   },
-  "packageManager": "bun@1.2.14",
-  "devDependencies": {
-    "@types/bun": "^1.2.18",
-    "@types/ejs": "^3.1.5",
-    "@types/sharp": "^0.32.0"
-  }
+  "packageManager": "bun@1.2.14"
 }

@@ -27,7 +27,7 @@ services:
       - hasnet-domain
       - nonet-domain
 
-# boxie env for domain to run commands in
+  # boxie env for domain to run commands in
   boxie:
     image: balazsmanus/boxie-sandbox:latest
     container_name: boxie
