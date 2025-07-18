@@ -331,7 +331,7 @@ async function getContext(url) {
     }
 
     content = content
-      .replaceAll(/\[([^\]]+)]/g, "") // remove wikipedia links
+      .replaceAll(/\[[^\]]*?]/g, "") // remove wikipedia links
       .replaceAll(/\n{3,}/g, "\n\n") // remove excessive newlines
       .replaceAll(
         /(cookies? (policy|notice|banner)|accept (all )?cookies|privacy policy|terms of (service|use)|sign up for (our )?newsletter|subscribe to|follow us on|share this article|advertisement)/gi,
