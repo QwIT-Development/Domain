@@ -1,20 +1,31 @@
-{ pkgs, ... }: {
+# Firebase Studio my beloved
+{ pkgs, ... }:
+
+{
   channel = "unstable";
 
   packages = [
     pkgs.bun
-    # pkgs.go
-    # pkgs.python311
-    # pkgs.python311Packages.pip
-    # pkgs.nodejs_20
-    # pkgs.nodePackages.nodemon
+    pkgs.podman
+    pkgs.podman-compose
+    pkgs.fastfetchMinimal
+    pkgs.temurin-bin
   ];
 
   env = {};
+
+  # setup docker
+  services.docker.enable = true;
+
   idx = {
     # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
     extensions = [
-      # "vscodevim.vim"
+      "oven.bun-vscode"
+      "mgmcdermott.vscode-language-babel"
+      "tamasfe.even-better-toml"
+      "Prisma.prisma"
+      "SonarSource.sonarlint-vscode"
+      "BlueGlassBlock.better-json5"
     ];
 
     previews = {
@@ -26,11 +37,13 @@
       onCreate = {
         bun-install = "bun install";
         bun-update = "bun update";
+        create-temp = "mkdir /var/tmp";
+        ensure-podman-config-dir = "mkdir -p ~/.config/containers/";
+        create-podman-policy = ''
+           echo '{ "default": [ { "type": "insecureAcceptAnything" } ], "transports": { "docker": { "": [ { "type": "insecureAcceptAnything" } ] } } }' > ~/.config/containers/policy.json
+        '';
       };
-      onStart = {
-        # Example: start a background task to watch and re-build backend code
-        # watch-backend = "npm run watch-backend";
-      };
+      onStart = {};
     };
   };
 }

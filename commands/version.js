@@ -3,20 +3,18 @@
         Copyright (C) 2025 Anchietae
 */
 
-const {SlashCommandBuilder} = require('discord.js');
-const state = require('../initializers/state');
+const { SlashCommandBuilder } = require("discord.js");
+const state = require("../initializers/state");
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('version')
-        .setDescription('Shows the current version of the instance.'),
+  data: new SlashCommandBuilder()
+    .setName("version")
+    .setDescription("Shows the current version of the instance."),
 
-    async execute(interaction) {
-        await interaction.reply({
-            content: state.version,
-            flags: [
-                "Ephemeral"
-            ]
-        })
-    }
+  async execute(interaction) {
+    await interaction.reply({
+      content: state.version,
+      flags: ["Ephemeral"],
+    });
+  },
 };

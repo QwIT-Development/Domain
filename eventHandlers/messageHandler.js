@@ -76,15 +76,13 @@ async function callGeminiAPI(channelId, gemini) {
     });
 
     for await (const chunk of response) {
-        for (const part of chunk.candidates[0].content.parts) {
-            if (part.functionCalls) {
-                if (!functionCalls) {
-                    functionCalls = [];
-                }
-                functionCalls.push(...chunk.functionCalls);
-            } else if (part.text) {
-                responseMsg += chunk.text;
+        if (chunk.functionCalls) {
+            if (!functionCalls) {
+                functionCalls = [];
             }
+            functionCalls.push(...chunk.functionCalls);
+        } else if (chunk.text) {
+            responseMsg += chunk.text;
         }
     }
 

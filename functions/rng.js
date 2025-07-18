@@ -3,12 +3,12 @@
         Copyright (C) 2025 Anchietae
 */
 
-const { randomInt } = require('crypto');
+const { randomInt } = require("crypto");
 
 //epic rng generator, bc every code needs one!!1!
 async function RNGArray(array) {
-    const rng = randomInt(array.length);
-    return array[rng];
+  const rng = randomInt(array.length);
+  return array[rng];
 }
 
-module.exports = {RNGArray}
+module.exports = { RNGArray };
