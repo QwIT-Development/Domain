@@ -7,9 +7,17 @@ const OpenAI = require("openai");
 const { loadConfig } = require("../initializers/configuration");
 const config = loadConfig();
 
-let openaiClient = new OpenAI({ apiKey: config.OPENAI_API_KEY });
+const createOpenAIClient = (apiKey) => {
+  const clientConfig = { apiKey };
+  if (config.OPENAI_BASE_URL) {
+    clientConfig.baseURL = config.OPENAI_BASE_URL;
+  }
+  return new OpenAI(clientConfig);
+};
+
+let openaiClient = createOpenAIClient(config.OPENAI_API_KEY);
 if (config.CR_OPENAI_API_KEY?.length > 0) {
-  openaiClient = new OpenAI({ apiKey: config.CR_OPENAI_API_KEY });
+  openaiClient = createOpenAIClient(config.CR_OPENAI_API_KEY);
 }
 
 const tools = [

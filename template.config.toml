@@ -6,6 +6,14 @@ DISCORD_TOKEN = ""
 # openai api key (https://platform.openai.com/api-keys)
 OPENAI_API_KEY = ""
 
+# openai base url for api calls (leave empty for default OpenAI, or set for compatible APIs)
+# Examples:
+# OpenAI (default): https://api.openai.com/v1
+# Ollama: http://localhost:11434/v1
+# OpenRouter: https://openrouter.ai/api/v1
+# Azure OpenAI: https://your-resource.openai.azure.com/
+OPENAI_BASE_URL = ""
+
 # openai model id (https://platform.openai.com/docs/models)
 # OPENAI_MODEL = "gpt-4o"
 OPENAI_MODEL = "gpt-4o"

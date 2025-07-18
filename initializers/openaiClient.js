@@ -44,5 +44,9 @@ async function model(history, showLog = true) {
 }
 
 // Initialize OpenAI client
-const openai = new OpenAI({ apiKey: config.OPENAI_API_KEY });
+const clientConfig = { apiKey: config.OPENAI_API_KEY };
+if (config.OPENAI_BASE_URL) {
+  clientConfig.baseURL = config.OPENAI_BASE_URL;
+}
+const openai = new OpenAI(clientConfig);
 module.exports = { model, openai };
