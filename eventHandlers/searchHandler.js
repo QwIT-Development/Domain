@@ -3,11 +3,11 @@
         Copyright (C) 2025 Anchietae
 */
 
-const {search} = require("../utils/searx");
-const {genAI} = require("../initializers/geminiClient");
+const { search } = require("../utils/searx");
+const { genAI } = require("../initializers/geminiClient");
 
 async function searchHandler(str) {
-    return await search(str, genAI);
+  return await search(str, genAI);
 }
 
 module.exports = searchHandler;

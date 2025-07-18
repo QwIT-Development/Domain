@@ -15,22 +15,22 @@
   },
   "dependencies": {
     "@discordjs/rest": "^2.5.1",
-    "@google/genai": "^1.6.0",
+    "@google/genai": "^1.9.0",
     "@google/generative-ai": "^0.24.1",
-    "@modelcontextprotocol/sdk": "^1.13.1",
-    "@prisma/client": "^6.10.1",
-    "@sentry/bun": "^9.31.0",
+    "@modelcontextprotocol/sdk": "^1.15.1",
+    "@prisma/client": "^6.12.0",
+    "@sentry/bun": "^9.39.0",
     "cheerio": "^1.1.0",
-    "discord-api-types": "^0.38.13",
-    "discord.js": "^14.20.0",
+    "discord-api-types": "^0.38.16",
+    "discord.js": "^14.21.0",
     "ejs": "^3.1.10",
     "fuse.js": "^7.1.0",
     "html-to-text": "^9.0.5",
     "lz-string": "^1.5.0",
     "ora": "^8.2.0",
-    "prisma": "^6.10.1",
+    "prisma": "^6.12.0",
     "robots-parser": "^3.0.1",
-    "sharp": "^0.34.2",
+    "sharp": "^0.34.3",
     "toml": "^3.0.0"
   },
   "overrides": {
@@ -43,7 +43,8 @@
   "scripts": {
     "start": "bun run index.js --smol",
     "update": "bun update",
-    "build": "docker buildx build --platform linux/amd64,linux/arm64 ."
+    "build-all": "docker buildx build --platform linux/amd64,linux/arm64 --tag balazsmanus/domain:latest --push .",
+    "build": "docker buildx build --platform linux/amd64 --tag balazsmanus/domain:latest --push ."
   },
   "packageManager": "bun@1.2.14"
 }

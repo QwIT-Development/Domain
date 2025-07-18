@@ -1,2 +1,4 @@
 *.md
 !domain_bela.md
+!default.md
+!example.md

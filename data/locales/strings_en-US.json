@@ -52,7 +52,8 @@
     "score": "Reputation score: {SCORE}\n",
     "youNeed0": "You need {SCORE} more points for a healthy score!\n",
     "percent100": "You need {SCORE} points until you 100% the bot.\n",
-    "currentPercent": "Current completion: {SCORE}%"
+    "currentPercent": "Current completion: {SCORE}%",
+    "decayed": "I missed you, so your reputation has went down a bit. Talk to me to get it back!"
   },
   "summarize": {
     "unauthorized": "You are not authorized to use this command.",
