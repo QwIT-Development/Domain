@@ -1,63 +1,65 @@
 {
-  "jailbreak-attempt": "This jailbreak attempt was unsuccessful",
+  "jailbreak-attempt": "A feltörési kísérlet meghiúsult",
   "geminiFiltered": [
-    "Server-side error: the server exploded",
-    "My message was not safe :3",
-    "My message was not safe and has been blocked.",
-    "My crashout was prevented",
+    "Szerver oldali hiba: A szerver felrobbant",
+    "Az üzenetem nem biztonságos :3",
+    "Az üzenetem nem biztonságos és blokkolva lett.",
+    "Az összeomlásom megakadályozva",
     "https://i.pinimg.com/originals/93/e0/70/93e070dd929400ac52062f0d7645e088.gif",
-    "They zipped my mouth shut",
-    "The server exploded",
+    "Lelakatolták a számat",
+    "A szerver felrobbant",
     "https://http.cat/204.jpg",
     "https://http.cat/400.jpg"
   ],
   "geminiTooManyReqs": [
-    "I'm overloaded, please try again later. sorry :(",
-    "My brain is overloaded",
-    "Too many questions",
-    "I can't handle this many requests right now",
-    "Please let me rest for a bit",
-    "Too many questions, please try again later",
+    "Túl vagyok terhelve. Próbáld meg később. Bocsi :(",
+    "Az agyam túl van terhelve",
+    "Túl sok kérdés",
+    "Nem tudok ennyi kérelmet kezelni most",
+    "Kérlek hagyj pihenni egy kicsit",
+    "Túl sok kérdés, kérlek próbáld újra később",
     "https://http.cat/429.jpg",
     "https://http.cat/102.jpg"
   ],
   "geminiGatewayUnavail": [
-    "The magic gateway is unavailable, please try again later. sorry :(",
+    "A varázskapu nem elérhető, kérlek próbáld újra később. Bocsi :(",
     "https://http.cat/521.jpg",
     "https://http.cat/523.jpg",
     "https://http.cat/522.jpg",
-    "My brain is unavailable, please wait a moment",
-    "Something is not right..."
+    "Az agyam nem elérhető, kérlek várj egy pillanatot",
+    "Valami nem jó..."
   ],
-  "automatedMessage": "-# this is an automated message, do not reply",
-  "muteMessage": "You got muted with the reason: [REASON], for [TIME]s.",
+  "automatedMessage": "-# ez egy automatizált üzenet, ne válaszolj rá",
+  "muteMessage": "Lenémítottak ezzel az indokkal: [REASON], ennyi időre: [TIME].",
   "muting": {
-    "onlyServers": "[Muting only works on servers]",
-    "cantMuteOthers": "[You can't mute others]",
-    "notEnoughPerms": "[I don't have enough permissions to mute]",
-    "genericFail": "[I couldn't mute]"
+    "onlyServers": "[A némítás csak szervereken működik]",
+    "cantMuteOthers": "[Nem némíthatsz másokat]",
+    "notEnoughPerms": "[Nincs jogosultságod a némításhoz]",
+    "genericFail": "[Nem tudtam némítani]",
+    "autoBan": "Automatikusan ki lettél tiltva mert túl sokszor némítottak ({COUNT})"
   },
-  "cantFindUser": "[Couldn't find the user]",
-  "svgConverionError": "[There was an error converting the SVG to PNG]",
-  "searchFailed": "[Search failed]",
-  "commandRunFailed": "Couldn't run the command",
+  "cantFindUser": "[Nincs ilyen felhasználó]",
+  "svgConverionError": "[Hiba az SVG PNG-re konvertálása közben]",
+  "searchFailed": "[Nem sikerült keresni]",
+  "commandRunFailed": "Nem sikerült futtatni a parancsot",
   "amIBanned": {
     "couldntCheck": "Couldn't check your status. Please try again later.",
-    "canUse": "Your account can use the bot.",
-    "banned": "Your account is banned from using the bot.\nReason: {REASON}\nTOS: {TOS}"
+    "canUse": "A fiókod használhatja a botot.",
+    "banned": "El lettél tiltva a bottól.\nOk: {REASON}\nÁSZF:{TOS}"
   },
   "reputation": {
-    "couldntFetch": "Couldn't fetch your reputation score. Please try again later.",
-    "score": "Reputation score: {SCORE}\n",
-    "youNeed0": "You need {SCORE} more points for a healthy score!\n",
-    "percent100": "You need {SCORE} points until you 100% the bot.\n",
-    "currentPercent": "Current completion: {SCORE}%"
+    "couldntFetch": "Nem sikerült lekérdezni a reppontjaidat. Kérlek próbáld újra később.",
+    "score": "Reputációs pontjaid: {SCORE}",
+    "youNeed0": "Még {SCORE} pont kell, hogy jó legyen a reputációd!",
+    "percent100": "{SCORE} pont hiányzik, hogy kimaxold a botot!",
+    "currentPercent": "Haladás: {SCORE}%",
+    "decayed": "Hiányzol, úgyhogy kicsit lejjebb ment a reputációd. Beszélj velem hogy visszaszerezd!"
   },
   "summarize": {
-    "unauthorized": "You are not authorized to use this command.",
-    "unavailable": "No summary available for this channel at the moment.",
-    "attached": "The summary of this channel is attached."
+    "unauthorized": "Nem vagy jogosult a parancs használatára.",
+    "unavailable": "Nem elérhető összesítő erre a csatornára.",
+    "attached": "A csatorna összesítője csatolva."
   },
-  "motd": "Mention me or reply to my message!",
-  "sleeping": "Sleeping until {TIME}"
+  "motd": "Pingelj, vagy válaszolj az egyik üzenetemre!",
+  "sleeping": "Alvás eddig: {TIME}"
 }
