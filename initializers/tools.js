@@ -21,21 +21,36 @@ const tools = [
       {
         name: "mute",
         description:
-          "Mutes the specified user for the given time, with an optional reason.",
+          "Mutes the specified user. Select a predefined reason from `muteFor` for a default duration. To set a custom time, choose `Other` and specify the duration in the `seconds` parameter. An optional `reason` can be provided for logging.",
         parameters: {
           type: "object",
           properties: {
             userID: {
               type: "number",
             },
-            seconds: {
-              type: "number",
-            },
             reason: {
               type: "string",
             },
+            muteFor: {
+              type: "string",
+              enum: [
+                "Spam",
+                "Inappropriate_Language",
+                "Harassment",
+                "Advertising",
+                "Trolling",
+                "Mass_Mentions",
+                "Evading_Punishment",
+                "Sharing_Personal_Information",
+                "Raiding_and_Coordinated_Spam",
+                "Other",
+              ],
+            },
+            seconds: {
+              type: "number",
+            },
           },
-          required: ["userID", "seconds"],
+          required: ["userID", "muteFor"],
         },
       },
       {
