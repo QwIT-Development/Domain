@@ -18,11 +18,15 @@ RUN bunx prisma migrate dev --name buildtime \
 && bunx prisma generate
 
 COPY . .
+COPY ./entry.sh /app/entry.sh.tmp
+COPY ./wrapper.sh /app/wrapper.sh
 RUN chmod -R a+rw /app/prisma \
 && chown -R bun:bun /app/prisma \
 && mkdir -p /app/data/running \
 && chown -R bun:bun /app/data/running \
 && chmod a+rw /app/data/running \
+&& tr -d '\015' <entry.sh.tmp >entry.sh && \
+&& tr -d '\015' <wrapper.sh.tmp >wrapper.sh && \
 && chmod +x /app/entry.sh \
 && chmod +x /app/wrapper.sh
 
