@@ -1,41 +1,40 @@
 /*
-        Domain-Unchained, src of the discord bot, that uses gemini api to generate messages
+        Domain-Unchained, src of the discord bot, that uses openai api to generate messages
         Copyright (C) 2025 Anchietae
 */
 
-const { GoogleGenAI, FunctionCallingConfigMode } = require("@google/genai");
+const OpenAI = require("openai");
 const { loadConfig } = require("../initializers/configuration");
 const config = loadConfig();
 
-let genAI = new GoogleGenAI({ apiKey: config.GEMINI_API_KEY });
-if (config.CR_GEMINI_API_KEY?.length > 0) {
-  genAI = new GoogleGenAI({ apiKey: config.CR_GEMINI_API_KEY });
+let openaiClient = new OpenAI({ apiKey: config.OPENAI_API_KEY });
+if (config.CR_OPENAI_API_KEY?.length > 0) {
+  openaiClient = new OpenAI({ apiKey: config.CR_OPENAI_API_KEY });
 }
 
 const tools = [
   {
-    functionDeclarations: [
-      {
-        name: "respond",
-        description:
-          "Use this function to decide whether the bot should reply to the user's message. The 'shouldRespond' parameter indicates the decision, 'respondReason' provides a brief justification for that decision, and 'reply' indicates whether this is a direct reply to the message.",
-        parameters: {
-          type: "object",
-          properties: {
-            shouldRespond: {
-              type: "boolean",
-            },
-            respondReason: {
-              type: "string",
-            },
-            reply: {
-              type: "boolean",
-            },
+    type: "function",
+    function: {
+      name: "respond",
+      description:
+        "Use this function to decide whether the bot should reply to the user's message. The 'shouldRespond' parameter indicates the decision, 'respondReason' provides a brief justification for that decision, and 'reply' indicates whether this is a direct reply to the message.",
+      parameters: {
+        type: "object",
+        properties: {
+          shouldRespond: {
+            type: "boolean",
           },
-          required: ["shouldRespond", "respondReason", "reply"],
+          respondReason: {
+            type: "string",
+          },
+          reply: {
+            type: "boolean",
+          },
         },
+        required: ["shouldRespond", "respondReason", "reply"],
       },
-    ],
+    },
   },
 ];
 
@@ -71,18 +70,8 @@ FAILURE TO USE THE FUNCTION WILL RESULT IN AN ERROR. YOU MUST USE THE 'respond' 
 
   const defaultConfig = {
     temperature: 0.3, // Lower temperature for more consistent function calling
-    topP: 0.95,
-    topK: 40,
-    maxOutputTokens: 8192,
-    responseMimeType: "text/plain",
-    systemInstruction: newPrompt,
-    tools: tools,
-    toolConfig: {
-      functionCallingConfig: {
-        mode: FunctionCallingConfigMode.ANY, // Force the model to use a function
-        allowedFunctionNames: ["respond"],
-      },
-    },
+    top_p: 0.95,
+    max_tokens: 8192,
   };
 
   const maxRetries = 5;
@@ -90,7 +79,7 @@ FAILURE TO USE THE FUNCTION WILL RESULT IN AN ERROR. YOU MUST USE THE 'respond' 
 
   while (attempt < maxRetries) {
     try {
-      let functionCalls = null;
+      let tool_calls = null;
       const historyCopy = [...history];
 
       if (attempt > 0) {
@@ -99,23 +88,55 @@ FAILURE TO USE THE FUNCTION WILL RESULT IN AN ERROR. YOU MUST USE THE 'respond' 
         );
       }
 
-      const result = await genAI.models.generateContentStream({
-        model: "gemini-2.0-flash",
-        config: defaultConfig,
-        contents: historyCopy,
+      // Convert history to OpenAI format
+      const messages = [
+        { role: "system", content: newPrompt },
+        ...historyCopy.map(item => ({
+          role: item.role === "model" ? "assistant" : item.role,
+          content: item.parts?.[0]?.text || ""
+        }))
+      ];
+
+      const result = await openaiClient.chat.completions.create({
+        model: config.OPENAI_MODEL,
+        messages: messages,
+        temperature: defaultConfig.temperature,
+        top_p: defaultConfig.top_p,
+        max_tokens: defaultConfig.max_tokens,
+        tools: tools,
+        tool_choice: { type: "function", function: { name: "respond" } }, // Force function use
+        stream: true,
       });
 
       for await (const chunk of result) {
-        if (chunk.functionCalls) {
-          if (!functionCalls) {
-            functionCalls = [];
+        const delta = chunk.choices?.[0]?.delta;
+        if (delta?.tool_calls) {
+          if (!tool_calls) {
+            tool_calls = [];
           }
-          functionCalls.push(...chunk.functionCalls);
+          // Handle tool calls accumulation for streaming
+          for (const toolCall of delta.tool_calls) {
+            if (!tool_calls[toolCall.index]) {
+              tool_calls[toolCall.index] = {
+                id: toolCall.id,
+                type: toolCall.type,
+                function: {
+                  name: toolCall.function?.name || "",
+                  arguments: toolCall.function?.arguments || ""
+                }
+              };
+            } else {
+              // Accumulate arguments for streaming
+              if (toolCall.function?.arguments) {
+                tool_calls[toolCall.index].function.arguments += toolCall.function.arguments;
+              }
+            }
+          }
         }
       }
 
-      if (functionCalls && functionCalls.length > 0) {
-        const args = functionCalls[0].args;
+      if (tool_calls && tool_calls.length > 0) {
+        const args = JSON.parse(tool_calls[0].function.arguments);
         if (attempt > 0) {
           console.log("Successfully received function call from AI");
         }
@@ -126,7 +147,7 @@ FAILURE TO USE THE FUNCTION WILL RESULT IN AN ERROR. YOU MUST USE THE 'respond' 
     } catch (error) {
       console.error(`Error in shouldRespond attempt ${attempt + 1}:`, error);
       if (error.response?.data) {
-        console.error("Gemini API response data:", error.response.data);
+        console.error("OpenAI API response data:", error.response.data);
       }
       attempt++;
 

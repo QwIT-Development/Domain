@@ -56,9 +56,8 @@ PROXIES = []
 # remote blocklists (hosts), must be an url to the plaintext file
 REMOTE_LISTS = []
 
-# enables the thinking capabilities of the model (if it supports it)
-# supported models are anything that is above gemini 2.5 *
-ENABLE_THINKING = true
+# Note: OpenAI models don't have separate "thinking" modes like Gemini
+# Reasoning capabilities are built into the models themselves
 
 # the openai api key for Contextual Responding, useful if your bot gets a lot of messages
 # you may use a different account's key here

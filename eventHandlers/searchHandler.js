@@ -7,7 +7,7 @@ const { search } = require("../utils/searx");
 const { openai } = require("../initializers/openaiClient");
 
 async function searchHandler(str) {
-  return await search(str, genAI);
+  return await search(str, openai);
 }
 
 module.exports = searchHandler;

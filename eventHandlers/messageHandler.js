@@ -11,7 +11,7 @@ const parseBotCommands = require("./botCommands");
 const fs = require("fs");
 const path = require("path");
 const { RNGArray } = require("../functions/rng");
-const uploadFilesToGemini = require("../eventHandlers/fileUploader");
+const uploadFilesToOpenAI = require("../eventHandlers/fileUploader");
 const { loadConfig } = require("../initializers/configuration");
 const config = loadConfig();
 const { formatDate } = require("../functions/makePrompt");
@@ -80,14 +80,36 @@ async function callOpenAI(channelId, openaiConfig) {
   }
   
   // Convert history from Gemini format to OpenAI format
-  for (const historyItem of state.history[channelId]) {
+  for (let i = 0; i < state.history[channelId].length; i++) {
+    const historyItem = state.history[channelId][i];
     const role = historyItem.role === "model" ? "assistant" : historyItem.role;
     const content = historyItem.parts?.[0]?.text || "";
+    
     if (content) {
-      messages.push({
-        role: role,
-        content: content
-      });
+      // Check if this is the last user message and has image files
+      if (i === state.history[channelId].length - 1 && 
+          role === "user" && 
+          historyItem.imageFiles && 
+          historyItem.imageFiles.length > 0) {
+        // For the latest message with images, create a complex content structure
+        const messageContent = [
+          {
+            type: "text",
+            text: content
+          },
+          ...historyItem.imageFiles
+        ];
+        
+        messages.push({
+          role: role,
+          content: messageContent
+        });
+      } else {
+        messages.push({
+          role: role,
+          content: content
+        });
+      }
     }
   }
 
@@ -330,7 +352,7 @@ async function _internalMessageHandler(message, client, openaiConfig) {
     log(`Failed to fetch replied message: ${e}`, "warn", "messageHandler.js");
   }
 
-  const files = await uploadFilesToGemini(message, client);
+  const files = await uploadFilesToOpenAI(message, client);
   if (files.length > 0) {
     message.content += "[Attachment]";
   }
@@ -359,51 +381,28 @@ async function _internalMessageHandler(message, client, openaiConfig) {
 
   let msgParts = [];
   if (files.length > 0) {
-    const validFiles = [];
+    // For OpenAI, we'll include images directly in the message content
+    // Files are already in the correct format from uploadFilesToOpenAI
     for (const file of files) {
-      // Validate file before adding to message parts
-      if (!file.uri || !file.mimeType) {
-        log(
-          `Invalid file data - URI: ${file.uri}, MIME: ${file.mimeType}`,
-          "error",
-          "messageHandler.js",
-        );
-        continue;
-      }
-
-      if (file.state && file.state !== "ACTIVE") {
-        log(
-          `File not ready - State: ${file.state}`,
-          "warn",
-          "messageHandler.js",
-        );
-        continue;
-      }
-
-      validFiles.push(file);
-    }
-
-    // Add valid files to message parts
-    for (const file of validFiles) {
-      msgParts.push({
-        fileData: {
-          fileUri: file.uri,
-          mimeType: file.mimeType,
-        },
-      });
+      msgParts.push(file);
     }
   }
 
-  // Add text message after files
+  // Add text message
   msgParts.push({
+    type: "text",
     text: await formatUserMessage(message, repliedTo, mentioned.respondReason),
   });
 
   await trimHistory(channelId);
 
+  // Store the user message in history (just text for now, files handled separately in API calls)
+  const userMessage = await formatUserMessage(message, repliedTo, mentioned.respondReason);
   state.history[channelId].push({
     role: "user",
-    parts: msgParts,
+    parts: [{ text: userMessage }],
+    // Store file info separately for API calls
+    imageFiles: files.length > 0 ? files : undefined
   });
 
   let initialResponse;

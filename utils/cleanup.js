@@ -1,5 +1,5 @@
 /*
-        Domain-Unchained, src of the discord bot, that uses gemini api to generate messages
+        Domain-Unchained, src of the discord bot, that uses openai api to generate messages
         Copyright (C) 2025 Anchietae
 */
 
@@ -7,8 +7,6 @@ const fs = require("fs");
 const path = require("path");
 const { loadConfig } = require("../initializers/configuration");
 const config = loadConfig();
-const { GoogleAIFileManager } = require("@google/generative-ai/server");
-const fileManager = new GoogleAIFileManager(config.GEMINI_API_KEY);
 const log = require("./betterLogs");
 const { changeSpinnerText } = require("../utils/processInfo");
 const state = require("../initializers/state");
@@ -37,34 +35,22 @@ async function deleteArtifacts() {
 async function deleteUploadedItems() {
   state.locationHelper.init = "cleanup.js/deleteUploadedItems";
   await changeSpinnerText("Deleting Uploaded Items...");
-  const fileIds = await getFileIds();
-  if (!fileIds) {
-    log("No fileIds found", "warn", "cleanup.js");
-    return;
-  }
-  try {
-    for (const fileId of fileIds) {
-      await fileManager.deleteFile(fileId);
-      log(`Deleted file with ID: ${fileId}`, "info", "cleanup.js");
+  
+  // For OpenAI implementation, we use Discord URLs directly, so no cleanup needed
+  // Just clean up any temporary files that might exist
+  const tmpDir = path.join(global.dirname, "data", "running", "tmp");
+  if (fs.existsSync(tmpDir)) {
+    const files = fs.readdirSync(tmpDir);
+    for (const file of files) {
+      const filePath = path.join(tmpDir, file);
+      if (fs.statSync(filePath).isFile()) {
+        fs.unlinkSync(filePath);
+        log(`Deleted temporary file: ${file}`, "info", "cleanup.js");
+      }
     }
-  } catch (error) {
-    console.error(`Error deleting file with ID: ${error}`);
   }
-}
-
-async function getFileIds() {
-  try {
-    const fileListResponse = await fileManager.listFiles({ pageSize: 100 });
-
-    if (fileListResponse.files && fileListResponse.files.length > 0) {
-      return fileListResponse.files.map((file) => file.name);
-    } else {
-      return [];
-    }
-  } catch (error) {
-    console.error(`Error listing files: ${error}`);
-    return [];
-  }
+  
+  log("OpenAI implementation uses Discord URLs - no remote file cleanup needed", "info", "cleanup.js");
 }
 
 module.exports = { deleteArtifacts, deleteUploadedItems };

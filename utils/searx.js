@@ -28,18 +28,11 @@ const options = {
   ],
 };
 
-async function callGemini(genAI, prompt, configOverride = {}, history = []) {
-  let promptText = "";
-  if (history.length > 0) {
-    promptText = prompt;
-  }
+async function callOpenAI(openaiClient, prompt, configOverride = {}, history = []) {
   const defaultConfig = {
     temperature: 0.7,
-    topP: 0.95,
-    topK: 40,
-    maxOutputTokens: 8192,
-    responseMimeType: "text/plain",
-    systemInstruction: promptText,
+    top_p: 0.95,
+    max_tokens: 8192,
   };
 
   const mergedConfig = { ...defaultConfig, ...configOverride };
@@ -47,32 +40,38 @@ async function callGemini(genAI, prompt, configOverride = {}, history = []) {
   const maxRetries = 5;
   for (let i = 0; i < maxRetries; i++) {
     try {
-      let response;
+      let messages = [];
+      
       if (history.length > 0) {
-        response = await genAI.models.generateContentStream({
-          model: "gemini-2.0-flash-lite",
-          config: mergedConfig,
-          contents: history,
-        });
+        messages = history;
       } else {
-        response = await genAI.models.generateContentStream({
-          model: "gemini-2.0-flash-lite",
-          config: mergedConfig,
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-        });
+        messages = [
+          { role: "system", content: prompt },
+          { role: "user", content: "Please help with this request." }
+        ];
       }
+
+      const response = await openaiClient.chat.completions.create({
+        model: config.OPENAI_MODEL,
+        messages: messages,
+        temperature: mergedConfig.temperature,
+        top_p: mergedConfig.top_p,
+        max_tokens: mergedConfig.max_tokens,
+        stream: true,
+      });
 
       let responseText = "";
       for await (const chunk of response) {
-        if (chunk.text) {
-          responseText += chunk.text;
+        const content = chunk.choices?.[0]?.delta?.content;
+        if (content) {
+          responseText += content;
         }
       }
       return responseText;
     } catch (error) {
-      console.error("Error in callGemini:", error);
+      console.error("Error in callOpenAI:", error);
       if (error.response?.data) {
-        console.error("Gemini API response data:", error.response.data);
+        console.error("OpenAI API response data:", error.response.data);
       }
       if (error.message?.includes("500")) {
         if (i < maxRetries - 1) {
@@ -88,7 +87,7 @@ async function callGemini(genAI, prompt, configOverride = {}, history = []) {
   }
 }
 
-async function search(query, genAI) {
+async function search(query, openaiClient) {
   try {
     log(`Starting search for query: "${query}"`, "info", "searx.js");
 
@@ -109,13 +108,13 @@ async function search(query, genAI) {
     }
 
     const rawResults = response.results.slice(0, 20);
-    const relevantResults = await analyzer(genAI, query, rawResults);
+    const relevantResults = await analyzer(openaiClient, query, rawResults);
     const topResults = relevantResults.slice(0, 5);
 
     const enhancedResults = await Promise.allSettled(
       topResults.map(async (result, index) => ({
         ...result,
-        context: await generateContext(genAI, result.url, query),
+        context: await generateContext(openaiClient, result.url, query),
         rank: index + 1,
       })),
     );
@@ -129,14 +128,14 @@ async function search(query, genAI) {
       return "Search completed but no detailed context could be extracted.";
     }
 
-    return await summarizer(genAI, query, successfulResults);
+    return await summarizer(openaiClient, query, successfulResults);
   } catch (e) {
     console.error(`Search error: ${e.message}`);
     return `Search failed: ${e.message}`;
   }
 }
 
-async function analyzer(genAI, query, results) {
+async function analyzer(openaiClient, query, results) {
   const prompt = `Analyze these search results for the query: "${query}"
 
 Search Results:
@@ -156,7 +155,7 @@ Return ONLY a JSON array of result indices (1-based) in order of relevance. No e
 Example format: [3, 1, 7, 2, 5]
 Include at most 8 results in your ranking.`;
   try {
-    const responseText = await callGemini(genAI, prompt, {
+    const responseText = await callOpenAI(openaiClient, prompt, {
       temperature: 0.5,
       topP: 0.8,
       maxOutputTokens: 200,
@@ -185,7 +184,7 @@ Include at most 8 results in your ranking.`;
   }
 }
 
-async function generateContext(genAI, url, query) {
+async function generateContext(openaiClient, url, query) {
   const basicContext = await getContext(url);
 
   if (
@@ -214,7 +213,7 @@ Instructions:
 
 Extract the relevant information:`;
   try {
-    return await callGemini(genAI, prompt);
+    return await callOpenAI(openaiClient, prompt);
   } catch (e) {
     log(`Error enhancing context for ${url}: ${e.message}`, "warn", "searx.js");
     return basicContext.length > 1500
@@ -223,7 +222,7 @@ Extract the relevant information:`;
   }
 }
 
-async function summarizer(genAI, query, results) {
+async function summarizer(openaiClient, query, results) {
   const prompt = `Create a comprehensive answer based on these search results for the query: "${query}"
 
 Search Results:
@@ -246,7 +245,7 @@ Instructions:
 
 Provide a comprehensive answer to: "${query}"`;
   try {
-    const summary = await callGemini(genAI, prompt, {
+    const summary = await callOpenAI(openaiClient, prompt, {
       temperature: 0.4,
       maxOutputTokens: 8192,
     });
@@ -364,4 +363,4 @@ function extractDomain(url) {
   }
 }
 
-module.exports = { getContext, search, callGemini };
+module.exports = { getContext, search, callOpenAI };
