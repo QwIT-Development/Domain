@@ -85,7 +85,7 @@ FAILURE TO USE THE FUNCTION WILL RESULT IN AN ERROR. YOU MUST USE THE 'respond' 
     },
   };
 
-  const maxRetries = 3;
+  const maxRetries = 5;
   let attempt = 0;
 
   while (attempt < maxRetries) {
@@ -93,9 +93,11 @@ FAILURE TO USE THE FUNCTION WILL RESULT IN AN ERROR. YOU MUST USE THE 'respond' 
       let functionCalls = null;
       const historyCopy = [...history];
 
-      console.log(
-        `Attempt ${attempt + 1}/${maxRetries} to get function call from AI...`,
-      );
+      if (attempt > 0) {
+        console.log(
+          `Attempt ${attempt + 1}/${maxRetries} to get function call from AI...`,
+        );
+      }
 
       const result = await genAI.models.generateContentStream({
         model: "gemini-2.0-flash",
@@ -114,12 +116,11 @@ FAILURE TO USE THE FUNCTION WILL RESULT IN AN ERROR. YOU MUST USE THE 'respond' 
 
       if (functionCalls && functionCalls.length > 0) {
         const args = functionCalls[0].args;
-        console.log("Successfully received function call from AI");
+        if (attempt > 0) {
+          console.log("Successfully received function call from AI");
+        }
         return args;
       } else {
-        console.warn(
-          `Attempt ${attempt + 1}: No function calls found in the response. Retrying...`,
-        );
         attempt++;
       }
     } catch (error) {
