@@ -1,4 +1,4 @@
-# Domain - Gemini Powered Discord Chatbot
+# Domain - OpenAI-Compatible Discord Chatbot
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=QwIT-Development_Domain&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=QwIT-Development_Domain)
@@ -6,17 +6,19 @@
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=QwIT-Development_Domain&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=QwIT-Development_Domain)
 [![Crowdin](https://badges.crowdin.net/domain-unchained/localized.svg)](https://crowdin.com/project/domain-unchained)
 
-Domain is a feature-rich Discord chatbot powered by Google's Gemini API. It's designed to be highly configurable and extensible, offering a wide array of functionalities to enhance your Discord server.
+Domain is a feature-rich Discord chatbot powered by OpenAI-compatible APIs. It's designed to be highly configurable and extensible, offering a wide array of functionalities to enhance your Discord server.
 
 > [!IMPORTANT]
 > For people coming from SoM, since resources are limited and we have a whitelist where the bot works, we strongly encourage users to selfhost the bot
 
 ## Features
 
-*   **AI-Powered Conversations:** Utilizes Google's Gemini API for intelligent and context-aware chat responses.
+*   **AI-Powered Conversations:** Utilizes OpenAI-compatible APIs for intelligent and context-aware chat responses.
+*   **Universal API Compatibility:** Works with OpenAI, Ollama, OpenRouter, and other compatible providers.
 *   **Smart Context Gathering:** Employs sophisticated methods to understand conversation context for more relevant interactions.
 *   **Reputation System:** Allows users to build and track reputation within the server.
 *   **Image Generation:** Capable of generating images from SVG code.
+*   **Vision Capabilities:** Can understand and analyze uploaded images.
 *   **User Moderation:** Includes features for timing out users.
 *   **Code Snippet Handling:** Can understand and process snippets from code blocks.
 *   **File & Picture Understanding:** Ability to interpret and react to uploaded pictures and files.
@@ -29,7 +31,6 @@ Domain is a feature-rich Discord chatbot powered by Google's Gemini API. It's de
 *   **Extensive Configuration:** Highly configurable through the `config.toml`.
 *   **Emoji Management:** Resolves and utilizes custom emojis.
 *   **Banned Site Filtering:** Filters messages containing links to banned sites.
-*   **"Thinking" Indicator:** Shows when the bot is processing a request.
 *   **Sleeping Mode:** Can be set to be inactive during specified hours.
 *   **Proxy Support:** Allows routing traffic through proxies.
 *   **Remote Blocklists:** Can fetch and use remote domain blocklists.
@@ -40,7 +41,7 @@ Domain is a feature-rich Discord chatbot powered by Google's Gemini API. It's de
 
 *   [**Docker**](https://docs.docker.com/engine/install/) installed.
 *   A Discord Bot Token.
-*   A Google Gemini API Key.
+*   An OpenAI API Key (or compatible provider API key).
 *   **Linux**: A Linux environment is recommended for running Domain, but it can also run on Windows or macOS with Docker.
 
 ### Installation & Setup
@@ -83,6 +84,20 @@ The bot primarily interacts through natural language. However, some slash comman
 
 The `config.toml` file holds all configuration settings for Domain. It is the primary and recommended way for initial setup and many ongoing adjustments, this section serves as a detailed reference for all available parameters. You might refer to this for advanced configurations or if you prefer manual editing.
 
+### API Provider Configuration
+
+Domain supports any OpenAI-compatible API. Configure your provider by setting:
+
+*   `OPENAI_API_KEY`: Your API key
+*   `OPENAI_MODEL`: The model to use (e.g., "gpt-4o", "gpt-4o-mini")
+
+**Supported Providers:**
+*   **OpenAI**: Use `https://api.openai.com/v1` (default)
+*   **Ollama**: Local models via `http://localhost:11434/v1`
+*   **OpenRouter**: Multiple models via `https://openrouter.ai/api/v1`
+*   **Azure OpenAI**: Azure-hosted OpenAI models
+*   **Other compatible providers**: Any API that implements OpenAI's chat completions format
+
 Refer to `template.config.toml` for a full list of available options and their structure.
 
 ## WebUI
@@ -109,9 +124,9 @@ The project is organized into several key directories:
 *   `data/`: Static data files and runtime data storage.
 *   `eventHandlers/`: Handlers for Discord events (message creation, etc.).
 *   `functions/`: Core bot logic and utility functions.
-*   `initializers/`: Scripts for setting up various components (Discord client, Gemini client, state).
+*   `initializers/`: Scripts for setting up various components (Discord client, OpenAI client, state).
 *   `prisma/`: Prisma schema and migration files for database management.
-*   `prompts/`: Markdown or text files used as system prompts for the Gemini model.
+*   `prompts/`: Markdown or text files used as system prompts for the AI model.
 *   `utils/`: General utility scripts.
 *   `webui/`: Contains all files related to the Express.js based Web User Interface.
     *   `webui/api/`: API endpoints for the WebUI.

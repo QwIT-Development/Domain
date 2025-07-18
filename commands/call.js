@@ -1,5 +1,5 @@
 /*
-        Domain-Unchained, src of the discord bot, that uses gemini api to generate messages
+        Domain-Unchained, src of the discord bot, that uses openai api to generate messages
         Copyright (C) 2025 Anchietae
 */
 
@@ -42,7 +42,7 @@ module.exports = {
       } else {
         state.tempChannels[channel] = true;
         state.history[channel] = [];
-        global.geminiModel = await model(state.history, false); // reinit model
+        global.openaiModel = await model(state.history, false); // reinit model
         await interaction.editReply("The bot is now tracking this channel.");
       }
     } else {

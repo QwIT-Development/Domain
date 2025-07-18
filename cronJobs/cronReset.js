@@ -11,7 +11,7 @@ let timeoutId = null;
 const task = async () => {
   try {
     // rebuild models (so prompt updates too)
-    global.geminiModel = await model(state.history, false);
+    global.openaiModel = await model(state.history, false);
   } catch (error) {
     console.error(`Error while resetting prompt reset task: ${error}`);
   } finally {
