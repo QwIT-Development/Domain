@@ -3,9 +3,8 @@
         Copyright (C) 2025 Anchietae
 */
 
-const { GoogleGenAI } = require("@google/genai");
+const { GoogleGenAI, FunctionCallingConfigMode } = require("@google/genai");
 const { loadConfig } = require("../initializers/configuration");
-import { FunctionCallingConfigMode } from "@google/genai";
 const config = loadConfig();
 
 let genAI = new GoogleGenAI({ apiKey: config.GEMINI_API_KEY });
