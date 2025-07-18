@@ -94,8 +94,9 @@ ALLOW_SANDBOX = false
 # prompt: prompt file to be used
 # wikis: list of wiki urls to be used in the channel, can be useful for context
 # contextRespond: if true, the bot will use a context-aware response system
+# disableClassicRespond: if true, the bot will not use the classic mentioned/replied/contains respond system, should be used with contextRespond = true
 
-# "12312312324312123" = { prompt = "default.md", wikis = [], contextRespond = false }
+# "12312312324312123" = { prompt = "default.md", wikis = [], contextRespond = false, disableClassicRespond = false }
 
 # timings, should be in milliseconds
 # these are all undocumented for a reason

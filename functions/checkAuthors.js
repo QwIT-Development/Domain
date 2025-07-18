@@ -110,20 +110,23 @@ async function checkForMentions(message, client) {
     reply: true,
   };
 
-  // check if bot is mentioned
-  const mentioned = message.mentions.users.has(client.user.id);
-  if (mentioned) return generic;
+  // disables classic respond system
+  if (!channelConfig?.disableClassicRespond) {
+    // check if bot is mentioned
+    const mentioned = message.mentions.users.has(client.user.id);
+    if (mentioned) return generic;
 
-  // check if user is replying to the bot
-  // noinspection JSUnresolvedReference
-  const replied =
-    message.reference?.messageId &&
-    (await message.channel.messages.fetch(message.reference.messageId)).author
-      .id === client.user.id;
-  if (replied) return generic;
+    // check if user is replying to the bot
+    // noinspection JSUnresolvedReference
+    const replied =
+      message.reference?.messageId &&
+      (await message.channel.messages.fetch(message.reference.messageId)).author
+        .id === client.user.id;
+    if (replied) return generic;
 
-  // noinspection RedundantIfStatementJS
-  if (splitFuzzySearch(message.content, config.ALIASES)) return generic;
+    // noinspection RedundantIfStatementJS
+    if (splitFuzzySearch(message.content, config.ALIASES)) return generic;
+  }
 
   // contextual respond thingy
   if (channelConfig?.contextRespond) {
