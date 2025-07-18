@@ -3,13 +3,12 @@
 # discord token (https://discord.com/developers/applications)
 DISCORD_TOKEN = ""
 
-# gemini api key (https://aistudio.google.com/apikey)
-# yes, it is free with some boundaries
-GEMINI_API_KEY = ""
+# openai api key (https://platform.openai.com/api-keys)
+OPENAI_API_KEY = ""
 
-# gemini model id (https://ai.google.dev/gemini-api/docs/models/#model-variations)
-# GEMINI_MODEL = "gemini-2.5-flash"
-GEMINI_MODEL = "gemini-2.5-flash"
+# openai model id (https://platform.openai.com/docs/models)
+# OPENAI_MODEL = "gpt-4o"
+OPENAI_MODEL = "gpt-4o"
 
 # aliases the bot will respond to (exception: the ping and replying)
 # ALIASES = [ "dave", "domain" ]
@@ -61,10 +60,10 @@ REMOTE_LISTS = []
 # supported models are anything that is above gemini 2.5 *
 ENABLE_THINKING = true
 
-# the gemini api key for Contextual Responding, useful if your bot gets a lot of messages
+# the openai api key for Contextual Responding, useful if your bot gets a lot of messages
 # you may use a different account's key here
 # we don't recommend using different accounts, as it may lead to issues with the tos
-CR_GEMINI_API_KEY = ""
+CR_OPENAI_API_KEY = ""
 
 # set to false, so it doesn't "bootloop"
 NEEDS_SETUP = true
