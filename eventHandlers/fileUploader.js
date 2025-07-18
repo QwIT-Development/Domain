@@ -12,6 +12,35 @@ const fs = require("fs");
 const path = require("path");
 const state = require("../initializers/state");
 
+const MIME_TYPE_MAP = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".bmp": "image/bmp",
+  ".svg": "image/svg+xml",
+};
+
+function getMimeType(filename, discordMimeType) {
+  const ext = path.extname(filename).toLowerCase();
+  const mappedType = MIME_TYPE_MAP[ext];
+
+  if (mappedType) {
+    return mappedType;
+  }
+
+  if (
+    discordMimeType &&
+    !discordMimeType.startsWith("image/") &&
+    Object.keys(MIME_TYPE_MAP).includes(ext)
+  ) {
+    return mappedType;
+  }
+
+  return discordMimeType || "application/octet-stream";
+}
+
 async function uploadFilesToGemini(message, client) {
   let files;
   if (message.attachments.size > 0) {
@@ -34,10 +63,12 @@ async function uploadFilesToGemini(message, client) {
           if (response.ok) {
             const fileBuffer = Buffer.from(await response.arrayBuffer());
             fs.writeFileSync(fPath, fileBuffer);
-            const uploadedFile = await uploadToGemini(
-              fPath,
+            const correctedMimeType = getMimeType(
+              attachment.name,
               attachment.contentType,
             );
+
+            const uploadedFile = await uploadToGemini(fPath, correctedMimeType);
             fs.unlinkSync(fPath);
             await message.reactions.cache
               .find(
@@ -65,13 +96,38 @@ async function uploadFilesToGemini(message, client) {
 }
 
 async function uploadToGemini(fPath, mimeType) {
-  const uploadResult = await fileManager.uploadFile(fPath, {
-    mimeType,
-    displayName: path.basename(fPath),
-  });
-  const file = uploadResult.file;
-  log(`Uploaded file: ${file.name}`, "info", "fileUploader.js");
-  return file;
+  try {
+    const uploadResult = await fileManager.uploadFile(fPath, {
+      mimeType,
+      displayName: path.basename(fPath),
+    });
+
+    const file = uploadResult.file;
+    log(
+      `Successfully uploaded file: ${file.name} (URI: ${file.uri})`,
+      "info",
+      "fileUploader.js",
+    );
+
+    let fileStatus = await fileManager.getFile(file.name);
+    while (fileStatus.state === "PROCESSING") {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      fileStatus = await fileManager.getFile(file.name);
+    }
+
+    if (fileStatus.state === "FAILED") {
+      throw new Error(`File processing failed: ${file.name}`);
+    }
+
+    return fileStatus;
+  } catch (error) {
+    log(
+      `Error uploading file to Gemini: ${error.message}`,
+      "error",
+      "fileUploader.js",
+    );
+    throw error;
+  }
 }
 
 module.exports = uploadFilesToGemini;
