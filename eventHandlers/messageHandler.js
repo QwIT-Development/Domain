@@ -18,6 +18,7 @@ const { formatDate } = require("../functions/makePrompt");
 const { openai } = require("../initializers/openaiClient");
 const { bondUpdater } = require("../functions/usageRep");
 const { addToHistory, trimHistory } = require("../utils/historyUtils");
+const { processOpenAIStreamingResponse } = require("../utils/openaiUtils");
 
 function simplifyEmoji(content) {
   // discord's custom emoji format: <:name:id>
@@ -65,9 +66,6 @@ ${simplifyEmoji(message.content)}
 }
 
 async function callOpenAI(channelId, openaiConfig) {
-  let responseMsg = "";
-  let tool_calls = null;
-
   // Convert Gemini history format to OpenAI messages format
   const messages = [];
   
@@ -128,40 +126,7 @@ async function callOpenAI(channelId, openaiConfig) {
   }
 
   const response = await openai.chat.completions.create(requestBody);
-
-  for await (const chunk of response) {
-    const delta = chunk.choices?.[0]?.delta;
-    if (delta?.tool_calls) {
-      if (!tool_calls) {
-        tool_calls = [];
-      }
-      // Handle tool calls accumulation for streaming
-      for (const toolCall of delta.tool_calls) {
-        if (!tool_calls[toolCall.index]) {
-          tool_calls[toolCall.index] = {
-            id: toolCall.id,
-            type: toolCall.type,
-            function: {
-              name: toolCall.function?.name || "",
-              arguments: toolCall.function?.arguments || ""
-            }
-          };
-        } else {
-          // Accumulate arguments for streaming
-          if (toolCall.function?.arguments) {
-            tool_calls[toolCall.index].function.arguments += toolCall.function.arguments;
-          }
-        }
-      }
-    } else if (delta?.content) {
-      responseMsg += delta.content;
-    }
-  }
-
-  if (tool_calls && tool_calls.length > 0) {
-    return { tool_calls, text: responseMsg.trim() };
-  }
-  return { text: responseMsg.trim() };
+  return await processOpenAIStreamingResponse(response);
 }
 
 async function handleOpenAIError(e, message, client, openaiConfig) {

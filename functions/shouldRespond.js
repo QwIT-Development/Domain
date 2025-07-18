@@ -3,22 +3,10 @@
         Copyright (C) 2025 Anchietae
 */
 
-const OpenAI = require("openai");
 const { loadConfig } = require("../initializers/configuration");
+const { openai } = require("../initializers/openaiClient");
+const { processOpenAIStreamingResponse } = require("../utils/openaiUtils");
 const config = loadConfig();
-
-const createOpenAIClient = (apiKey) => {
-  const clientConfig = { apiKey };
-  if (config.OPENAI_BASE_URL) {
-    clientConfig.baseURL = config.OPENAI_BASE_URL;
-  }
-  return new OpenAI(clientConfig);
-};
-
-let openaiClient = createOpenAIClient(config.OPENAI_API_KEY);
-if (config.CR_OPENAI_API_KEY?.length > 0) {
-  openaiClient = createOpenAIClient(config.CR_OPENAI_API_KEY);
-}
 
 const tools = [
   {
@@ -87,7 +75,6 @@ FAILURE TO USE THE FUNCTION WILL RESULT IN AN ERROR. YOU MUST USE THE 'respond' 
 
   while (attempt < maxRetries) {
     try {
-      let tool_calls = null;
       const historyCopy = [...history];
 
       if (attempt > 0) {
@@ -105,7 +92,7 @@ FAILURE TO USE THE FUNCTION WILL RESULT IN AN ERROR. YOU MUST USE THE 'respond' 
         }))
       ];
 
-      const result = await openaiClient.chat.completions.create({
+      const result = await openai.chat.completions.create({
         model: config.OPENAI_MODEL,
         messages: messages,
         temperature: defaultConfig.temperature,
@@ -116,35 +103,10 @@ FAILURE TO USE THE FUNCTION WILL RESULT IN AN ERROR. YOU MUST USE THE 'respond' 
         stream: true,
       });
 
-      for await (const chunk of result) {
-        const delta = chunk.choices?.[0]?.delta;
-        if (delta?.tool_calls) {
-          if (!tool_calls) {
-            tool_calls = [];
-          }
-          // Handle tool calls accumulation for streaming
-          for (const toolCall of delta.tool_calls) {
-            if (!tool_calls[toolCall.index]) {
-              tool_calls[toolCall.index] = {
-                id: toolCall.id,
-                type: toolCall.type,
-                function: {
-                  name: toolCall.function?.name || "",
-                  arguments: toolCall.function?.arguments || ""
-                }
-              };
-            } else {
-              // Accumulate arguments for streaming
-              if (toolCall.function?.arguments) {
-                tool_calls[toolCall.index].function.arguments += toolCall.function.arguments;
-              }
-            }
-          }
-        }
-      }
+      const streamResult = await processOpenAIStreamingResponse(result);
 
-      if (tool_calls && tool_calls.length > 0) {
-        const args = JSON.parse(tool_calls[0].function.arguments);
+      if (streamResult.tool_calls && streamResult.tool_calls.length > 0) {
+        const args = JSON.parse(streamResult.tool_calls[0].function.arguments);
         if (attempt > 0) {
           console.log("Successfully received function call from AI");
         }
