@@ -5,6 +5,7 @@
 
 const { GoogleGenAI } = require("@google/genai");
 const { loadConfig } = require("../initializers/configuration");
+import { FunctionCallingConfigMode } from "@google/genai";
 const config = loadConfig();
 
 let genAI = new GoogleGenAI({ apiKey: config.GEMINI_API_KEY });
@@ -54,62 +55,101 @@ ${message.content}
 \`\`\`
 
 ---
-**Final Output Instruction:**
+**CRITICAL REQUIREMENT - YOU MUST FOLLOW THIS:**
 
-You MUST use the 'respond' tool to indicate your decision. Do not output any other text.
-Based on your analysis, call the 'respond' function with the following parameters:
+YOU ARE REQUIRED TO USE THE 'respond' FUNCTION. NO OTHER RESPONSE IS ACCEPTABLE.
+DO NOT generate any text, explanations, or reasoning outside of the function call.
+DO NOT respond with plain text.
+DO NOT provide analysis or commentary.
+YOUR ENTIRE RESPONSE MUST BE A SINGLE FUNCTION CALL TO 'respond'.
+
+MANDATORY: Call the 'respond' function with these exact parameters:
 - 'shouldRespond': A boolean (true or false) indicating if the bot should reply.
 - 'respondReason': A brief string explaining your reasoning.
 - 'reply': A boolean (true or false) indicating if this should be a direct reply to the message. Only use true if the response is intended for a single specific user.
 
-Your response will be a function call to the 'respond' tool.`;
+FAILURE TO USE THE FUNCTION WILL RESULT IN AN ERROR. YOU MUST USE THE 'respond' FUNCTION.`;
 
   const defaultConfig = {
-    temperature: 0.7,
+    temperature: 0.3, // Lower temperature for more consistent function calling
     topP: 0.95,
     topK: 40,
     maxOutputTokens: 8192,
     responseMimeType: "text/plain",
     systemInstruction: newPrompt,
     tools: tools,
+    toolConfig: {
+      functionCallingConfig: {
+        mode: FunctionCallingConfigMode.ANY, // Force the model to use a function
+        allowedFunctionNames: ["respond"],
+      },
+    },
   };
 
-  try {
-    let functionCalls = null;
-    const historyCopy = [...history];
-    const result = await genAI.models.generateContentStream({
-      model: "gemini-2.0-flash",
-      config: defaultConfig,
-      contents: historyCopy,
-    });
+  const maxRetries = 3;
+  let attempt = 0;
 
-    for await (const chunk of result) {
-      if (chunk.functionCalls) {
-        if (!functionCalls) {
-          functionCalls = [];
+  while (attempt < maxRetries) {
+    try {
+      let functionCalls = null;
+      const historyCopy = [...history];
+
+      console.log(
+        `Attempt ${attempt + 1}/${maxRetries} to get function call from AI...`,
+      );
+
+      const result = await genAI.models.generateContentStream({
+        model: "gemini-2.0-flash",
+        config: defaultConfig,
+        contents: historyCopy,
+      });
+
+      for await (const chunk of result) {
+        if (chunk.functionCalls) {
+          if (!functionCalls) {
+            functionCalls = [];
+          }
+          functionCalls.push(...chunk.functionCalls);
         }
-        functionCalls.push(...chunk.functionCalls);
+      }
+
+      if (functionCalls && functionCalls.length > 0) {
+        const args = functionCalls[0].args;
+        console.log("Successfully received function call from AI");
+        return args;
+      } else {
+        console.warn(
+          `Attempt ${attempt + 1}: No function calls found in the response. Retrying...`,
+        );
+        attempt++;
+      }
+    } catch (error) {
+      console.error(`Error in shouldRespond attempt ${attempt + 1}:`, error);
+      if (error.response?.data) {
+        console.error("Gemini API response data:", error.response.data);
+      }
+      attempt++;
+
+      if (attempt >= maxRetries) {
+        console.error("Max retries reached. Returning default response.");
+        return {
+          shouldRespond: false,
+          respondReason:
+            "Failed to get function call from AI after maximum retries.",
+          reply: false,
+        };
       }
     }
-    if (!functionCalls || functionCalls.length === 0) {
-      console.error("No function calls found in the response.");
-      return {
-        shouldRespond: false,
-        respondReason: "No function calls found in the response.",
-      };
-    }
-    const args = functionCalls[0].args;
-    return args;
-  } catch (error) {
-    console.error("Error in shouldRespond:", error);
-    if (error.response?.data) {
-      console.error("Gemini API response data:", error.response.data);
-    }
-    return {
-      shouldRespond: false,
-      respondReason: "An error occurred while processing the request.",
-    };
   }
+
+  // Fallback if all retries failed
+  console.error("All attempts failed to get function call from AI.");
+  return {
+    shouldRespond: false,
+    respondReason:
+      "AI failed to make required function call after all retry attempts.",
+    reply: false,
+  };
 }
 
 module.exports = { shouldRespond };
