@@ -79,7 +79,12 @@ async function parseBotCommands(toolCalls, message) {
         break;
       }
       case "mute": {
-        const { userID: userIdToMute, seconds, reason: muteReason } = args;
+        const {
+          userID: userIdToMute,
+          seconds,
+          reason: muteReason,
+          muteFor,
+        } = args;
         const messageUID = message.author.id;
         const userIdToMuteStr = userIdToMute.toString();
         let muteID = userIdToMuteStr;
@@ -87,8 +92,38 @@ async function parseBotCommands(toolCalls, message) {
         if (fuzzySearch(userIdToMuteStr, [messageUID], 0.3)) {
           muteID = messageUID;
         }
-        const time = seconds ? seconds * 1000 : 0;
-        const reason = muteReason || "No reason provided.";
+        // Predefined mute durations, so a schizophrenic/hallucinating bot won't mute for 1000 years
+        const predefinedDurations = {
+          Spam: 60, // 1m
+          Inappropriate_Language: 120, // 2m
+          Harassment: 600, // 10min
+          Advertising: 1800, // 30min
+          Trolling: 120, // 2min, yeah thats enough
+          Mass_Mentions: 600, // 10min
+          Evading_Punishment: 7200, // 2h, fair enough
+          Sharing_Personal_Information: 43200, // 12h
+          Raiding_and_Coordinated_Spam: 3600, // 1h, prob the mods hop on dc if a raid happens
+        };
+
+        let muteDurationSeconds;
+        if (muteFor && muteFor !== "Other") {
+          muteDurationSeconds = predefinedDurations[muteFor];
+        } else {
+          // check if seconds is valid
+          if (typeof seconds !== "number" || seconds <= 0) {
+            // fall back to 30 sec
+            muteDurationSeconds = 30;
+          } else {
+            muteDurationSeconds = seconds;
+          }
+        }
+
+        const time = muteDurationSeconds ? muteDurationSeconds * 1000 : 0;
+        const reason =
+          muteReason ||
+          (muteFor && muteFor !== "Other"
+            ? muteFor.replace(/_/g, " ")
+            : "No reason provided.");
 
         if (!muteID || !time || time <= 0) {
           log(
