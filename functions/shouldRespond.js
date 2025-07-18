@@ -18,7 +18,7 @@ const tools = [
       {
         name: "respond",
         description:
-          "Use this function to decide whether the bot should reply to the user's message. The 'shouldRespond' parameter indicates the decision, and 'respondReason' provides a brief justification for that decision.",
+          "Use this function to decide whether the bot should reply to the user's message. The 'shouldRespond' parameter indicates the decision, 'respondReason' provides a brief justification for that decision, and 'reply' indicates whether this is a direct reply to the message.",
         parameters: {
           type: "object",
           properties: {
@@ -28,8 +28,11 @@ const tools = [
             respondReason: {
               type: "string",
             },
+            reply: {
+              type: "boolean",
+            },
           },
-          required: ["shouldRespond", "respondReason"],
+          required: ["shouldRespond", "respondReason", "reply"],
         },
       },
     ],
@@ -57,6 +60,7 @@ You MUST use the 'respond' tool to indicate your decision. Do not output any oth
 Based on your analysis, call the 'respond' function with the following parameters:
 - 'shouldRespond': A boolean (true or false) indicating if the bot should reply.
 - 'respondReason': A brief string explaining your reasoning.
+- 'reply': A boolean (true or false) indicating if this should be a direct reply to the message. Only use true if the response is intended for a single specific user.
 
 Your response will be a function call to the 'respond' tool.`;
 

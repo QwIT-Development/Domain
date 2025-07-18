@@ -131,12 +131,7 @@ async function checkForMentions(message, client) {
     const prompt = await makePrompt(channelId, false);
     let response = await shouldRespond(message, client, history, prompt);
     const should = response.shouldRespond;
-    if (should === true)
-      return {
-        shouldRespond: true,
-        respondReason: response.respondReason,
-        reply: false,
-      };
+    if (should === true) return response;
   }
 
   return {
