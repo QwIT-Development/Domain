@@ -92,7 +92,7 @@ async function main() {
   // noinspection ES6MissingAwait
   getBannedSites();
   // imports
-  const { model } = require("./initializers/geminiClient");
+  const { model } = require("./initializers/openaiClient");
   const { messageHandler } = require("./eventHandlers/messageHandler");
 
   // initialize stuff inside async thingy

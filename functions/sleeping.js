@@ -10,7 +10,7 @@ const { changeSpinnerText } = require("../utils/processInfo");
 const fs = require("fs");
 const path = require("path");
 const { callGemini } = require("../utils/searx");
-const { genAI } = require("../initializers/geminiClient");
+const { openai } = require("../initializers/openaiClient");
 const { appendMemory } = require("./memories");
 
 // kibasszuk a sleeptimert ha meg nem null

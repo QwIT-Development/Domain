@@ -1,7 +1,7 @@
 const log = require("../utils/betterLogs");
 const { loadConfig } = require("../initializers/configuration");
 const state = require("../initializers/state");
-const { model } = require("../initializers/geminiClient");
+const { model } = require("../initializers/openaiClient");
 log(`Prompt reset schedule set`, "info", "cronReset.js");
 
 const config = loadConfig();

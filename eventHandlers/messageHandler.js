@@ -15,7 +15,7 @@ const uploadFilesToGemini = require("../eventHandlers/fileUploader");
 const { loadConfig } = require("../initializers/configuration");
 const config = loadConfig();
 const { formatDate } = require("../functions/makePrompt");
-const { genAI } = require("../initializers/geminiClient");
+const { openai } = require("../initializers/openaiClient");
 const { bondUpdater } = require("../functions/usageRep");
 const { addToHistory, trimHistory } = require("../utils/historyUtils");
 
@@ -64,34 +64,85 @@ ${simplifyEmoji(message.content)}
 \`\`\``;
 }
 
-async function callGeminiAPI(channelId, gemini) {
+async function callOpenAI(channelId, openaiConfig) {
   let responseMsg = "";
-  let functionCalls = null;
+  let tool_calls = null;
 
-  const response = await genAI.models.generateContentStream({
-    model: config.GEMINI_MODEL,
-    config: gemini[channelId],
-    contents: state.history[channelId],
-  });
-
-  for await (const chunk of response) {
-    if (chunk.functionCalls) {
-      if (!functionCalls) {
-        functionCalls = [];
-      }
-      functionCalls.push(...chunk.functionCalls);
-    } else if (chunk.text) {
-      responseMsg += chunk.text;
+  // Convert Gemini history format to OpenAI messages format
+  const messages = [];
+  
+  // Add system message first
+  if (state.prompts[channelId]) {
+    messages.push({
+      role: "system",
+      content: state.prompts[channelId]
+    });
+  }
+  
+  // Convert history from Gemini format to OpenAI format
+  for (const historyItem of state.history[channelId]) {
+    const role = historyItem.role === "model" ? "assistant" : historyItem.role;
+    const content = historyItem.parts?.[0]?.text || "";
+    if (content) {
+      messages.push({
+        role: role,
+        content: content
+      });
     }
   }
 
-  if (functionCalls) {
-    return { functionCalls, text: responseMsg.trim() };
+  const requestBody = {
+    model: config.OPENAI_MODEL,
+    messages: messages,
+    temperature: openaiConfig[channelId].temperature,
+    top_p: openaiConfig[channelId].top_p,
+    max_tokens: openaiConfig[channelId].max_tokens,
+    stream: true,
+  };
+  
+  if (openaiConfig[channelId].tools && openaiConfig[channelId].tools.length > 0) {
+    requestBody.tools = openaiConfig[channelId].tools;
+    requestBody.tool_choice = openaiConfig[channelId].tool_choice;
+  }
+
+  const response = await openai.chat.completions.create(requestBody);
+
+  for await (const chunk of response) {
+    const delta = chunk.choices?.[0]?.delta;
+    if (delta?.tool_calls) {
+      if (!tool_calls) {
+        tool_calls = [];
+      }
+      // Handle tool calls accumulation for streaming
+      for (const toolCall of delta.tool_calls) {
+        if (!tool_calls[toolCall.index]) {
+          tool_calls[toolCall.index] = {
+            id: toolCall.id,
+            type: toolCall.type,
+            function: {
+              name: toolCall.function?.name || "",
+              arguments: toolCall.function?.arguments || ""
+            }
+          };
+        } else {
+          // Accumulate arguments for streaming
+          if (toolCall.function?.arguments) {
+            tool_calls[toolCall.index].function.arguments += toolCall.function.arguments;
+          }
+        }
+      }
+    } else if (delta?.content) {
+      responseMsg += delta.content;
+    }
+  }
+
+  if (tool_calls && tool_calls.length > 0) {
+    return { tool_calls, text: responseMsg.trim() };
   }
   return { text: responseMsg.trim() };
 }
 
-async function handleGeminiError(e, message, client, gemini) {
+async function handleOpenAIError(e, message, client, openaiConfig) {
   const errorJSON = JSON.parse(JSON.stringify(e));
   let status = errorJSON?.status || null;
 
@@ -150,7 +201,7 @@ async function handleGeminiError(e, message, client, gemini) {
     let retryDelay;
     if (status === 429) {
       log(
-        `Gemini returned 429 (Resource Exhausted), attempting to retry after cooldown.`,
+        `OpenAI returned 429 (Rate Limited), attempting to retry after cooldown.`,
         "warn",
         "messageHandler.js",
       );
@@ -158,7 +209,7 @@ async function handleGeminiError(e, message, client, gemini) {
       retryDelay = delaySeconds * 1000;
     } else {
       log(
-        `Gemini returned ${status} (${statusMessage}), retrying`,
+        `OpenAI returned ${status} (${statusMessage}), retrying`,
         "warn",
         "messageHandler.js",
       );
@@ -170,20 +221,20 @@ async function handleGeminiError(e, message, client, gemini) {
     state.retryCounts[channelId]++;
     if (state.retryCounts[channelId] > 5) {
       console.error(
-        `Gemini returned ${status} error 5 times for channel ${channelId}, dropping task`,
+        `OpenAI returned ${status} error 5 times for channel ${channelId}, dropping task`,
       );
       state.retryCounts[channelId] = 0;
       return message.channel.send("Couldn't get a response, try again later.");
     }
 
     await new Promise((resolve) => setTimeout(resolve, retryDelay));
-    return messageHandler(message, client, gemini);
+    return messageHandler(message, client, openaiConfig);
   } else {
     if (state.retryCounts[channelId]) {
       state.retryCounts[channelId] = 0;
     }
     console.error(
-      `Unhandled Gemini error. Status: ${status}. Message: ${statusMessage || "No message provided"}`,
+      `Unhandled OpenAI error. Status: ${status}. Message: ${statusMessage || "No message provided"}`,
     );
     if (e.stack) {
       console.error(e.stack);
@@ -209,14 +260,14 @@ async function processResponse(responseMsg, message) {
   return responseMsg;
 }
 
-async function messageHandler(message, client, gemini) {
+async function messageHandler(message, client, openaiConfig) {
   const channelId = message.channel.id;
 
   if (!state.messageQueues[channelId]) {
     state.messageQueues[channelId] = [];
   }
 
-  state.messageQueues[channelId].push({ message, client, gemini });
+  state.messageQueues[channelId].push({ message, client, openaiConfig });
 
   if (state.isProcessing[channelId]) {
     return;
@@ -231,7 +282,7 @@ async function messageHandler(message, client, gemini) {
     ) {
       const task = state.messageQueues[channelId][0];
       try {
-        await _internalMessageHandler(task.message, task.client, task.gemini);
+        await _internalMessageHandler(task.message, task.client, task.openaiConfig);
       } catch (e) {
         console.error(
           `Error processing message in queue for channel ${channelId}: ${e.stack}`,
@@ -262,7 +313,7 @@ async function messageHandler(message, client, gemini) {
   }
 }
 
-async function _internalMessageHandler(message, client, gemini) {
+async function _internalMessageHandler(message, client, openaiConfig) {
   if (!(await checkAuthors(message, client))) {
     return;
   }
@@ -357,17 +408,17 @@ async function _internalMessageHandler(message, client, gemini) {
 
   let initialResponse;
   try {
-    initialResponse = await callGeminiAPI(channelId, gemini);
+    initialResponse = await callOpenAI(channelId, openaiConfig);
   } catch (e) {
-    return handleGeminiError(e, message, client, gemini);
+    return handleOpenAIError(e, message, client, openaiConfig);
   }
 
   const hasInitialText =
     initialResponse.text && initialResponse.text.trim().length > 0;
-  const hasFunctionCalls =
-    initialResponse.functionCalls && initialResponse.functionCalls.length > 0;
+  const hasToolCalls =
+    initialResponse.tool_calls && initialResponse.tool_calls.length > 0;
 
-  if (hasFunctionCalls) {
+  if (hasToolCalls) {
     if (hasInitialText) {
       let processedInitialThought = await processResponse(
         initialResponse.text,
@@ -376,21 +427,27 @@ async function _internalMessageHandler(message, client, gemini) {
       await addToHistory("model", processedInitialThought, channelId);
     }
 
+    // Convert OpenAI tool_calls to Gemini-compatible format for backwards compatibility
+    const convertedToolCalls = initialResponse.tool_calls.map((toolCall) => ({
+      name: toolCall.function.name,
+      args: JSON.parse(toolCall.function.arguments || '{}')
+    }));
+
     state.history[channelId].push({
-      role: "model",
-      parts: initialResponse.functionCalls.map((fc) => ({ functionCall: fc })),
+      role: "model", 
+      parts: [{ text: initialResponse.text || "" }]
     });
 
     let toolResponses;
     try {
       toolResponses = await parseBotCommands(
-        initialResponse.functionCalls,
+        convertedToolCalls,
         message,
-        gemini,
+        openaiConfig,
       );
     } catch (e) {
       console.error(`Error executing parseBotCommands: ${e.stack}`);
-      toolResponses = initialResponse.functionCalls.map((fc) => ({
+      toolResponses = convertedToolCalls.map((fc) => ({
         name: fc.name,
         response: {
           content: `An internal error occurred while attempting to execute the tool: ${fc.name}.`,
@@ -398,23 +455,19 @@ async function _internalMessageHandler(message, client, gemini) {
       }));
     }
 
-    const functionResponseParts = toolResponses.map((toolResponse) => ({
-      functionResponse: {
-        name: toolResponse.name,
-        response: toolResponse.response,
-      },
-    }));
-
-    state.history[channelId].push({
-      role: "user",
-      parts: functionResponseParts,
-    });
+    // Add tool responses to history - convert to format that historyUtils expects
+    for (const toolResponse of toolResponses) {
+      state.history[channelId].push({
+        role: "user",
+        parts: [{ text: `Tool response for ${toolResponse.name}: ${JSON.stringify(toolResponse.response)}` }]
+      });
+    }
 
     let subsequentResponse;
     try {
-      subsequentResponse = await callGeminiAPI(channelId, gemini);
+      subsequentResponse = await callOpenAI(channelId, openaiConfig);
     } catch (e) {
-      return handleGeminiError(e, message, client, gemini);
+      return handleOpenAIError(e, message, client, openaiConfig);
     }
     let subsequentText = subsequentResponse.text || "";
     if (subsequentText.trim().length > 0) {

@@ -7,7 +7,7 @@ const { SlashCommandBuilder } = require("discord.js");
 const state = require("../initializers/state");
 const { loadConfig } = require("../initializers/configuration");
 const config = loadConfig();
-const { model } = require("../initializers/geminiClient");
+const { model } = require("../initializers/openaiClient");
 
 module.exports = {
   data: new SlashCommandBuilder()

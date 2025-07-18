@@ -4,7 +4,7 @@
 */
 
 const { search } = require("../utils/searx");
-const { genAI } = require("../initializers/geminiClient");
+const { openai } = require("../initializers/openaiClient");
 
 async function searchHandler(str) {
   return await search(str, genAI);
