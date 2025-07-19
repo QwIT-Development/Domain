@@ -1,49 +1,90 @@
-<nav class="navbar">
-    <a class="navbar-brand" href="/">Domain WebUI</a>
+<nav class="bg-domain-card border-b border-domain-border shadow-lg">
+    <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center h-16">
+            <!-- Brand -->
+            <a href="/" class="text-xl font-bold text-gray-100 hover:text-domain-red transition-colors">
+                Domain WebUI
+            </a>
 
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="/leaderboard" class="text-gray-300 hover:text-white font-medium transition-colors">
+                    Leaderboard
+                </a>
+                <a href="#reputation" class="text-gray-300 hover:text-white font-medium transition-colors">
+                    Reputations
+                </a>
+                <a href="#bans" class="text-gray-300 hover:text-white font-medium transition-colors">
+                    Bans
+                </a>
 
-    <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
-            <li class="nav-item">
-                <a href="#reputation"><b>Reputations</b></a>.
-            </li>
-            <li class="nav-item">
-                <a href="#bans"><b>Bans</b></a>.
-            </li>
-            <li class="nav-item">
-                <a onclick="lobotomize()" href="javascript:void(0)">
-                    <button class="btn btn-primary">
-                        <span class="material-symbols-rounded">restart_alt</span>
+                <!-- Action Buttons -->
+                <div class="flex items-center space-x-2">
+                    <button onclick="lobotomize()" class="inline-flex items-center px-3 py-2 bg-domain-red hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors">
+                        <span class="material-symbols-rounded text-base mr-1">restart_alt</span>
                         Reset History
                     </button>
-                </a>
-                <a href="javascript:void(0)" onclick="garbageCollect()">
-                    <button class="btn btn-outline-primary">
-                        <span class="material-symbols-rounded">recycling</span>
+                    <button onclick="garbageCollect()" class="inline-flex items-center px-3 py-2 border border-domain-red text-domain-red hover:bg-domain-red hover:text-white text-sm font-medium rounded-lg transition-colors">
+                        <span class="material-symbols-rounded text-base mr-1">recycling</span>
                         Garbage Collect
                     </button>
+                </div>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button class="md:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors" id="mobile-menu-toggle">
+                <span class="material-symbols-rounded">menu</span>
+            </button>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="py-4 space-y-3 border-t border-domain-border">
+                <a href="/leaderboard" class="block text-gray-300 hover:text-white font-medium py-2 transition-colors">
+                    Leaderboard
                 </a>
-            </li>
-        </ul>
+                <a href="#reputation" class="block text-gray-300 hover:text-white font-medium py-2 transition-colors">
+                    Reputations
+                </a>
+                <a href="#bans" class="block text-gray-300 hover:text-white font-medium py-2 transition-colors">
+                    Bans
+                </a>
+
+                <!-- Mobile Action Buttons -->
+                <div class="pt-3 space-y-2 border-t border-domain-border">
+                    <button onclick="lobotomize()" class="w-full flex items-center justify-center px-4 py-3 bg-domain-red hover:bg-red-700 text-white font-medium rounded-lg transition-colors">
+                        <span class="material-symbols-rounded text-base mr-2">restart_alt</span>
+                        Reset History
+                    </button>
+                    <button onclick="garbageCollect()" class="w-full flex items-center justify-center px-4 py-3 border border-domain-red text-domain-red hover:bg-domain-red hover:text-white font-medium rounded-lg transition-colors">
+                        <span class="material-symbols-rounded text-base mr-2">recycling</span>
+                        Garbage Collect
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const navbarToggler = document.querySelector('.navbar-toggler');
-            const navbarCollapse = document.querySelector('.collapse.navbar-collapse');
-
-            if (navbarToggler) {
-                navbarToggler.addEventListener('click', function () {
-                    if (navbarCollapse) {
-                        navbarCollapse.classList.toggle('show');
-                    }
-                });
-            }
-        });
-    </script>
 </nav>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const toggleIcon = mobileMenuToggle.querySelector('.material-symbols-rounded');
+
+        if (mobileMenuToggle && mobileMenu) {
+            mobileMenuToggle.addEventListener('click', function () {
+                mobileMenu.classList.toggle('hidden');
+
+                // Toggle icon between menu and close
+                if (mobileMenu.classList.contains('hidden')) {
+                    toggleIcon.textContent = 'menu';
+                } else {
+                    toggleIcon.textContent = 'close';
+                }
+            });
+        }
+    });
+</script>
+
 <script src="/js/navjs.js"></script>

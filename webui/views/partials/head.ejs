@@ -4,17 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Domain WebUI</title>
-    <link rel="stylesheet" href="/css/kitten.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'domain-red': '#C41E3A',
+                        'domain-dark': '#121214',
+                        'domain-card': '#1a1a1c',
+                        'domain-border': '#444',
+                    },
+                    fontFamily: {
+                        'mono': ['ui-monospace', 'SFMono-Regular', 'Monaco', 'Consolas', '"Liberation Mono"', '"Courier New"', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
     <style>
+        .material-symbols-rounded {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
         .log-entry {
-            font-family: monospace;
+            font-family: ui-monospace, SFMono-Regular, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
             white-space: pre;
             margin-bottom: 2px;
+            line-height: 1.4;
         }
         .log-info { color: #29ABE2; }
         .log-warn { color: #FFD700; font-weight: bold; }
-        .log-error { color: white; background-color: #E74C3C; font-weight: bold; }
+        .log-error { color: white; background-color: #E74C3C; font-weight: bold; padding: 2px 4px; border-radius: 3px; }
     </style>
 </head>
-<body>
+<body class="dark bg-domain-dark text-gray-100 min-h-screen flex flex-col">
 <%- include('navbar') %>

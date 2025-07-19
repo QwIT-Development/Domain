@@ -6,7 +6,7 @@
 const state = require("../initializers/state");
 const log = require("../utils/betterLogs");
 const { botReady, botSleeping } = require("./presenceManager");
-const { changeSpinnerText } = require("../utils/processInfo");
+const { changeSpinnerText, stopSpinner } = require("../utils/processInfo");
 const fs = require("fs");
 const path = require("path");
 const { callOpenAI } = require("../utils/searx");
@@ -30,12 +30,14 @@ function schedSleep(range, client) {
   try {
     if (!range || typeof range !== "string") {
       console.error(`Invalid range format: ${range}, expected: 10:00-11:00`);
+      stopSpinner(false, "Invalid sleep range format").then();
       return false;
     }
     const parts = range.split("-").map((t) => t.trim());
 
     if (parts.length !== 2 || !parts[0] || !parts[1]) {
       console.error(`Invalid range format: ${range}, expected: 10:00-11:00`);
+      stopSpinner(false, "Invalid sleep range format").then();
       return false;
     }
     const [startStr, endStr] = parts;
@@ -47,12 +49,14 @@ function schedSleep(range, client) {
       console.error(
         `Invalid values in range: "${range}". Are you sure you used the format?`,
       );
+      stopSpinner(false, "Invalid time values in sleep range").then();
       return false;
     }
 
     scheduleSleepCycle(startTimeMs, endTimeMs, client, endStr);
 
     log(`Sleep schedule set: ${startStr} - ${endStr}`, "info", "sleeping.js");
+    stopSpinner(true, `Sleep schedule set: ${startStr} - ${endStr}`).then();
     return true;
   } catch (error) {
     console.error(`Error scheduling sleep: ${error.message}`);
@@ -60,6 +64,7 @@ function schedSleep(range, client) {
       clearTimeout(state.sleepCycleTimer);
       state.sleepCycleTimer = null;
     }
+    stopSpinner(false, `Error scheduling sleep: ${error.message}`).then();
     return false;
   }
 }

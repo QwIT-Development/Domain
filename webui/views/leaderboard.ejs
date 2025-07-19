@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain WebUI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'domain-red': '#C41E3A',
+                        'domain-dark': '#121214',
+                        'domain-card': '#1a1a1c',
+                        'domain-border': '#444',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-rounded {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="dark bg-domain-dark text-gray-100 min-h-screen flex flex-col">
+    <main class="container mx-auto px-4 mt-8 flex-grow">
+        <div class="w-full">
+            <div class="bg-domain-card rounded-lg shadow-xl border border-domain-border">
+                <div class="px-6 py-4 border-b border-domain-border">
+                    <h2 class="text-2xl font-semibold flex items-center gap-2">
+                        <span class="material-symbols-rounded">leaderboard</span>
+                        Reputation Leaderboard
+                    </h2>
+                    <p class="text-gray-400 mt-2 mb-0">Top users ranked by reputation score</p>
+                </div>
+                <div class="p-6">
+                    <% if (users && users.length > 0) { %>
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse">
+                                <thead>
+                                    <tr class="border-b-2 border-domain-border">
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">#</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">User</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">Reputation</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">Bond Level</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">Messages</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% users.forEach((user, index) => { %>
+                                        <tr class="border-b border-domain-border hover:bg-gray-800/50 transition-colors duration-150 <%= index % 2 === 0 ? 'bg-gray-900/20' : '' %>">
+                                            <td class="py-4 px-4">
+                                                <% if (index === 0) { %>
+                                                    <span class="material-symbols-rounded text-yellow-500 text-2xl">trophy</span>
+                                                <% } else if (index === 1) { %>
+                                                    <span class="material-symbols-rounded text-gray-400 text-2xl">trophy</span>
+                                                <% } else if (index === 2) { %>
+                                                    <span class="material-symbols-rounded text-yellow-700 text-2xl">trophy</span>
+                                                <% } else { %>
+                                                    <span class="inline-flex items-center justify-center w-8 h-8 bg-gray-600 text-white text-sm rounded-full font-medium"><%= index + 1 %></span>
+                                                <% } %>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <div class="flex items-center gap-3">
+                                                    <% if (user.avatarUrl && user.avatarUrl.trim() !== '') { %>
+                                                        <%
+                                                            let avatarSrc;
+                                                            const lowerUrl = user.avatarUrl.toLowerCase();
+                                                            if (lowerUrl.startsWith('https:') || lowerUrl.startsWith('data:')) {
+                                                                avatarSrc = user.avatarUrl;
+                                                            } else {
+                                                                avatarSrc = 'data:,';
+                                                            }
+                                                        %>
+                                                        <img src="<%= avatarSrc %>" alt="" class="w-8 h-8 rounded-full">
+                                                    <% } else { %>
+                                                        <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-white">
+                                                            <span class="material-symbols-rounded text-base">person</span>
+                                                        </div>
+                                                    <% } %>
+                                                    <span class="font-semibold text-gray-100"><%= user.username %></span>
+                                                </div>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <% if (user.score > 0) { %>
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-500/20 text-green-400 border border-green-500/30"><%= user.score %></span>
+                                                <% } else if (user.score < 0) { %>
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-500/20 text-red-400 border border-red-500/30"><%= user.score %></span>
+                                                <% } else { %>
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-500/20 text-gray-400 border border-gray-500/30">0</span>
+                                                <% } %>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30"><%= user.bondLvl %></span>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <span class="text-gray-400"><%= user.totalMsgCount.toLocaleString() %></span>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } else { %>
+                        <div class="text-center py-12">
+                            <span class="material-symbols-rounded text-gray-500 text-6xl block mb-4">person_off</span>
+                            <h4 class="text-xl font-semibold text-gray-400 mb-2">No users found</h4>
+                            <p class="text-gray-500">The leaderboard is empty. Users will appear here once they start interacting with the bot.</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <% if (users && users.length > 0) { %>
+            <div class="w-full mt-8">
+                <div class="bg-domain-card rounded-lg shadow-xl border border-domain-border">
+                    <div class="px-6 py-4 border-b border-domain-border">
+                        <h3 class="text-xl font-semibold flex items-center gap-2">
+                            <span class="material-symbols-rounded">insights</span>
+                            Statistics
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div class="text-center">
+                                <h4 class="text-3xl font-bold text-blue-400 mb-2"><%= stats.totalUsers %></h4>
+                                <p class="text-gray-400 font-medium">Total Users</p>
+                            </div>
+                            <div class="text-center">
+                                <h4 class="text-3xl font-bold text-green-400 mb-2"><%= stats.positiveUsers %></h4>
+                                <p class="text-gray-400 font-medium">Positive Rep</p>
+                            </div>
+                            <div class="text-center">
+                                <h4 class="text-3xl font-bold text-yellow-400 mb-2"><%= stats.averageScore.toFixed(1) %></h4>
+                                <p class="text-gray-400 font-medium">Average Score</p>
+                            </div>
+                            <div class="text-center">
+                                <h4 class="text-3xl font-bold text-cyan-400 mb-2"><%= stats.totalMessages.toLocaleString() %></h4>
+                                <p class="text-gray-400 font-medium">Total Messages</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+    </main>
+
+    <footer class="text-center text-gray-500 py-6 mt-8 border-t border-domain-border">
+        <small>
+            <a href="https://github.com/QwIT-Development/Domain" class="text-domain-red hover:text-red-400 transition-colors">
+                Domain-Unchained
+            </a>
+        </small>
+    </footer>
+</body>
+</html>

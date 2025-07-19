@@ -2,36 +2,27 @@ const log = require("../../utils/betterLogs");
 const state = require("../../initializers/state");
 const getCurrentStats = require("./getCurrentStats");
 
-async function sendStatsToClient(client, currentStats, deadClients) {
+async function sendStatsToClient(
+  client,
+  currentStats,
+  deadClients,
+  forceFullStats = false,
+) {
   return new Promise((resolve) => {
     if (client.readyState === WebSocket.OPEN && !deadClients.has(client)) {
       let payloadToSend;
       let isDelta = false;
 
-      if (!client.lastSentStats) {
+      // Force full stats or first time sending
+      if (!client.lastSentStats || forceFullStats) {
         payloadToSend = currentStats;
         client.lastSentStats = JSON.parse(JSON.stringify(currentStats));
+        isDelta = false;
       } else {
-        const diff = {};
-        let hasChanges = false;
-        for (const key in currentStats) {
-          if (
-            JSON.stringify(currentStats[key]) !==
-            JSON.stringify(client.lastSentStats[key])
-          ) {
-            diff[key] = currentStats[key];
-            hasChanges = true;
-          }
-        }
-
-        if (hasChanges) {
-          payloadToSend = diff;
-          isDelta = true;
-          client.lastSentStats = JSON.parse(JSON.stringify(currentStats));
-        } else {
-          resolve();
-          return;
-        }
+        // Always send full stats to ensure WebUI gets complete data
+        payloadToSend = currentStats;
+        client.lastSentStats = JSON.parse(JSON.stringify(currentStats));
+        isDelta = false;
       }
 
       const data = JSON.stringify({
@@ -54,6 +45,7 @@ async function sendStatsToClient(client, currentStats, deadClients) {
 async function broadcastStats() {
   try {
     const currentStats = await getCurrentStats();
+
     const deadClients = new Set();
 
     state.wsClients.forEach((client) => {
@@ -81,7 +73,7 @@ async function broadcastStats() {
     deadClients.forEach((client) => state.wsClients.delete(client));
 
     const sendPromises = Array.from(state.wsClients).map((client) => {
-      return sendStatsToClient(client, currentStats, deadClients);
+      return sendStatsToClient(client, currentStats, deadClients, false);
     });
 
     await Promise.all(sendPromises);

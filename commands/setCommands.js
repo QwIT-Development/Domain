@@ -12,7 +12,7 @@ const { loadConfig } = require("../initializers/configuration");
 const config = loadConfig();
 const log = require("../utils/betterLogs");
 const state = require("../initializers/state");
-const { changeSpinnerText } = require("../utils/processInfo");
+const { changeSpinnerText, stopSpinner } = require("../utils/processInfo");
 
 async function announceCommands(client) {
   state.locationHelper.init = "setCommands.js/announceCommands";
@@ -54,12 +54,19 @@ async function announceCommands(client) {
     });
 
     log(`Registered ${result.length} commands`, "info", "setCommands.js");
+
+    for (const data of result) {
+      state.commandIds[data.name] = data.id;
+    }
+
+    await stopSpinner(
+      true,
+      `Registered ${result.length} commands successfully`,
+    );
   } catch (e) {
     console.error(`Error while registering commands: ${e}`);
-  }
-
-  for (const data of result) {
-    state.commandIds[data.name] = data.id;
+    await stopSpinner(false, `Failed to register commands: ${e.message}`);
+    throw e; // Re-throw to maintain error handling behavior
   }
 }
 

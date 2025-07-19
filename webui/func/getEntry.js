@@ -20,39 +20,66 @@ async function getEntry(userId) {
 
   let apiUserInfo = null;
   if (needsAPIRefresh) {
-    apiUserInfo = await getUserInfo(userId);
-    if (apiUserInfo) {
-      cachedUserInfo = {
-        // id: userId
-        username: apiUserInfo.username,
-        avatarUrl: apiUserInfo.avatarUrl,
-        lastUpdated: now,
-      };
-      usersCache[userId] = cachedUserInfo;
-    } else if (cachedUserInfo) {
-      cachedUserInfo.lastUpdated = now;
-    } else {
-      cachedUserInfo = {
-        username: "Unknown",
-        avatarUrl: null,
-        lastUpdated: now,
-      };
-      usersCache[userId] = cachedUserInfo;
+    try {
+      apiUserInfo = await getUserInfo(userId);
+      if (apiUserInfo) {
+        cachedUserInfo = {
+          // id: userId
+          username: apiUserInfo.username,
+          avatarUrl: apiUserInfo.avatarUrl,
+          lastUpdated: now,
+        };
+        usersCache[userId] = cachedUserInfo;
+      } else if (cachedUserInfo) {
+        cachedUserInfo.lastUpdated = now;
+      } else {
+        cachedUserInfo = {
+          username: "Unknown",
+          avatarUrl: null,
+          lastUpdated: now,
+        };
+        usersCache[userId] = cachedUserInfo;
+      }
+    } catch (error) {
+      console.error(`Error getting user info for ${userId}: ${error.message}`);
+      if (!cachedUserInfo) {
+        cachedUserInfo = {
+          username: "Unknown",
+          avatarUrl: null,
+          lastUpdated: now,
+        };
+        usersCache[userId] = cachedUserInfo;
+      }
     }
   }
 
-  const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+  try {
+    const dbUser = await prisma.user.findUnique({ where: { id: userId } });
 
-  return {
-    id: userId,
-    username: cachedUserInfo.username,
-    avatarUrl: cachedUserInfo.avatarUrl,
-    lastUpdated: cachedUserInfo.lastUpdated,
-    score: dbUser ? dbUser.repPoint : 0,
-    banReason: dbUser?.banned ? dbUser.banMessage : null,
-    bondLvl: dbUser ? dbUser.bondLvl : 0,
-    totalMsgCount: dbUser ? dbUser.totalMsgCount : 0,
-  };
+    const entry = {
+      id: userId,
+      username: cachedUserInfo.username,
+      avatarUrl: cachedUserInfo.avatarUrl,
+      lastUpdated: cachedUserInfo.lastUpdated,
+      score: dbUser ? dbUser.repPoint : 0,
+      banReason: dbUser?.banned ? dbUser.banMessage : null,
+      bondLvl: dbUser ? dbUser.bondLvl : 0,
+      totalMsgCount: dbUser ? dbUser.totalMsgCount : 0,
+    };
+    return entry;
+  } catch (error) {
+    console.error(`Database error for user ${userId}: ${error.message}`);
+    return {
+      id: userId,
+      username: cachedUserInfo.username || "Unknown",
+      avatarUrl: cachedUserInfo.avatarUrl || null,
+      lastUpdated: cachedUserInfo.lastUpdated || now,
+      score: 0,
+      banReason: null,
+      bondLvl: 0,
+      totalMsgCount: 0,
+    };
+  }
 }
 
 module.exports = getEntry;

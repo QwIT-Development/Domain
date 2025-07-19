@@ -35,7 +35,7 @@ async function deleteArtifacts() {
 async function deleteUploadedItems() {
   state.locationHelper.init = "cleanup.js/deleteUploadedItems";
   await changeSpinnerText("Deleting Uploaded Items...");
-  
+
   // For OpenAI implementation, we use Discord URLs directly, so no cleanup needed
   // Just clean up any temporary files that might exist
   const tmpDir = path.join(global.dirname, "data", "running", "tmp");
@@ -49,8 +49,12 @@ async function deleteUploadedItems() {
       }
     }
   }
-  
-  log("OpenAI implementation uses Discord URLs - no remote file cleanup needed", "info", "cleanup.js");
+
+  log(
+    "OpenAI implementation uses Discord URLs - no remote file cleanup needed",
+    "info",
+    "cleanup.js",
+  );
 }
 
 module.exports = { deleteArtifacts, deleteUploadedItems };

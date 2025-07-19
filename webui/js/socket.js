@@ -1,17 +1,17 @@
 const socket = new WebSocket(`ws://${window.location.host}`);
 
 function createCard(user, cardType) {
-  const colDiv = document.createElement("div");
-  colDiv.className = "col-12 col-md-12 col-lg";
-
   const cardDiv = document.createElement("div");
-  cardDiv.className = "card";
+  cardDiv.className =
+    "bg-domain-card rounded-lg shadow-xl border border-domain-border";
   cardDiv.dataset.userId = user.id;
 
   const cardHeader = document.createElement("div");
-  cardHeader.className = "card-header";
+  cardHeader.className =
+    "px-4 py-3 border-b border-domain-border flex items-center gap-2";
 
-  const avatarImg = document.createElement("img");
+  // Avatar handling
+  const avatarContainer = document.createElement("div");
   let avatarSrc;
   const rawUserAvatarUrl = user.avatarUrl;
 
@@ -33,55 +33,75 @@ function createCard(user, cardType) {
   } else {
     avatarSrc = "data:,";
   }
-  avatarImg.src = avatarSrc;
-  avatarImg.alt = ""; // blank alt
-  avatarImg.width = 32;
-  avatarImg.height = 32;
-  avatarImg.className = "me-2 rounded-circle";
 
-  const usernameP = document.createElement("p");
-  usernameP.style.marginBottom = "0";
-  usernameP.textContent = user.username;
+  if (avatarSrc && avatarSrc !== "data:,") {
+    const avatarImg = document.createElement("img");
+    avatarImg.src = avatarSrc;
+    avatarImg.alt = "";
+    avatarImg.className = "w-10 h-10 rounded-full flex-shrink-0";
+    avatarContainer.appendChild(avatarImg);
+  } else {
+    // Default avatar placeholder
+    const avatarPlaceholder = document.createElement("div");
+    avatarPlaceholder.className =
+      "w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center text-white flex-shrink-0";
+    const personIcon = document.createElement("span");
+    personIcon.className = "material-symbols-rounded text-base";
+    personIcon.textContent = "person";
+    avatarPlaceholder.appendChild(personIcon);
+    avatarContainer.appendChild(avatarPlaceholder);
+  }
 
-  cardHeader.appendChild(avatarImg);
-  cardHeader.appendChild(usernameP);
+  const usernameDiv = document.createElement("div");
+  usernameDiv.className = "flex-1";
+  const usernameH3 = document.createElement("h3");
+  usernameH3.className = "text-lg font-semibold text-gray-100";
+  usernameH3.textContent = user.username;
+  usernameDiv.appendChild(usernameH3);
+
+  cardHeader.appendChild(avatarContainer);
+  cardHeader.appendChild(usernameDiv);
 
   const cardBody = document.createElement("div");
-  cardBody.className = "card-body";
+  cardBody.className = "p-4";
 
   if (cardType === "reputation") {
     // Reputation-specific content
     const scoreDiv = document.createElement("div");
-    scoreDiv.className = "mb-3";
+    scoreDiv.className = "space-y-3";
 
     const scoreLabel = document.createElement("label");
     const inputId = `scoreInput_${user.id}`;
     scoreLabel.htmlFor = inputId;
+    scoreLabel.className = "block text-sm font-medium text-gray-300 mb-1";
     scoreLabel.textContent = "Score:";
 
     const scoreInput = document.createElement("input");
     scoreInput.type = "number";
-    scoreInput.className = "form-control";
+    scoreInput.className =
+      "w-full px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-domain-red focus:border-transparent";
     scoreInput.id = inputId;
     scoreInput.name = "scoreInput";
     scoreInput.value = user.score;
     scoreInput.max = 1000;
     scoreInput.min = -1000;
 
-    scoreDiv.appendChild(scoreLabel);
-    scoreDiv.appendChild(scoreInput);
+    const infoDiv = document.createElement("div");
+    infoDiv.className = "space-y-1";
 
     const bondLvlP = document.createElement("p");
-    bondLvlP.textContent = `Bond Level: ${user.bondLvl}`;
+    bondLvlP.className = "text-sm text-gray-300 flex items-center gap-2";
+    bondLvlP.innerHTML = `<span class="material-symbols-rounded text-blue-400 text-sm">link</span>Bond Level: <span class="text-blue-400 font-mono">${user.bondLvl}</span>`;
 
     const totalMsgP = document.createElement("p");
-    totalMsgP.textContent = `Total Messages: ${user.totalMsgCount}`;
+    totalMsgP.className = "text-sm text-gray-300 flex items-center gap-2";
+    totalMsgP.innerHTML = `<span class="material-symbols-rounded text-cyan-400 text-sm">chat_bubble</span>Total Messages: <span class="text-blue-400 font-mono">${user.totalMsgCount.toLocaleString()}</span>`;
 
     const saveButton = document.createElement("button");
     saveButton.type = "button";
-    saveButton.className = "btn btn-outline-primary";
-    saveButton.textContent = "Save Score";
-    saveButton.style.width = "100%";
+    saveButton.className =
+      "w-full px-4 py-2 bg-domain-red hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2";
+    saveButton.innerHTML = `<span class="material-symbols-rounded text-sm">save</span>Save Score`;
     saveButton.onclick = () => {
       const newScore = parseInt(scoreInput.value, 10);
       if (isNaN(newScore)) {
@@ -113,24 +133,26 @@ function createCard(user, cardType) {
         });
     };
 
+    scoreDiv.appendChild(scoreLabel);
+    scoreDiv.appendChild(scoreInput);
+    infoDiv.appendChild(bondLvlP);
+    infoDiv.appendChild(totalMsgP);
+    scoreDiv.appendChild(infoDiv);
+    scoreDiv.appendChild(saveButton);
     cardBody.appendChild(scoreDiv);
-    cardBody.appendChild(bondLvlP);
-    cardBody.appendChild(totalMsgP);
-    cardBody.appendChild(saveButton);
   } else if (cardType === "ban") {
     const reasonDiv = document.createElement("div");
-    reasonDiv.className = "mb-3";
+    reasonDiv.className = "space-y-3";
 
-    const reason = document.createElement("p");
-    reason.innerText = "Reason: " + user.banReason;
-
-    reasonDiv.appendChild(reason);
+    const reasonP = document.createElement("p");
+    reasonP.className = "text-sm text-gray-300 p-2 bg-gray-800/30 rounded-lg";
+    reasonP.innerHTML = `<span class="material-symbols-rounded text-red-400 text-sm mr-2">info</span><strong>Reason:</strong> ${user.banReason}`;
 
     const liftButton = document.createElement("button");
     liftButton.type = "button";
-    liftButton.className = "btn btn-outline-primary";
-    liftButton.textContent = "Lift Ban";
-    liftButton.style.width = "100%";
+    liftButton.className =
+      "w-full px-4 py-2 border border-green-500 text-green-400 hover:bg-green-500 hover:text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2";
+    liftButton.innerHTML = `<span class="material-symbols-rounded text-sm">check_circle</span>Lift Ban`;
     liftButton.onclick = () => {
       fetch(`/api/unban/${encodeURIComponent(user.id)}`, {
         method: "DELETE",
@@ -149,15 +171,15 @@ function createCard(user, cardType) {
         });
     };
 
+    reasonDiv.appendChild(reasonP);
+    reasonDiv.appendChild(liftButton);
     cardBody.appendChild(reasonDiv);
-    cardBody.appendChild(liftButton);
   }
 
   cardDiv.appendChild(cardHeader);
   cardDiv.appendChild(cardBody);
-  colDiv.appendChild(cardDiv);
 
-  return colDiv;
+  return cardDiv;
 }
 
 let pingIntervalId = null;
@@ -253,6 +275,8 @@ function updateRootPathStats(stats) {
       logLine.textContent = `${logEntry.timestamp} ${logEntry.symbol}[${logEntry.thread}]: ${logEntry.message}`;
       logsElement.appendChild(logLine);
     });
+    // Auto-scroll to bottom
+    logsElement.scrollTop = logsElement.scrollHeight;
   }
 }
 
@@ -262,24 +286,21 @@ function updateReputationPathStats(stats) {
 
   const users = stats.users || [];
   const userIds = new Set(users.map((u) => u.id));
-  const existingUserCards = userCont.querySelectorAll(".card[data-user-id]");
+  const existingUserCards = userCont.querySelectorAll("[data-user-id]");
 
   existingUserCards.forEach((cardElement) => {
     const userId = cardElement.dataset.userId;
     if (!userIds.has(userId)) {
-      const colDiv = cardElement.closest(".col-12");
-      if (colDiv) {
-        userCont.removeChild(colDiv);
-      }
+      userCont.removeChild(cardElement);
     }
   });
 
   users.forEach((user) => {
-    let card = userCont.querySelector(`.card[data-user-id="${user.id}"]`);
+    let card = userCont.querySelector(`[data-user-id="${user.id}"]`);
     if (card) {
       const scoreInput = card.querySelector('input[name="scoreInput"]');
       const avatarImg = card.querySelector("img");
-      const usernameP = card.querySelector(".card-header p");
+      const usernameH3 = card.querySelector("h3");
 
       if (
         scoreInput &&
@@ -318,8 +339,8 @@ function updateReputationPathStats(stats) {
         avatarImg.src = newAvatarUrl;
       }
 
-      if (usernameP && usernameP.textContent !== user.username) {
-        usernameP.textContent = user.username;
+      if (usernameH3 && usernameH3.textContent !== user.username) {
+        usernameH3.textContent = user.username;
       }
     } else {
       const userCardElement = createCard(user, "reputation");

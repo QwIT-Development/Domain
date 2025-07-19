@@ -19,6 +19,8 @@ const heapdumpHandler = require("./api/heapdump");
 
 const wsConn = require("./func/wsConn");
 const broadcastStats = require("./func/broadcastStats");
+const getLeaderboardData = require("./func/getLeaderboardData");
+const warmupCache = require("./func/warmupCache");
 const state = require("../initializers/state");
 
 const viewsPath = path.join(global.dirname, "webui", "views");
@@ -57,9 +59,9 @@ async function handleStaticFile(pathname, staticPath, prefix) {
   return null;
 }
 
-async function handleEjsTemplate(viewName) {
+async function handleEjsTemplate(viewName, data = {}) {
   const filePath = path.join(viewsPath, viewName);
-  const html = await ejs.renderFile(filePath);
+  const html = await ejs.renderFile(filePath, data);
   return new Response(html, { headers: { "Content-Type": "text/html" } });
 }
 
@@ -105,6 +107,9 @@ const server = Bun.serve({
         response = await handleStaticFile(pathname, staticJSPath, "/js/");
       } else if (pathname === "/") {
         response = await handleEjsTemplate("index.ejs");
+      } else if (pathname === "/leaderboard") {
+        const leaderboardData = await getLeaderboardData();
+        response = await handleEjsTemplate("leaderboard.ejs", leaderboardData);
       } else if (pathname.startsWith("/api/")) {
         response = await handleApiRoutes(req, pathname);
       }
@@ -157,8 +162,38 @@ log(
 );
 log("WebUI is not secured, do not expose the port.", "warn", "webui.js");
 
+// Wait for Discord client to be ready before warming up cache
+async function startCacheWarmup() {
+  // Wait for Discord client to be available and ready
+  let attempts = 0;
+  const maxAttempts = 30; // 30 seconds timeout
+
+  while (attempts < maxAttempts) {
+    if (global.discordClient && global.discordClient.isReady()) {
+      try {
+        await warmupCache();
+      } catch (error) {
+        console.error(`User cache warmup failed: ${error.message}`);
+      }
+      return;
+    }
+
+    attempts++;
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
+  }
+
+  console.warn(
+    "Discord client not ready after 30 seconds, proceeding without cache warmup",
+  );
+}
+
+// Start cache warmup asynchronously
+startCacheWarmup().catch((error) => {
+  console.error(`Cache warmup startup failed: ${error.message}`);
+});
+
 log("Initializing WebSocket broadcast...", "info", "webui.js");
-statsInterval = setInterval(() => broadcastStats(server), 2000);
+statsInterval = setInterval(() => broadcastStats(), 2000);
 log("WebSocket broadcast initialized", "info", "webui.js");
 
 process.on("SIGINT", () => {
