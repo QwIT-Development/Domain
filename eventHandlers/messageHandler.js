@@ -15,7 +15,7 @@ const uploadFilesToOpenAI = require("../eventHandlers/fileUploader");
 const { loadConfig } = require("../initializers/configuration");
 const config = loadConfig();
 const { formatDate } = require("../functions/makePrompt");
-const { openai } = require("../initializers/openaiClient");
+const { messageGenerationClient } = require("../initializers/openaiClient");
 const { bondUpdater } = require("../functions/usageRep");
 const { addToHistory, trimHistory } = require("../utils/historyUtils");
 const { processOpenAIStreamingResponse } = require("../utils/openaiUtils");
@@ -125,7 +125,7 @@ async function callOpenAI(channelId, openaiConfig) {
     requestBody.tool_choice = openaiConfig[channelId].tool_choice;
   }
 
-  const response = await openai.chat.completions.create(requestBody);
+  const response = await messageGenerationClient.createChatCompletion(requestBody);
   return await processOpenAIStreamingResponse(response);
 }
 

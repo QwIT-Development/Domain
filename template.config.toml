@@ -3,20 +3,40 @@
 # discord token (https://discord.com/developers/applications)
 DISCORD_TOKEN = ""
 
-# openai api key (https://platform.openai.com/api-keys)
+# OpenAI API configuration for message generation (main chat responses)
+# Can be a single key or array of keys for failover when rate limits are hit
+# Single key format: OPENAI_API_KEY = "your-key-here"
+# Array format: OPENAI_API_KEY = ["key1", "key2", "key3"]
 OPENAI_API_KEY = ""
 
-# openai base url for api calls (leave empty for default OpenAI, or set for compatible APIs)
+# OpenAI base URL for message generation API calls
 # Examples:
 # OpenAI (default): https://api.openai.com/v1
-# Ollama: http://localhost:11434/v1
+# Ollama: http://localhost:11434/v1  
 # OpenRouter: https://openrouter.ai/api/v1
 # Azure OpenAI: https://your-resource.openai.azure.com/
 OPENAI_BASE_URL = ""
 
-# openai model id (https://platform.openai.com/docs/models)
-# OPENAI_MODEL = "gpt-4o"
+# OpenAI model for message generation
 OPENAI_MODEL = "gpt-4o"
+
+# Search API configuration (for web search functionality)
+# Leave empty to use same as message generation, or configure separately
+# Examples:
+# Single key: SEARCH_OPENAI_API_KEY = "search-specific-key"
+# Multiple keys: SEARCH_OPENAI_API_KEY = ["search-key-1", "search-key-2", "search-key-3"]
+SEARCH_OPENAI_API_KEY = ""
+SEARCH_OPENAI_BASE_URL = "" # Leave empty to use OPENAI_BASE_URL
+SEARCH_OPENAI_MODEL = ""    # Leave empty to use OPENAI_MODEL
+
+# ShouldRespond API configuration (for context-aware response decisions)  
+# Leave empty to use same as message generation, or configure separately
+# Examples:
+# Single key: SHOULDRESPOND_OPENAI_API_KEY = "respond-specific-key"
+# Multiple keys: SHOULDRESPOND_OPENAI_API_KEY = ["respond-key-1", "respond-key-2"]
+SHOULDRESPOND_OPENAI_API_KEY = ""
+SHOULDRESPOND_OPENAI_BASE_URL = "" # Leave empty to use OPENAI_BASE_URL
+SHOULDRESPOND_OPENAI_MODEL = ""    # Leave empty to use OPENAI_MODEL
 
 # aliases the bot will respond to (exception: the ping and replying)
 # ALIASES = [ "dave", "domain" ]

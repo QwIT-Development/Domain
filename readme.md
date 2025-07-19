@@ -86,10 +86,39 @@ The `config.toml` file holds all configuration settings for Domain. It is the pr
 
 ### API Provider Configuration
 
-Domain supports any OpenAI-compatible API. Configure your provider by setting:
+Domain supports any OpenAI-compatible API with advanced token management features:
 
-*   `OPENAI_API_KEY`: Your API key
+#### Basic Configuration
+*   `OPENAI_API_KEY`: Your API key (single key or array)
 *   `OPENAI_MODEL`: The model to use (e.g., "gpt-4o", "gpt-4o-mini")
+*   `OPENAI_BASE_URL`: Custom API endpoint (optional)
+
+#### Advanced Token Management
+Domain supports **multiple API tokens with automatic failover** to handle rate limits and resource exhaustion:
+
+**Single Token:**
+```toml
+OPENAI_API_KEY = "your-single-key"
+```
+
+**Multiple Tokens (Recommended):**
+```toml
+OPENAI_API_KEY = ["key-1", "key-2", "key-3"]
+```
+
+When one token hits rate limits or quota exhaustion, Domain automatically rotates to the next available token.
+
+#### Component-Specific Configuration
+Configure separate tokens and endpoints for different bot components:
+
+*   **Search API**: `SEARCH_OPENAI_API_KEY`, `SEARCH_OPENAI_BASE_URL`, `SEARCH_OPENAI_MODEL`
+*   **Response Logic**: `SHOULDRESPOND_OPENAI_API_KEY`, `SHOULDRESPOND_OPENAI_BASE_URL`, `SHOULDRESPOND_OPENAI_MODEL`
+*   **Message Generation**: Uses the main `OPENAI_*` settings
+
+This allows you to:
+- Use different providers for different features
+- Distribute API usage across multiple accounts/tokens
+- Maintain service availability even when some tokens are rate-limited
 
 **Supported Providers:**
 *   **OpenAI**: Use `https://api.openai.com/v1` (default)

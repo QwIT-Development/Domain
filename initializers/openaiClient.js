@@ -11,6 +11,7 @@ const log = require("../utils/betterLogs");
 const { changeSpinnerText } = require("../utils/processInfo");
 const state = require("./state");
 const tools = require("./tools");
+const { OpenAIClientManager } = require("../utils/openaiClientManager");
 
 async function model(history, showLog = true) {
   state.locationHelper.init = "openaiClient.js/model";
@@ -43,10 +44,51 @@ async function model(history, showLog = true) {
   return models;
 }
 
-// Initialize OpenAI client
-const clientConfig = { apiKey: config.OPENAI_API_KEY };
-if (config.OPENAI_BASE_URL) {
-  clientConfig.baseURL = config.OPENAI_BASE_URL;
-}
-const openai = new OpenAI(clientConfig);
-module.exports = { model, openai };
+// Initialize separate OpenAI client managers for different components
+const messageGenerationClient = new OpenAIClientManager(
+  "MessageGeneration",
+  {
+    apiKey: "OPENAI_API_KEY",
+    baseUrl: "OPENAI_BASE_URL", 
+    model: "OPENAI_MODEL"
+  }
+);
+
+const searchClient = new OpenAIClientManager(
+  "Search",
+  {
+    apiKey: "SEARCH_OPENAI_API_KEY",
+    baseUrl: "SEARCH_OPENAI_BASE_URL",
+    model: "SEARCH_OPENAI_MODEL"
+  },
+  {
+    apiKey: "OPENAI_API_KEY",
+    baseUrl: "OPENAI_BASE_URL",
+    model: "OPENAI_MODEL"
+  }
+);
+
+const shouldRespondClient = new OpenAIClientManager(
+  "ShouldRespond", 
+  {
+    apiKey: "SHOULDRESPOND_OPENAI_API_KEY",
+    baseUrl: "SHOULDRESPOND_OPENAI_BASE_URL",
+    model: "SHOULDRESPOND_OPENAI_MODEL"
+  },
+  {
+    apiKey: "OPENAI_API_KEY", 
+    baseUrl: "OPENAI_BASE_URL",
+    model: "OPENAI_MODEL"
+  }
+);
+
+// Backward compatibility - main openai client using message generation config
+const openai = messageGenerationClient.getCurrentClient().client;
+
+module.exports = { 
+  model, 
+  openai, 
+  messageGenerationClient,
+  searchClient,
+  shouldRespondClient
+};

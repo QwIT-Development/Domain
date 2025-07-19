@@ -4,10 +4,10 @@
 */
 
 const { search } = require("../utils/searx");
-const { openai } = require("../initializers/openaiClient");
+const { searchClient } = require("../initializers/openaiClient");
 
 async function searchHandler(str) {
-  return await search(str, openai);
+  return await search(str, searchClient);
 }
 
 module.exports = searchHandler;

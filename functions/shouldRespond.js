@@ -4,7 +4,7 @@
 */
 
 const { loadConfig } = require("../initializers/configuration");
-const { openai } = require("../initializers/openaiClient");
+const { shouldRespondClient } = require("../initializers/openaiClient");
 const { processOpenAIStreamingResponse } = require("../utils/openaiUtils");
 const config = loadConfig();
 
@@ -92,8 +92,7 @@ FAILURE TO USE THE FUNCTION WILL RESULT IN AN ERROR. YOU MUST USE THE 'respond' 
         }))
       ];
 
-      const result = await openai.chat.completions.create({
-        model: config.OPENAI_MODEL,
+      const result = await shouldRespondClient.createChatCompletion({
         messages: messages,
         temperature: defaultConfig.temperature,
         top_p: defaultConfig.top_p,

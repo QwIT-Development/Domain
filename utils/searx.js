@@ -28,7 +28,7 @@ const options = {
   ],
 };
 
-async function callOpenAI(openaiClient, prompt, configOverride = {}, history = []) {
+async function callOpenAI(openaiClientManager, prompt, configOverride = {}, history = []) {
   const defaultConfig = {
     temperature: 0.7,
     top_p: 0.95,
@@ -51,8 +51,7 @@ async function callOpenAI(openaiClient, prompt, configOverride = {}, history = [
         ];
       }
 
-      const response = await openaiClient.chat.completions.create({
-        model: config.OPENAI_MODEL,
+      const response = await openaiClientManager.createChatCompletion({
         messages: messages,
         temperature: mergedConfig.temperature,
         top_p: mergedConfig.top_p,
@@ -77,7 +76,7 @@ async function callOpenAI(openaiClient, prompt, configOverride = {}, history = [
         if (i < maxRetries - 1) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
         } else {
-          console.warn(`Gemini call failed after ${maxRetries} retries.`);
+          console.warn(`OpenAI call failed after ${maxRetries} retries.`);
           throw error;
         }
       } else {
@@ -87,7 +86,7 @@ async function callOpenAI(openaiClient, prompt, configOverride = {}, history = [
   }
 }
 
-async function search(query, openaiClient) {
+async function search(query, openaiClientManager) {
   try {
     log(`Starting search for query: "${query}"`, "info", "searx.js");
 
@@ -108,13 +107,13 @@ async function search(query, openaiClient) {
     }
 
     const rawResults = response.results.slice(0, 20);
-    const relevantResults = await analyzer(openaiClient, query, rawResults);
+    const relevantResults = await analyzer(openaiClientManager, query, rawResults);
     const topResults = relevantResults.slice(0, 5);
 
     const enhancedResults = await Promise.allSettled(
       topResults.map(async (result, index) => ({
         ...result,
-        context: await generateContext(openaiClient, result.url, query),
+        context: await generateContext(openaiClientManager, result.url, query),
         rank: index + 1,
       })),
     );
@@ -128,14 +127,14 @@ async function search(query, openaiClient) {
       return "Search completed but no detailed context could be extracted.";
     }
 
-    return await summarizer(openaiClient, query, successfulResults);
+    return await summarizer(openaiClientManager, query, successfulResults);
   } catch (e) {
     console.error(`Search error: ${e.message}`);
     return `Search failed: ${e.message}`;
   }
 }
 
-async function analyzer(openaiClient, query, results) {
+async function analyzer(openaiClientManager, query, results) {
   const prompt = `Analyze these search results for the query: "${query}"
 
 Search Results:
@@ -155,7 +154,7 @@ Return ONLY a JSON array of result indices (1-based) in order of relevance. No e
 Example format: [3, 1, 7, 2, 5]
 Include at most 8 results in your ranking.`;
   try {
-    const responseText = await callOpenAI(openaiClient, prompt, {
+    const responseText = await callOpenAI(openaiClientManager, prompt, {
       temperature: 0.5,
       topP: 0.8,
       maxOutputTokens: 200,
@@ -184,7 +183,7 @@ Include at most 8 results in your ranking.`;
   }
 }
 
-async function generateContext(openaiClient, url, query) {
+async function generateContext(openaiClientManager, url, query) {
   const basicContext = await getContext(url);
 
   if (
@@ -213,7 +212,7 @@ Instructions:
 
 Extract the relevant information:`;
   try {
-    return await callOpenAI(openaiClient, prompt);
+    return await callOpenAI(openaiClientManager, prompt);
   } catch (e) {
     log(`Error enhancing context for ${url}: ${e.message}`, "warn", "searx.js");
     return basicContext.length > 1500
@@ -222,7 +221,7 @@ Extract the relevant information:`;
   }
 }
 
-async function summarizer(openaiClient, query, results) {
+async function summarizer(openaiClientManager, query, results) {
   const prompt = `Create a comprehensive answer based on these search results for the query: "${query}"
 
 Search Results:
@@ -245,7 +244,7 @@ Instructions:
 
 Provide a comprehensive answer to: "${query}"`;
   try {
-    const summary = await callOpenAI(openaiClient, prompt, {
+    const summary = await callOpenAI(openaiClientManager, prompt, {
       temperature: 0.4,
       maxOutputTokens: 8192,
     });
