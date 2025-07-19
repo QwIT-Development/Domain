@@ -1,10 +1,3 @@
-networks:
-  hasnet-domain:
-    driver: bridge
-  nonet-domain:
-    driver: bridge
-    internal: true
-
 services:
   Domain-Unchained:
     container_name: Domain-Unchained
@@ -23,29 +16,3 @@ services:
       - /etc/timezone:/etc/timezone:ro,z
       - /etc/localtime:/etc/localtime:ro,z
     restart: unless-stopped
-    networks:
-      - hasnet-domain
-      - nonet-domain
-
-  # boxie env for domain to run commands in
-  boxie:
-    image: balazsmanus/boxie-sandbox:latest
-    container_name: boxie
-    restart: unless-stopped
-    environment:
-      - http_proxy=http://boxie-proxy:3128
-      - https_proxy=http://boxie-proxy:3128
-    volumes:
-      - ./boxie_home:/root:z
-    networks:
-      - nonet-domain
-    depends_on:
-      - boxie-proxy
-
-  boxie-proxy:
-    image: balazsmanus/boxie-proxy:latest
-    container_name: boxie-proxy
-    restart: unless-stopped
-    networks:
-      - hasnet-domain
-      - nonet-domain

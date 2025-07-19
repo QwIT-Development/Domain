@@ -16,7 +16,6 @@ const { reputation } = require("../db/reputation");
 const searchHandler = require("./searchHandler");
 const { svgToPng } = require("../utils/svg2png");
 const { fuzzySearch } = require("../utils/fuzzySearch");
-const { runCommandInSandbox } = require("../utils/boxie");
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
@@ -263,48 +262,7 @@ async function parseBotCommands(toolCalls, message) {
         }
         break;
       }
-      case "terminal": {
-        const { command_string: commandString } = args;
-        if (commandString) {
-          try {
-            const result = await runCommandInSandbox(commandString);
-            let output = "";
 
-            if (result.error) {
-              output += `Error: ${result.error}\n`;
-              if (result.status) {
-                output += `Status: ${result.status}\n`;
-              }
-              if (result.details) {
-                const detailsString =
-                  typeof result.details === "object"
-                    ? JSON.stringify(result.details, null, 2)
-                    : result.details;
-                output += `Details: ${detailsString}\n`;
-              }
-            } else {
-              if (result.stdout) {
-                output += `stdout:\n${result.stdout}\n`;
-              }
-              if (result.stderr) {
-                output += `stderr:\n${result.stderr}\n`;
-              }
-              if (result.cwd) {
-                output += `cwd: ${result.cwd}\n`;
-              }
-            }
-            response.content = output.trim();
-          } catch (e) {
-            console.error(
-              `Terminal command failed for: "${commandString}" - ${e}`,
-            );
-            response.content = `Failed to execute command: An unexpected error occurred.`;
-          }
-        } else {
-          response.content = "Empty command not executed.";
-        }
-        break;
-      }
       default:
         log(`Unknown tool call: ${toolCall.name}`, "warn", "botCommands.js");
         response.content = `[Unknown tool: ${toolCall.name}]`;

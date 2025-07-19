@@ -1,38 +1,41 @@
-## Main configuration
-
 # discord token (https://discord.com/developers/applications)
 DISCORD_TOKEN = ""
 
 # OpenAI API configuration for message generation (main chat responses)
 # Can be a single key or array of keys for failover when rate limits are hit
-# Single key format: OPENAI_API_KEY = "your-key-here"
-# Array format: OPENAI_API_KEY = ["key1", "key2", "key3"]
+# Single key format: "your-key-here"
+# Array format: ["key1", "key2", "key3"]
 OPENAI_API_KEY = ""
 
 # OpenAI base URL for message generation API calls
 # Examples:
 # OpenAI (default): https://api.openai.com/v1
 # Ollama: http://localhost:11434/v1
-# OpenRouter: https://openrouter.ai/api/v1
+# OpenRouter (Has free stuff): https://openrouter.ai/api/v1
 # Azure OpenAI: https://your-resource.openai.azure.com/
+# HackClub AI (Free): https://ai.hackclub.com
+# Google Gemini (Has free stuff): https://generativelanguage.googleapis.com/v1beta/openai/
 OPENAI_BASE_URL = ""
 
 # OpenAI model for message generation
-OPENAI_MODEL = "gpt-4o"
+# example: google/gemini-2.5-flash
+OPENAI_MODEL = ""
 
 # Search API configuration (for web search functionality)
 # Leave empty to use same as message generation, or configure separately
+# If you want to just change the model, you only need to change the OPENAI_MODEL
 SEARCH_OPENAI_API_KEY = ""
 SEARCH_OPENAI_BASE_URL = ""
 SEARCH_OPENAI_MODEL = ""
 
 # ShouldRespond API configuration (for context-aware response decisions)
 # Leave empty to use same as message generation, or configure separately
+# If you want to just change the model, you only need to change the OPENAI_MODEL
 SHOULDRESPOND_OPENAI_API_KEY = ""
 SHOULDRESPOND_OPENAI_BASE_URL = ""
 SHOULDRESPOND_OPENAI_MODEL = ""
 
-# aliases the bot will respond to (exception: the ping and replying)
+# aliases the bot will respond to (exception: the ping and replying, if disableClassicRespond is false)
 # ALIASES = [ "dave", "domain" ]
 ALIASES = []
 
@@ -43,6 +46,7 @@ LOCALE = "hu-HU"
 
 # webui port
 # you shouldn't allow this port to be accesible from the internet
+# you might want to leave as it is
 WEBUI_PORT = 4500
 
 # administrator user ids, capable of running some commands not available for regular users
@@ -55,6 +59,7 @@ SEARX_BASE_URL = ""
 
 # total number of messages to be stored in the history
 # if it would exceed, the history rollovers
+# you might want to experiment with this value on other models
 MAX_MESSAGES = 200
 
 # sleeping range for the bot, during this time it will not respond to anything except slash commands
@@ -83,6 +88,7 @@ NEEDS_SETUP = true
 
 # cumulative mode
 # classic, noise, worse
+# worse more resource intensive, but more unpredictable
 CUMULATIVE_MODE = "classic"
 
 # tos url
@@ -96,14 +102,10 @@ BAN_AFTER = 20
 # the default prompt that will be used when using the /call command
 DEFAULT_PROMPT = "default.md"
 
-# this allows the bot to use a boxie environment with it's terminal tool
-# we don't recommend using this as it is not very useful/secure
-# i mean if you run the bot in a different, seperated and isolated virtual machine/environment, then it is fine
-ALLOW_SANDBOX = false
-
 # disable all tool usage for models that don't support function calling
-# set to true when using models like google/gemma or other models without tool support
-# this will disable reputation, mute, svg, search, memory, and terminal functions
+# set to true when using models like gemma or other models without tool support
+# this will disable reputation, mute, svg, search and memory functions
+# you might want to change contextRespond to false as well
 DISABLE_TOOLS = false
 
 # channels to be tracked
