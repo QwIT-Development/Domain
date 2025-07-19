@@ -66,46 +66,44 @@ ${simplifyEmoji(message.content)}
 }
 
 async function callOpenAI(channelId, openaiConfig) {
-  // Convert Gemini history format to OpenAI messages format
   const messages = [];
-  
-  // Add system message first
+
+  // Add prompt first
   if (state.prompts[channelId]) {
     messages.push({
       role: "system",
-      content: state.prompts[channelId]
+      content: state.prompts[channelId],
     });
   }
-  
-  // Convert history from Gemini format to OpenAI format
+
   for (let i = 0; i < state.history[channelId].length; i++) {
     const historyItem = state.history[channelId][i];
     const role = historyItem.role === "model" ? "assistant" : historyItem.role;
     const content = historyItem.parts?.[0]?.text || "";
-    
+
     if (content) {
-      // Check if this is the last user message and has image files
-      if (i === state.history[channelId].length - 1 && 
-          role === "user" && 
-          historyItem.imageFiles && 
-          historyItem.imageFiles.length > 0) {
-        // For the latest message with images, create a complex content structure
+      if (
+        i === state.history[channelId].length - 1 &&
+        role === "user" &&
+        historyItem.imageFiles &&
+        historyItem.imageFiles.length > 0
+      ) {
         const messageContent = [
           {
             type: "text",
-            text: content
+            text: content,
           },
-          ...historyItem.imageFiles
+          ...historyItem.imageFiles,
         ];
-        
+
         messages.push({
           role: role,
-          content: messageContent
+          content: messageContent,
         });
       } else {
         messages.push({
           role: role,
-          content: content
+          content: content,
         });
       }
     }
@@ -119,13 +117,17 @@ async function callOpenAI(channelId, openaiConfig) {
     max_tokens: openaiConfig[channelId].max_tokens,
     stream: true,
   };
-  
-  if (openaiConfig[channelId].tools && openaiConfig[channelId].tools.length > 0) {
+
+  if (
+    openaiConfig[channelId].tools &&
+    openaiConfig[channelId].tools.length > 0
+  ) {
     requestBody.tools = openaiConfig[channelId].tools;
     requestBody.tool_choice = openaiConfig[channelId].tool_choice;
   }
 
-  const response = await messageGenerationClient.createChatCompletion(requestBody);
+  const response =
+    await messageGenerationClient.createChatCompletion(requestBody);
   return await processOpenAIStreamingResponse(response);
 }
 
@@ -269,7 +271,11 @@ async function messageHandler(message, client, openaiConfig) {
     ) {
       const task = state.messageQueues[channelId][0];
       try {
-        await _internalMessageHandler(task.message, task.client, task.openaiConfig);
+        await _internalMessageHandler(
+          task.message,
+          task.client,
+          task.openaiConfig,
+        );
       } catch (e) {
         console.error(
           `Error processing message in queue for channel ${channelId}: ${e.stack}`,
@@ -361,13 +367,16 @@ async function _internalMessageHandler(message, client, openaiConfig) {
 
   await trimHistory(channelId);
 
-  // Store the user message in history (just text for now, files handled separately in API calls)
-  const userMessage = await formatUserMessage(message, repliedTo, mentioned.respondReason);
+  const userMessage = await formatUserMessage(
+    message,
+    repliedTo,
+    mentioned.respondReason,
+  );
   state.history[channelId].push({
     role: "user",
     parts: [{ text: userMessage }],
     // Store file info separately for API calls
-    imageFiles: files.length > 0 ? files : undefined
+    imageFiles: files.length > 0 ? files : undefined,
   });
 
   let initialResponse;
@@ -394,12 +403,12 @@ async function _internalMessageHandler(message, client, openaiConfig) {
     // Convert OpenAI tool_calls to Gemini-compatible format for backwards compatibility
     const convertedToolCalls = initialResponse.tool_calls.map((toolCall) => ({
       name: toolCall.function.name,
-      args: JSON.parse(toolCall.function.arguments || '{}')
+      args: JSON.parse(toolCall.function.arguments || "{}"),
     }));
 
     state.history[channelId].push({
-      role: "model", 
-      parts: [{ text: initialResponse.text || "" }]
+      role: "model",
+      parts: [{ text: initialResponse.text || "" }],
     });
 
     let toolResponses;
@@ -423,7 +432,11 @@ async function _internalMessageHandler(message, client, openaiConfig) {
     for (const toolResponse of toolResponses) {
       state.history[channelId].push({
         role: "user",
-        parts: [{ text: `Tool response for ${toolResponse.name}: ${JSON.stringify(toolResponse.response)}` }]
+        parts: [
+          {
+            text: `Tool response for ${toolResponse.name}: ${JSON.stringify(toolResponse.response)}`,
+          },
+        ],
       });
     }
 

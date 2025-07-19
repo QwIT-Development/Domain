@@ -1,6 +1,12 @@
 const { loadConfig } = require("../initializers/configuration");
 const config = loadConfig();
 
+// If tools are disabled, return empty array
+if (config.DISABLE_TOOLS) {
+  module.exports = [];
+  return;
+}
+
 const tools = [
   {
     type: "function",

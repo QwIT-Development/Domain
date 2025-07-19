@@ -12,43 +12,81 @@ async function processOpenAIStreamingResponse(response) {
   let responseText = "";
   let tool_calls = null;
 
-  for await (const chunk of response) {
-    const delta = chunk.choices?.[0]?.delta;
-    
-    if (delta?.tool_calls) {
-      if (!tool_calls) {
-        tool_calls = [];
+  try {
+    if (
+      response &&
+      response.choices &&
+      response.choices[0] &&
+      !response[Symbol.asyncIterator]
+    ) {
+      const choice = response.choices[0];
+      if (choice.message) {
+        return {
+          text: choice.message.content || "",
+          tool_calls: choice.message.tool_calls || null,
+        };
       }
-      // Handle tool calls accumulation for streaming
-      for (const toolCall of delta.tool_calls) {
-        if (!tool_calls[toolCall.index]) {
-          tool_calls[toolCall.index] = {
-            id: toolCall.id,
-            type: toolCall.type,
-            function: {
-              name: toolCall.function?.name || "",
-              arguments: toolCall.function?.arguments || ""
+    }
+
+    if (!response || typeof response[Symbol.asyncIterator] !== "function") {
+      throw new Error(`Response is not an async iterable: ${typeof response}`);
+    }
+
+    for await (const chunk of response) {
+      if (!chunk || !chunk.choices || !chunk.choices[0]) {
+        continue;
+      }
+
+      const delta = chunk.choices[0].delta;
+      if (!delta) {
+        continue;
+      }
+
+      if (delta.tool_calls) {
+        if (!tool_calls) {
+          tool_calls = [];
+        }
+
+        for (const toolCall of delta.tool_calls) {
+          const index = toolCall.index || 0;
+
+          if (!tool_calls[index]) {
+            tool_calls[index] = {
+              id: toolCall.id,
+              type: toolCall.type || "function",
+              function: {
+                name: toolCall.function?.name || "",
+                arguments: toolCall.function?.arguments || "",
+              },
+            };
+          } else {
+            if (toolCall.function?.arguments) {
+              tool_calls[index].function.arguments +=
+                toolCall.function.arguments;
             }
-          };
-        } else {
-          // Accumulate arguments for streaming
-          if (toolCall.function?.arguments) {
-            tool_calls[toolCall.index].function.arguments += toolCall.function.arguments;
+            if (toolCall.function?.name) {
+              tool_calls[index].function.name = toolCall.function.name;
+            }
           }
         }
       }
-    } else if (delta?.content) {
-      responseText += delta.content;
-    }
-  }
 
-  const result = { text: responseText.trim() };
-  if (tool_calls && tool_calls.length > 0) {
-    result.tool_calls = tool_calls;
+      if (delta.content) {
+        responseText += delta.content;
+      }
+    }
+
+    const result = { text: responseText.trim() };
+    if (tool_calls && tool_calls.length > 0) {
+      result.tool_calls = tool_calls;
+    }
+    return result;
+  } catch (error) {
+    console.error("Error processing streaming response:", error.message);
+    throw error;
   }
-  return result;
 }
 
 module.exports = {
-  processOpenAIStreamingResponse
+  processOpenAIStreamingResponse,
 };

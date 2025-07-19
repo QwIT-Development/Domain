@@ -83,13 +83,12 @@ FAILURE TO USE THE FUNCTION WILL RESULT IN AN ERROR. YOU MUST USE THE 'respond' 
         );
       }
 
-      // Convert history to OpenAI format
       const messages = [
         { role: "system", content: newPrompt },
-        ...historyCopy.map(item => ({
+        ...historyCopy.map((item) => ({
           role: item.role === "model" ? "assistant" : item.role,
-          content: item.parts?.[0]?.text || ""
-        }))
+          content: item.parts?.[0]?.text || "",
+        })),
       ];
 
       const result = await shouldRespondClient.createChatCompletion({
@@ -98,7 +97,7 @@ FAILURE TO USE THE FUNCTION WILL RESULT IN AN ERROR. YOU MUST USE THE 'respond' 
         top_p: defaultConfig.top_p,
         max_tokens: defaultConfig.max_tokens,
         tools: tools,
-        tool_choice: { type: "function", function: { name: "respond" } }, // Force function use
+        tool_choice: "required",
         stream: true,
       });
 

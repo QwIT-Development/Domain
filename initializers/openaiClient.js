@@ -24,12 +24,11 @@ async function model(history, showLog = true) {
       top_p: 0.95,
       max_tokens: 8192,
       stream: true,
-      messages: [], // Will be populated from history
+      messages: [],
       tools: tools.length > 0 ? tools : undefined,
-      tool_choice: "auto",
+      tool_choice: tools.length > 0 ? "auto" : undefined,
     };
-    
-    // Store system instruction separately for OpenAI
+
     const systemInstruction = await makePrompt(channel, showLog);
     state.prompts[channel] = systemInstruction;
   }
@@ -44,51 +43,46 @@ async function model(history, showLog = true) {
   return models;
 }
 
-// Initialize separate OpenAI client managers for different components
-const messageGenerationClient = new OpenAIClientManager(
-  "MessageGeneration",
-  {
-    apiKey: "OPENAI_API_KEY",
-    baseUrl: "OPENAI_BASE_URL", 
-    model: "OPENAI_MODEL"
-  }
-);
+const messageGenerationClient = new OpenAIClientManager("MessageGeneration", {
+  apiKey: "OPENAI_API_KEY",
+  baseUrl: "OPENAI_BASE_URL",
+  model: "OPENAI_MODEL",
+});
 
 const searchClient = new OpenAIClientManager(
   "Search",
   {
     apiKey: "SEARCH_OPENAI_API_KEY",
     baseUrl: "SEARCH_OPENAI_BASE_URL",
-    model: "SEARCH_OPENAI_MODEL"
+    model: "SEARCH_OPENAI_MODEL",
   },
   {
     apiKey: "OPENAI_API_KEY",
     baseUrl: "OPENAI_BASE_URL",
-    model: "OPENAI_MODEL"
-  }
+    model: "OPENAI_MODEL",
+  },
 );
 
 const shouldRespondClient = new OpenAIClientManager(
-  "ShouldRespond", 
+  "ShouldRespond",
   {
     apiKey: "SHOULDRESPOND_OPENAI_API_KEY",
     baseUrl: "SHOULDRESPOND_OPENAI_BASE_URL",
-    model: "SHOULDRESPOND_OPENAI_MODEL"
+    model: "SHOULDRESPOND_OPENAI_MODEL",
   },
   {
-    apiKey: "OPENAI_API_KEY", 
+    apiKey: "OPENAI_API_KEY",
     baseUrl: "OPENAI_BASE_URL",
-    model: "OPENAI_MODEL"
-  }
+    model: "OPENAI_MODEL",
+  },
 );
 
-// Backward compatibility - main openai client using message generation config
 const openai = messageGenerationClient.getCurrentClient().client;
 
-module.exports = { 
-  model, 
-  openai, 
+module.exports = {
+  model,
+  openai,
   messageGenerationClient,
   searchClient,
-  shouldRespondClient
+  shouldRespondClient,
 };
