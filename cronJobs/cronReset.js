@@ -1,7 +1,7 @@
 const log = require("../utils/betterLogs");
 const { loadConfig } = require("../initializers/configuration");
 const state = require("../initializers/state");
-const { model } = require("../initializers/geminiClient");
+const { model } = require("../initializers/openaiClient");
 log(`Prompt reset schedule set`, "info", "cronReset.js");
 
 const config = loadConfig();
@@ -11,7 +11,7 @@ let timeoutId = null;
 const task = async () => {
   try {
     // rebuild models (so prompt updates too)
-    global.geminiModel = await model(state.history, false);
+    global.openaiModel = await model(state.history, false);
   } catch (error) {
     console.error(`Error while resetting prompt reset task: ${error}`);
   } finally {

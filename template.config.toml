@@ -3,13 +3,40 @@
 # discord token (https://discord.com/developers/applications)
 DISCORD_TOKEN = ""
 
-# gemini api key (https://aistudio.google.com/apikey)
-# yes, it is free with some boundaries
-GEMINI_API_KEY = ""
+# OpenAI API configuration for message generation (main chat responses)
+# Can be a single key or array of keys for failover when rate limits are hit
+# Single key format: OPENAI_API_KEY = "your-key-here"
+# Array format: OPENAI_API_KEY = ["key1", "key2", "key3"]
+OPENAI_API_KEY = ""
 
-# gemini model id (https://ai.google.dev/gemini-api/docs/models/#model-variations)
-# GEMINI_MODEL = "gemini-2.5-flash"
-GEMINI_MODEL = "gemini-2.5-flash"
+# OpenAI base URL for message generation API calls
+# Examples:
+# OpenAI (default): https://api.openai.com/v1
+# Ollama: http://localhost:11434/v1  
+# OpenRouter: https://openrouter.ai/api/v1
+# Azure OpenAI: https://your-resource.openai.azure.com/
+OPENAI_BASE_URL = ""
+
+# OpenAI model for message generation
+OPENAI_MODEL = "gpt-4o"
+
+# Search API configuration (for web search functionality)
+# Leave empty to use same as message generation, or configure separately
+# Examples:
+# Single key: SEARCH_OPENAI_API_KEY = "search-specific-key"
+# Multiple keys: SEARCH_OPENAI_API_KEY = ["search-key-1", "search-key-2", "search-key-3"]
+SEARCH_OPENAI_API_KEY = ""
+SEARCH_OPENAI_BASE_URL = "" # Leave empty to use OPENAI_BASE_URL
+SEARCH_OPENAI_MODEL = ""    # Leave empty to use OPENAI_MODEL
+
+# ShouldRespond API configuration (for context-aware response decisions)  
+# Leave empty to use same as message generation, or configure separately
+# Examples:
+# Single key: SHOULDRESPOND_OPENAI_API_KEY = "respond-specific-key"
+# Multiple keys: SHOULDRESPOND_OPENAI_API_KEY = ["respond-key-1", "respond-key-2"]
+SHOULDRESPOND_OPENAI_API_KEY = ""
+SHOULDRESPOND_OPENAI_BASE_URL = "" # Leave empty to use OPENAI_BASE_URL
+SHOULDRESPOND_OPENAI_MODEL = ""    # Leave empty to use OPENAI_MODEL
 
 # aliases the bot will respond to (exception: the ping and replying)
 # ALIASES = [ "dave", "domain" ]
@@ -57,14 +84,13 @@ PROXIES = []
 # remote blocklists (hosts), must be an url to the plaintext file
 REMOTE_LISTS = []
 
-# enables the thinking capabilities of the model (if it supports it)
-# supported models are anything that is above gemini 2.5 *
-ENABLE_THINKING = true
+# Note: OpenAI models don't have separate "thinking" modes like Gemini
+# Reasoning capabilities are built into the models themselves
 
-# the gemini api key for Contextual Responding, useful if your bot gets a lot of messages
+# the openai api key for Contextual Responding, useful if your bot gets a lot of messages
 # you may use a different account's key here
 # we don't recommend using different accounts, as it may lead to issues with the tos
-CR_GEMINI_API_KEY = ""
+CR_OPENAI_API_KEY = ""
 
 # set to false, so it doesn't "bootloop"
 NEEDS_SETUP = true

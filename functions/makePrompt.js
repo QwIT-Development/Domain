@@ -1,5 +1,5 @@
 /*
-        Domain-Unchained, src of the discord bot, that uses gemini api to generate messages
+        Domain-Unchained, src of the discord bot, that uses openai api to generate messages
         Copyright (C) 2025 Anchietae
 */
 
@@ -48,7 +48,7 @@ async function makePrompt(channelId, showLog = true) {
   let prompt;
 
   // try to load prompt, if it's nonexistent, return empty string, which will defaults
-  // gemini to its default prompt
+  // AI model to its default prompt
   try {
     // path: ./prompts/<PROMPT_PATH>
     // noinspection JSUnresolvedReference

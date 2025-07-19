@@ -1,5 +1,5 @@
 /*
-        Domain-Unchained, src of the discord bot, that uses gemini api to generate messages
+        Domain-Unchained, src of the discord bot, that uses openai api to generate messages
         Copyright (C) 2025 Anchietae
 
         This program is free software: you can redistribute it and/or modify
@@ -92,7 +92,7 @@ async function main() {
   // noinspection ES6MissingAwait
   getBannedSites();
   // imports
-  const { model } = require("./initializers/geminiClient");
+  const { model } = require("./initializers/openaiClient");
   const { messageHandler } = require("./eventHandlers/messageHandler");
 
   // initialize stuff inside async thingy
@@ -122,7 +122,7 @@ async function main() {
   const generateHistory = require("./initializers/historyCreator");
   await generateHistory();
 
-  global.geminiModel = await model(state.history);
+  global.openaiModel = await model(state.history);
   setInterval(async () => {
     for (const channelId in state.history) {
       // prevent tempchannels from being saved
@@ -161,7 +161,7 @@ async function main() {
     if (state.isSleeping) return;
 
     // noinspection JSUnresolvedReference
-    await messageHandler(message, discordClient, global.geminiModel);
+    await messageHandler(message, discordClient, global.openaiModel);
   });
 
   discordClient.on("interactionCreate", async (interaction) => {

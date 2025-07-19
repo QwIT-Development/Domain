@@ -1,5 +1,5 @@
 /*
-        Domain-Unchained, src of the discord bot, that uses gemini api to generate messages
+        Domain-Unchained, src of the discord bot, that uses openai api to generate messages
         Copyright (C) 2025 Anchietae
 */
 
@@ -9,8 +9,8 @@ const { botReady, botSleeping } = require("./presenceManager");
 const { changeSpinnerText } = require("../utils/processInfo");
 const fs = require("fs");
 const path = require("path");
-const { callGemini } = require("../utils/searx");
-const { genAI } = require("../initializers/geminiClient");
+const { callOpenAI } = require("../utils/searx");
+const { openai } = require("../initializers/openaiClient");
 const { appendMemory } = require("./memories");
 
 // kibasszuk a sleeptimert ha meg nem null
@@ -95,7 +95,7 @@ async function createSummariesAndClearHistories() {
               state.prompts[channelId] || "",
             );
 
-            const summary = await callGemini(genAI, prompt, {
+            const summary = await callOpenAI(openai, prompt, {
               model: "gemini-2.5-flash",
             });
 
