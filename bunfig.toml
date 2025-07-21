@@ -1,0 +1,13 @@
+smol = true
+
+[install]
+cache.disable = true
+lockfile.print = "yarn"
+
+[test]
+smol = true
+coverage = true
+coverageDir = "./coverage"
+coverageReporter = ["lcov", "text"]
+coverageThreshold = 0.8
+root = "./tests"

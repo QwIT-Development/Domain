@@ -78,6 +78,7 @@ async function bondUpdater(userId) {
     data: {
       msgCount: msgCount + 1,
       totalMsgCount: totalMsgCount + 1, // analytics
+      lastInteraction: new Date(),
     },
   });
   const currentBondLvl = user.bondLvl || 0;

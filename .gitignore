@@ -5,3 +5,4 @@ config.toml
 pnpm-lock.yaml
 .idea
 .vscode
+yarn.lock

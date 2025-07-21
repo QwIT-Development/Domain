@@ -8,14 +8,16 @@ const { loadConfig } = require("../initializers/configuration");
 const config = loadConfig();
 const { makePrompt } = require("../functions/makePrompt");
 const log = require("../utils/betterLogs");
-const { changeSpinnerText } = require("../utils/processInfo");
+const { changeSpinnerText, stopSpinner } = require("../utils/processInfo");
 const state = require("./state");
 const tools = require("./tools");
 const { OpenAIClientManager } = require("../utils/openaiClientManager");
 
 async function model(history, showLog = true) {
   state.locationHelper.init = "openaiClient.js/model";
-  await changeSpinnerText("Creating OpenAI models...");
+  if (showLog) {
+    await changeSpinnerText("Creating OpenAI models...");
+  }
   const models = {};
 
   for (const channel in history) {
@@ -39,6 +41,7 @@ async function model(history, showLog = true) {
       "info",
       "openaiClient.js",
     );
+    await stopSpinner(true);
   }
   return models;
 }
