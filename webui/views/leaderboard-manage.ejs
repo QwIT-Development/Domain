@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain WebUI - Leaderboard Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'domain-red': '#C41E3A',
+                        'domain-dark': '#121214',
+                        'domain-card': '#1a1a1c',
+                        'domain-border': '#444',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-rounded {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="dark bg-domain-dark text-gray-100 min-h-screen flex flex-col">
+    <%- include('partials/navbar') %>
+
+    <main class="container mx-auto px-4 mt-8 flex-grow">
+        <div class="w-full">
+            <!-- Header Section -->
+            <div class="bg-domain-card rounded-lg shadow-xl border border-domain-border mb-6">
+                <div class="px-6 py-4 border-b border-domain-border">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-semibold flex items-center gap-2">
+                                <span class="material-symbols-rounded">admin_panel_settings</span>
+                                Leaderboard Management
+                            </h2>
+                            <p class="text-gray-400 mt-2 mb-0">Manage user visibility on the leaderboard</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <a href="/leaderboard" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+                                <span class="material-symbols-rounded text-sm">visibility</span>
+                                View Leaderboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Section -->
+            <% if (users && users.length > 0) { %>
+                <div class="w-full mb-8">
+                    <div class="bg-domain-card rounded-lg shadow-xl border border-domain-border">
+                        <div class="px-6 py-4 border-b border-domain-border">
+                            <h3 class="text-xl font-semibold flex items-center gap-2">
+                                <span class="material-symbols-rounded">insights</span>
+                                Management Statistics
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                                <div class="text-center">
+                                    <h4 class="text-3xl font-bold text-blue-400 mb-2"><%= stats.totalUsers %></h4>
+                                    <p class="text-gray-400 font-medium">Visible Users</p>
+                                </div>
+                                <div class="text-center">
+                                    <h4 class="text-3xl font-bold text-orange-400 mb-2"><%= stats.hiddenUsers %></h4>
+                                    <p class="text-gray-400 font-medium">Hidden Users</p>
+                                </div>
+                                <div class="text-center">
+                                    <h4 class="text-3xl font-bold text-red-400 mb-2"><%= stats.bannedUsers %></h4>
+                                    <p class="text-gray-400 font-medium">Banned Users</p>
+                                </div>
+                                <div class="text-center">
+                                    <h4 class="text-3xl font-bold text-green-400 mb-2"><%= stats.positiveUsers %></h4>
+                                    <p class="text-gray-400 font-medium">Positive Rep</p>
+                                </div>
+                                <div class="text-center">
+                                    <h4 class="text-3xl font-bold text-yellow-400 mb-2"><%= stats.averageScore.toFixed(1) %></h4>
+                                    <p class="text-gray-400 font-medium">Average Score</p>
+                                </div>
+                                <div class="text-center">
+                                    <h4 class="text-3xl font-bold text-cyan-400 mb-2"><%= stats.totalMessages.toLocaleString() %></h4>
+                                    <p class="text-gray-400 font-medium">Total Messages</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+
+            <!-- Users Management Table -->
+            <div class="bg-domain-card rounded-lg shadow-xl border border-domain-border">
+                <div class="px-6 py-4 border-b border-domain-border">
+                    <h3 class="text-xl font-semibold flex items-center gap-2">
+                        <span class="material-symbols-rounded">group</span>
+                        All Users
+                    </h3>
+                    <p class="text-gray-400 mt-2 mb-0">Manage visibility of users on the leaderboard</p>
+                </div>
+                <div class="p-6">
+                    <% if (users && users.length > 0) { %>
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse">
+                                <thead>
+                                    <tr class="border-b-2 border-domain-border">
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">#</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">User</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">Reputation</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">Bond Level</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">Messages</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">Status</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% users.forEach((user, index) => { %>
+                                        <tr class="border-b border-domain-border hover:bg-gray-800/50 transition-colors duration-150 <%= index % 2 === 0 ? 'bg-gray-900/20' : '' %>" id="user-row-<%= user.id %>">
+                                            <td class="py-4 px-4">
+                                                <span class="inline-flex items-center justify-center w-8 h-8 bg-gray-600 text-white text-sm rounded-full font-medium"><%= index + 1 %></span>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <div class="flex items-center gap-3">
+                                                    <% if (user.avatarUrl && user.avatarUrl.trim() !== '') { %>
+                                                        <%
+                                                            let avatarSrc;
+                                                            const lowerUrl = user.avatarUrl.toLowerCase();
+                                                            if (lowerUrl.startsWith('https:') || lowerUrl.startsWith('data:')) {
+                                                                avatarSrc = user.avatarUrl;
+                                                            } else {
+                                                                avatarSrc = 'data:,';
+                                                            }
+                                                        %>
+                                                        <img src="<%= avatarSrc %>" alt="" class="w-8 h-8 rounded-full">
+                                                    <% } else { %>
+                                                        <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-white">
+                                                            <span class="material-symbols-rounded text-base">person</span>
+                                                        </div>
+                                                    <% } %>
+                                                    <span class="font-semibold text-gray-100"><%= user.username %></span>
+                                                </div>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <% if (user.score > 0) { %>
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-500/20 text-green-400 border border-green-500/30"><%= user.score %></span>
+                                                <% } else if (user.score < 0) { %>
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-500/20 text-red-400 border border-red-500/30"><%= user.score %></span>
+                                                <% } else { %>
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-500/20 text-gray-400 border border-gray-500/30">0</span>
+                                                <% } %>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30"><%= user.bondLvl %></span>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <span class="text-gray-400"><%= user.totalMsgCount.toLocaleString() %></span>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <div class="flex flex-col gap-1">
+                                                    <% if (user.banned) { %>
+                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30">
+                                                            <span class="material-symbols-rounded text-xs mr-1">block</span>
+                                                            Banned
+                                                        </span>
+                                                    <% } %>
+                                                    <% if (user.hiddenFromLeaderboard) { %>
+                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                                                            <span class="material-symbols-rounded text-xs mr-1">visibility_off</span>
+                                                            Hidden
+                                                        </span>
+                                                    <% } else if (!user.banned) { %>
+                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">
+                                                            <span class="material-symbols-rounded text-xs mr-1">visibility</span>
+                                                            Visible
+                                                        </span>
+                                                    <% } %>
+                                                </div>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <div class="flex flex-col sm:flex-row gap-2">
+                                                    <% if (!user.banned) { %>
+                                                        <% if (user.hiddenFromLeaderboard) { %>
+                                                            <button onclick="toggleUserVisibility('<%= user.id %>', false)"
+                                                                    class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-1 text-sm">
+                                                                <span class="material-symbols-rounded text-sm">visibility</span>
+                                                                Show
+                                                            </button>
+                                                        <% } else { %>
+                                                            <button onclick="toggleUserVisibility('<%= user.id %>', true)"
+                                                                    class="px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors flex items-center gap-1 text-sm">
+                                                                <span class="material-symbols-rounded text-sm">visibility_off</span>
+                                                                Hide
+                                                            </button>
+                                                        <% } %>
+                                                        <button onclick="openReputationModal('<%= user.id %>', '<%= user.username %>', <%= user.score %>, <%= user.bondLvl %>, <%= user.totalMsgCount %>)"
+                                                                class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-1 text-sm">
+                                                            <span class="material-symbols-rounded text-sm">edit</span>
+                                                            Edit Rep
+                                                        </button>
+                                                    <% } else { %>
+                                                        <span class="text-gray-500 text-sm">Banned users cannot be edited</span>
+                                                    <% } %>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } else { %>
+                        <div class="text-center py-12">
+                            <span class="material-symbols-rounded text-gray-500 text-6xl block mb-4">group_off</span>
+                            <h4 class="text-xl font-semibold text-gray-400 mb-2">No users found</h4>
+                            <p class="text-gray-500">No users exist in the system yet.</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-domain-card rounded-lg p-6 flex items-center gap-3">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+            <span>Updating user visibility...</span>
+        </div>
+    </div>
+
+    <!-- Reputation Edit Modal -->
+    <div id="reputationModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div class="bg-domain-card rounded-lg border border-domain-border w-full max-w-md">
+            <div class="px-6 py-4 border-b border-domain-border">
+                <h3 class="text-xl font-semibold flex items-center gap-2">
+                    <span class="material-symbols-rounded text-yellow-400">star</span>
+                    Edit Reputation
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">User</label>
+                        <div class="text-gray-100 font-medium" id="modalUsername"></div>
+                    </div>
+                    <div>
+                        <label for="modalScore" class="block text-sm font-medium text-gray-300 mb-2">Reputation Score</label>
+                        <input type="number" id="modalScore" min="-2000" max="2000"
+                               class="w-full px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-300">
+                        <div class="p-3 bg-gray-800/30 rounded-lg">
+                            <span class="flex items-center gap-2 mb-1">
+                                <span class="material-symbols-rounded text-blue-400 text-sm">link</span>
+                                Bond Level
+                            </span>
+                            <div class="text-blue-400 font-mono" id="modalBondLvl"></div>
+                        </div>
+                        <div class="p-3 bg-gray-800/30 rounded-lg">
+                            <span class="flex items-center gap-2 mb-1">
+                                <span class="material-symbols-rounded text-cyan-400 text-sm">chat_bubble</span>
+                                Messages
+                            </span>
+                            <div class="text-blue-400 font-mono" id="modalTotalMsg"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-domain-border flex gap-3 justify-end">
+                <button onclick="closeReputationModal()"
+                        class="px-4 py-2 border border-gray-600 text-gray-300 hover:bg-gray-700 rounded-lg font-medium transition-colors">
+                    Cancel
+                </button>
+                <button onclick="saveReputation()"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+                    <span class="material-symbols-rounded text-sm">save</span>
+                    Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error notification -->
+    <div id="notification" class="hidden fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm">
+        <div class="flex items-center gap-3">
+            <span id="notificationIcon" class="material-symbols-rounded"></span>
+            <span id="notificationMessage"></span>
+        </div>
+    </div>
+
+    <footer class="text-center text-gray-500 py-6 mt-8 border-t border-domain-border">
+        <small>
+            <a href="https://github.com/QwIT-Development/Domain" class="text-domain-red hover:text-red-400 transition-colors">
+                Domain-Unchained
+            </a>
+        </small>
+    </footer>
+
+    <script>
+        let currentEditingUserId = null;
+
+        async function toggleUserVisibility(userId, hide) {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            try {
+                loadingOverlay.classList.remove('hidden');
+
+                const response = await fetch('/api/leaderboard/visibility', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: userId,
+                        hidden: hide
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showNotification(result.message, 'success');
+                    // Reload the page to update the UI
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showNotification(result.error || 'Failed to update user visibility', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Network error occurred', 'error');
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        function openReputationModal(userId, username, score, bondLvl, totalMsg) {
+            currentEditingUserId = userId;
+            document.getElementById('modalUsername').textContent = username;
+            document.getElementById('modalScore').value = score;
+            document.getElementById('modalBondLvl').textContent = bondLvl;
+            document.getElementById('modalTotalMsg').textContent = totalMsg.toLocaleString();
+            document.getElementById('reputationModal').classList.remove('hidden');
+        }
+
+        function closeReputationModal() {
+            currentEditingUserId = null;
+            document.getElementById('reputationModal').classList.add('hidden');
+        }
+
+        async function saveReputation() {
+            if (!currentEditingUserId) return;
+
+            const scoreInput = document.getElementById('modalScore');
+            const newScore = parseInt(scoreInput.value, 10);
+
+            if (isNaN(newScore)) {
+                showNotification('Invalid score value', 'error');
+                return;
+            }
+
+            if (newScore < -2000 || newScore > 2000) {
+                showNotification('Score must be between -2000 and 2000', 'error');
+                return;
+            }
+
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            try {
+                loadingOverlay.classList.remove('hidden');
+
+                const response = await fetch('/api/reputation/save', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: currentEditingUserId,
+                        score: newScore
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showNotification('Reputation updated successfully', 'success');
+                    closeReputationModal();
+                    // Reload the page to update the UI
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showNotification(result.error || 'Failed to update reputation', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Network error occurred', 'error');
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            const icon = document.getElementById('notificationIcon');
+            const messageElement = document.getElementById('notificationMessage');
+
+            messageElement.textContent = message;
+
+            // Clear existing classes
+            notification.className = 'fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm';
+
+            if (type === 'success') {
+                notification.classList.add('bg-green-600');
+                icon.textContent = 'check_circle';
+                icon.className = 'material-symbols-rounded text-white';
+            } else {
+                notification.classList.add('bg-red-600');
+                icon.textContent = 'error';
+                icon.className = 'material-symbols-rounded text-white';
+            }
+
+            notification.classList.remove('hidden');
+
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('reputationModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeReputationModal();
+            }
+        });
+
+        // Close modal with escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !document.getElementById('reputationModal').classList.contains('hidden')) {
+                closeReputationModal();
+            }
+        });
+    </script>
+</body>
+</html>

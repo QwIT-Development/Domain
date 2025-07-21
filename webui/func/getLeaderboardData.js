@@ -1,10 +1,10 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const state = require("../../initializers/state");
+const getCachedUserInfo = require("./getCachedUserInfo");
 
 async function getLeaderboardData() {
   try {
-    // Get only needed fields for leaderboard performance
     const allUsers = await prisma.user.findMany({
       select: {
         id: true,
@@ -13,44 +13,43 @@ async function getLeaderboardData() {
         banMessage: true,
         bondLvl: true,
         totalMsgCount: true,
+        hiddenFromLeaderboard: true,
       },
     });
 
-    // Filter out banned users and create user entries using cached data when available, fallback to database
     const userEntries = allUsers
-      .filter((user) => !user.banned)
+      .filter((user) => !user.banned && !user.hiddenFromLeaderboard)
       .map((user) => {
-        const cachedUserInfo = state.usersCache[user.id];
+        const cachedUserInfo = getCachedUserInfo(user.id);
 
         return {
           id: user.id,
-          username: cachedUserInfo?.username || `User_${user.id.slice(-4)}`,
-          avatarUrl: cachedUserInfo?.avatarUrl || null,
-          lastUpdated: cachedUserInfo?.lastUpdated || Date.now(),
+          username: cachedUserInfo.username,
+          avatarUrl: cachedUserInfo.avatarUrl,
+          lastUpdated: cachedUserInfo.lastUpdated,
           score: user.repPoint || 0,
           banReason: user.banned ? user.banMessage : null,
           bondLvl: user.bondLvl || 0,
           totalMsgCount: user.totalMsgCount || 0,
+          isExpired: cachedUserInfo.isExpired,
         };
       });
 
-    // Sort users by reputation score (descending), then by bond level (descending), then by message count (descending)
     const sortedUsers = userEntries.sort((a, b) => {
-      // Primary sort: reputation score (descending)
+      // reputation score
       if (b.score !== a.score) {
         return b.score - a.score;
       }
 
-      // Secondary sort: bond level (descending)
+      //  bond level
       if (b.bondLvl !== a.bondLvl) {
         return b.bondLvl - a.bondLvl;
       }
 
-      // Tertiary sort: message count (descending)
+      //  message count
       return b.totalMsgCount - a.totalMsgCount;
     });
 
-    // Calculate statistics (excluding banned users)
     const totalUsers = sortedUsers.length;
     const positiveUsers = sortedUsers.filter((user) => user.score > 0).length;
     const totalScore = sortedUsers.reduce((sum, user) => sum + user.score, 0);

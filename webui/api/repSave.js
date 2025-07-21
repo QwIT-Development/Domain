@@ -2,6 +2,7 @@ const broadcastStats = require("../func/broadcastStats");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const state = require("../../initializers/state");
+const getEntry = require("../func/getEntry");
 
 const repSave = async (req) => {
   let id, score;
@@ -26,7 +27,7 @@ const repSave = async (req) => {
     );
   }
   const numericScore = Number(score);
-  if (numericScore > 1000) {
+  if (numericScore > 2000) {
     return new Response(JSON.stringify({ error: "Score too high" }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
@@ -46,10 +47,13 @@ const repSave = async (req) => {
       create: { id, repPoint: numericScore },
     });
 
-    // remove cached user
+    // remove cached user and recache with fresh data
     if (state.usersCache[id]) {
       delete state.usersCache[id];
     }
+
+    // Recache the user with fresh Discord data
+    await getEntry(id);
 
     await broadcastStats();
 

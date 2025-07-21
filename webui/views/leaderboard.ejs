@@ -32,11 +32,15 @@
         <div class="w-full">
             <div class="bg-domain-card rounded-lg shadow-xl border border-domain-border">
                 <div class="px-6 py-4 border-b border-domain-border">
-                    <h2 class="text-2xl font-semibold flex items-center gap-2">
-                        <span class="material-symbols-rounded">leaderboard</span>
-                        Reputation Leaderboard
-                    </h2>
-                    <p class="text-gray-400 mt-2 mb-0">Top users ranked by reputation score</p>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-semibold flex items-center gap-2">
+                                <span class="material-symbols-rounded">leaderboard</span>
+                                Reputation Leaderboard
+                            </h2>
+                            <p class="text-gray-400 mt-2 mb-0">Top users ranked by reputation score</p>
+                        </div>
+                    </div>
                 </div>
                 <div class="p-6">
                     <% if (users && users.length > 0) { %>

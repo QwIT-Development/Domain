@@ -1,12 +1,10 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const state = require("../../initializers/state");
-const getEntry = require("./getEntry");
 
 async function getCurrentStats() {
   const allUsers = await prisma.user.findMany();
 
-  // Create user entries using cached data when available, fallback to database
   const userEntries = allUsers.map((user) => {
     const cachedUserInfo = state.usersCache[user.id];
 
@@ -14,11 +12,7 @@ async function getCurrentStats() {
       id: user.id,
       username: cachedUserInfo?.username || `User_${user.id.slice(-4)}`,
       avatarUrl: cachedUserInfo?.avatarUrl || null,
-      lastUpdated: cachedUserInfo?.lastUpdated || Date.now(),
-      score: user.repPoint || 0,
       banReason: user.banned ? user.banMessage : null,
-      bondLvl: user.bondLvl || 0,
-      totalMsgCount: user.totalMsgCount || 0,
     };
   });
 
@@ -45,10 +39,7 @@ async function getCurrentStats() {
         id: entry.id,
         username: entry.username,
         avatarUrl: entry.avatarUrl,
-        score: entry.score,
         banReason: entry.banReason,
-        bondLvl: entry.bondLvl,
-        totalMsgCount: entry.totalMsgCount,
       })) || [],
     muteCount: state.muteCount,
     logs: state.logs.toReversed() || [],

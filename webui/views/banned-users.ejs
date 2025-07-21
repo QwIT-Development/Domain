@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain WebUI - Banned Users Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'domain-red': '#C41E3A',
+                        'domain-dark': '#121214',
+                        'domain-card': '#1a1a1c',
+                        'domain-border': '#444',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-rounded {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="dark bg-domain-dark text-gray-100 min-h-screen flex flex-col">
+    <%- include('partials/navbar') %>
+
+    <main class="container mx-auto px-4 mt-8 flex-grow">
+        <div class="w-full">
+            <!-- Header Section -->
+            <div class="bg-domain-card rounded-lg shadow-xl border border-domain-border mb-6">
+                <div class="px-6 py-4 border-b border-domain-border">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-semibold flex items-center gap-2">
+                                <span class="material-symbols-rounded text-red-500">gavel</span>
+                                Banned Users Management
+                            </h2>
+                            <p class="text-gray-400 mt-2 mb-0">Manage and monitor banned users</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <a href="#ban-new-user" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+                                <span class="material-symbols-rounded text-sm">block</span>
+                                Ban User
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Section -->
+            <% if (users && users.length > 0) { %>
+                <div class="w-full mb-8">
+                    <div class="bg-domain-card rounded-lg shadow-xl border border-domain-border">
+                        <div class="px-6 py-4 border-b border-domain-border">
+                            <h3 class="text-xl font-semibold flex items-center gap-2">
+                                <span class="material-symbols-rounded">analytics</span>
+                                Ban Statistics
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+                                <div class="text-center">
+                                    <h4 class="text-3xl font-bold text-red-400 mb-2"><%= stats.totalBannedUsers %></h4>
+                                    <p class="text-gray-400 font-medium">Total Banned</p>
+                                </div>
+                                <div class="text-center">
+                                    <h4 class="text-3xl font-bold text-orange-400 mb-2"><%= stats.recentBans %></h4>
+                                    <p class="text-gray-400 font-medium">Last 24 Hours</p>
+                                </div>
+                                <div class="text-center">
+                                    <h4 class="text-3xl font-bold text-yellow-400 mb-2"><%= stats.weeklyBans %></h4>
+                                    <p class="text-gray-400 font-medium">Last 7 Days</p>
+                                </div>
+                                <div class="text-center">
+                                    <h4 class="text-3xl font-bold text-purple-400 mb-2"><%= stats.averageReputation.toFixed(1) %></h4>
+                                    <p class="text-gray-400 font-medium">Avg. Reputation</p>
+                                </div>
+                                <div class="text-center">
+                                    <h4 class="text-3xl font-bold text-cyan-400 mb-2"><%= stats.highMuteCount %></h4>
+                                    <p class="text-gray-400 font-medium">High Mute Count</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+
+            <!-- Banned Users Table -->
+            <div class="bg-domain-card rounded-lg shadow-xl border border-domain-border mb-8">
+                <div class="px-6 py-4 border-b border-domain-border">
+                    <h3 class="text-xl font-semibold flex items-center gap-2">
+                        <span class="material-symbols-rounded">person_off</span>
+                        Banned Users
+                    </h3>
+                    <p class="text-gray-400 mt-2 mb-0">All currently banned users</p>
+                </div>
+                <div class="p-6">
+                    <% if (users && users.length > 0) { %>
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse">
+                                <thead>
+                                    <tr class="border-b-2 border-domain-border">
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">#</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">User</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">Ban Reason</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">Reputation</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">Mute Count</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">Last Seen</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-200">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% users.forEach((user, index) => { %>
+                                        <tr class="border-b border-domain-border hover:bg-gray-800/50 transition-colors duration-150 <%= index % 2 === 0 ? 'bg-gray-900/20' : '' %>" id="user-row-<%= user.id %>">
+                                            <td class="py-4 px-4">
+                                                <span class="inline-flex items-center justify-center w-8 h-8 bg-red-600 text-white text-sm rounded-full font-medium"><%= index + 1 %></span>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <div class="flex items-center gap-3">
+                                                    <% if (user.avatarUrl && user.avatarUrl.trim() !== '') { %>
+                                                        <%
+                                                            let avatarSrc;
+                                                            const lowerUrl = user.avatarUrl.toLowerCase();
+                                                            if (lowerUrl.startsWith('https:') || lowerUrl.startsWith('data:')) {
+                                                                avatarSrc = user.avatarUrl;
+                                                            } else {
+                                                                avatarSrc = 'data:,';
+                                                            }
+                                                        %>
+                                                        <img src="<%= avatarSrc %>" alt="" class="w-8 h-8 rounded-full">
+                                                    <% } else { %>
+                                                        <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-white">
+                                                            <span class="material-symbols-rounded text-base">person</span>
+                                                        </div>
+                                                    <% } %>
+                                                    <div>
+                                                        <div class="font-semibold text-gray-100"><%= user.username %></div>
+                                                        <div class="text-xs text-gray-400"><%= user.id %></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <div class="max-w-xs">
+                                                    <div class="p-2 bg-red-500/20 border border-red-500/30 rounded-lg">
+                                                        <p class="text-sm text-red-300 break-words"><%= user.banReason || 'No reason provided' %></p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <% if (user.score > 0) { %>
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-500/20 text-green-400 border border-green-500/30"><%= user.score %></span>
+                                                <% } else if (user.score < 0) { %>
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-500/20 text-red-400 border border-red-500/30"><%= user.score %></span>
+                                                <% } else { %>
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-500/20 text-gray-400 border border-gray-500/30">0</span>
+                                                <% } %>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <% if (user.muteCount > 5) { %>
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-500/20 text-red-400 border border-red-500/30">
+                                                        <%= user.muteCount %>
+                                                    </span>
+                                                <% } else if (user.muteCount > 0) { %>
+                                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                                                        <%= user.muteCount %>
+                                                    </span>
+                                                <% } else { %>
+                                                    <span class="text-gray-400">0</span>
+                                                <% } %>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <div class="text-sm text-gray-400">
+                                                    <%
+                                                        const lastSeen = new Date(user.lastInteraction);
+                                                        const now = new Date();
+                                                        const diffTime = now - lastSeen;
+                                                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                                                        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+                                                        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+                                                    %>
+                                                    <% if (diffDays > 0) { %>
+                                                        <%= diffDays %> day<%= diffDays > 1 ? 's' : '' %> ago
+                                                    <% } else if (diffHours > 0) { %>
+                                                        <%= diffHours %> hour<%= diffHours > 1 ? 's' : '' %> ago
+                                                    <% } else if (diffMinutes > 0) { %>
+                                                        <%= diffMinutes %> minute<%= diffMinutes > 1 ? 's' : '' %> ago
+                                                    <% } else { %>
+                                                        Just now
+                                                    <% } %>
+                                                    <br>
+                                                    <span class="text-xs text-gray-500"><%= lastSeen.toLocaleDateString() %></span>
+                                                </div>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <div class="flex flex-col sm:flex-row gap-2">
+                                                    <button onclick="confirmUnban('<%= user.id %>', '<%= user.username %>')"
+                                                            class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-1 text-sm">
+                                                        <span class="material-symbols-rounded text-sm">check_circle</span>
+                                                        Unban
+                                                    </button>
+                                                    <button onclick="showUserDetails('<%= user.id %>', '<%= user.username %>', '<%= user.banReason %>', <%= user.score %>, <%= user.bondLvl %>, <%= user.totalMsgCount %>, <%= user.muteCount %>, '<%= user.lastInteraction %>')"
+                                                            class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-1 text-sm">
+                                                        <span class="material-symbols-rounded text-sm">info</span>
+                                                        Details
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } else { %>
+                        <div class="text-center py-12">
+                            <span class="material-symbols-rounded text-green-500 text-6xl block mb-4">check_circle</span>
+                            <h4 class="text-xl font-semibold text-gray-400 mb-2">No banned users</h4>
+                            <p class="text-gray-500">Great! There are currently no banned users.</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Ban New User Section -->
+            <div id="ban-new-user" class="bg-domain-card rounded-lg shadow-xl border border-domain-border">
+                <div class="px-6 py-4 border-b border-domain-border">
+                    <h3 class="text-xl font-semibold flex items-center gap-2">
+                        <span class="material-symbols-rounded text-red-400">add_circle</span>
+                        Ban New User
+                    </h3>
+                    <p class="text-gray-400 mt-2 mb-0">Add a new user to the ban list</p>
+                </div>
+                <div class="p-6">
+                    <form class="space-y-4" id="banForm">
+                        <div>
+                            <label for="ban-userid" class="block text-sm font-medium text-gray-300 mb-2">User ID</label>
+                            <input
+                                type="text"
+                                id="ban-userid"
+                                name="userId"
+                                placeholder="000000000000000000"
+                                required
+                                class="w-full px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                            >
+                        </div>
+                        <div>
+                            <label for="ban-reason" class="block text-sm font-medium text-gray-300 mb-2">Reason</label>
+                            <textarea
+                                id="ban-reason"
+                                name="reason"
+                                placeholder="Enter the reason for the ban..."
+                                required
+                                rows="3"
+                                class="w-full px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                            ></textarea>
+                        </div>
+                        <button
+                            type="submit"
+                            class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+                        >
+                            <span class="material-symbols-rounded text-sm">block</span>
+                            Ban User
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="bg-domain-card rounded-lg p-6 flex items-center gap-3">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+            <span>Processing...</span>
+        </div>
+    </div>
+
+    <!-- User Details Modal -->
+    <div id="userDetailsModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div class="bg-domain-card rounded-lg border border-domain-border w-full max-w-md">
+            <div class="px-6 py-4 border-b border-domain-border">
+                <h3 class="text-xl font-semibold flex items-center gap-2">
+                    <span class="material-symbols-rounded text-blue-400">person</span>
+                    User Details
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Username</label>
+                        <div class="text-gray-100 font-medium" id="detailsUsername"></div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Ban Reason</label>
+                        <div class="p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+                            <p class="text-sm text-red-300" id="detailsBanReason"></p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-3 bg-gray-800/30 rounded-lg">
+                            <span class="text-sm text-gray-300 block mb-1">Reputation</span>
+                            <div class="text-lg font-mono" id="detailsReputation"></div>
+                        </div>
+                        <div class="p-3 bg-gray-800/30 rounded-lg">
+                            <span class="text-sm text-gray-300 block mb-1">Bond Level</span>
+                            <div class="text-lg font-mono" id="detailsBondLvl"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-3 bg-gray-800/30 rounded-lg">
+                            <span class="text-sm text-gray-300 block mb-1">Messages</span>
+                            <div class="text-lg font-mono" id="detailsTotalMsg"></div>
+                        </div>
+                        <div class="p-3 bg-gray-800/30 rounded-lg">
+                            <span class="text-sm text-gray-300 block mb-1">Mute Count</span>
+                            <div class="text-lg font-mono" id="detailsMuteCount"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Last Interaction</label>
+                        <div class="text-gray-400" id="detailsLastInteraction"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-domain-border flex justify-end">
+                <button onclick="closeUserDetailsModal()"
+                        class="px-4 py-2 border border-gray-600 text-gray-300 hover:bg-gray-700 rounded-lg font-medium transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div class="bg-domain-card rounded-lg border border-domain-border w-full max-w-md">
+            <div class="px-6 py-4 border-b border-domain-border">
+                <h3 class="text-xl font-semibold flex items-center gap-2">
+                    <span class="material-symbols-rounded text-orange-400">warning</span>
+                    Confirm Action
+                </h3>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-300 mb-4" id="confirmationMessage"></p>
+            </div>
+            <div class="px-6 py-4 border-t border-domain-border flex gap-3 justify-end">
+                <button onclick="closeConfirmationModal()"
+                        class="px-4 py-2 border border-gray-600 text-gray-300 hover:bg-gray-700 rounded-lg font-medium transition-colors">
+                    Cancel
+                </button>
+                <button onclick="executeConfirmedAction()"
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error notification -->
+    <div id="notification" class="hidden fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm">
+        <div class="flex items-center gap-3">
+            <span id="notificationIcon" class="material-symbols-rounded"></span>
+            <span id="notificationMessage"></span>
+        </div>
+    </div>
+
+    <footer class="text-center text-gray-500 py-6 mt-8 border-t border-domain-border">
+        <small>
+            <a href="https://github.com/QwIT-Development/Domain" class="text-domain-red hover:text-red-400 transition-colors">
+                Domain-Unchained
+            </a>
+        </small>
+    </footer>
+
+    <script>
+        let pendingUnbanUserId = null;
+
+        // Ban form handler
+        document.getElementById('banForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const userId = document.getElementById('ban-userid').value.trim();
+            const reason = document.getElementById('ban-reason').value.trim();
+
+            if (!userId || !reason) {
+                showNotification('Please fill in all fields', 'error');
+                return;
+            }
+
+            await banUser(userId, reason);
+        });
+
+        async function banUser(userId, reason) {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            try {
+                loadingOverlay.classList.remove('hidden');
+
+                const response = await fetch('/api/ban', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: userId,
+                        reason: reason
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showNotification('User banned successfully', 'success');
+                    document.getElementById('banForm').reset();
+                    // Reload the page to update the UI
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showNotification(result.error || 'Failed to ban user', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Network error occurred', 'error');
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        function confirmUnban(userId, username) {
+            pendingUnbanUserId = userId;
+            document.getElementById('confirmationMessage').textContent =
+                `Are you sure you want to unban user "${username}"? This action cannot be undone.`;
+            document.getElementById('confirmationModal').classList.remove('hidden');
+        }
+
+        async function executeConfirmedAction() {
+            if (!pendingUnbanUserId) return;
+
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const userIdToUnban = pendingUnbanUserId; // Store before closing modal
+
+            try {
+                loadingOverlay.classList.remove('hidden');
+                closeConfirmationModal();
+
+                const response = await fetch(`/api/unban/${encodeURIComponent(userIdToUnban)}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showNotification('User unbanned successfully', 'success');
+                    // Reload the page to update the UI
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showNotification(result.error || 'Failed to unban user', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Network error occurred', 'error');
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        function showUserDetails(userId, username, banReason, score, bondLvl, totalMsg, muteCount, lastInteraction) {
+            document.getElementById('detailsUsername').textContent = username;
+            document.getElementById('detailsBanReason').textContent = banReason || 'No reason provided';
+
+            const reputationEl = document.getElementById('detailsReputation');
+            reputationEl.textContent = score;
+            reputationEl.className = score > 0 ? 'text-lg font-mono text-green-400' :
+                                    score < 0 ? 'text-lg font-mono text-red-400' :
+                                    'text-lg font-mono text-gray-400';
+
+            document.getElementById('detailsBondLvl').textContent = bondLvl;
+            document.getElementById('detailsTotalMsg').textContent = totalMsg.toLocaleString();
+
+            const muteEl = document.getElementById('detailsMuteCount');
+            muteEl.textContent = muteCount;
+            muteEl.className = muteCount > 5 ? 'text-lg font-mono text-red-400' :
+                              muteCount > 0 ? 'text-lg font-mono text-orange-400' :
+                              'text-lg font-mono text-gray-400';
+
+            const lastSeen = new Date(lastInteraction);
+            document.getElementById('detailsLastInteraction').textContent = lastSeen.toLocaleString();
+
+            document.getElementById('userDetailsModal').classList.remove('hidden');
+        }
+
+        function closeUserDetailsModal() {
+            document.getElementById('userDetailsModal').classList.add('hidden');
+        }
+
+        function closeConfirmationModal() {
+            pendingUnbanUserId = null;
+            document.getElementById('confirmationModal').classList.add('hidden');
+        }
+
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            const icon = document.getElementById('notificationIcon');
+            const messageElement = document.getElementById('notificationMessage');
+
+            messageElement.textContent = message;
+
+            // Clear existing classes
+            notification.className = 'fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm';
+
+            if (type === 'success') {
+                notification.classList.add('bg-green-600');
+                icon.textContent = 'check_circle';
+                icon.className = 'material-symbols-rounded text-white';
+            } else {
+                notification.classList.add('bg-red-600');
+                icon.textContent = 'error';
+                icon.className = 'material-symbols-rounded text-white';
+            }
+
+            notification.classList.remove('hidden');
+
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Close modals when clicking outside
+        document.getElementById('userDetailsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeUserDetailsModal();
+            }
+        });
+
+        document.getElementById('confirmationModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeConfirmationModal();
+            }
+        });
+
+        // Close modals with escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (!document.getElementById('userDetailsModal').classList.contains('hidden')) {
+                    closeUserDetailsModal();
+                }
+                if (!document.getElementById('confirmationModal').classList.contains('hidden')) {
+                    closeConfirmationModal();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

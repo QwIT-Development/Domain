@@ -16,11 +16,15 @@ const lobotomizeHandler = require("./api/lobotomize");
 const repSaveHandler = require("./api/repSave");
 const gcHandler = require("./api/gc.js");
 const heapdumpHandler = require("./api/heapdump");
+const toggleLeaderboardVisibilityHandler = require("./api/toggleLeaderboardVisibility");
 
 const wsConn = require("./func/wsConn");
 const broadcastStats = require("./func/broadcastStats");
 const getLeaderboardData = require("./func/getLeaderboardData");
+const getAllUsersForManagement = require("./func/getAllUsersForManagement");
+const getBannedUsersData = require("./func/getBannedUsersData");
 const warmupCache = require("./func/warmupCache");
+const cacheRefreshService = require("../cronJobs/cacheRefreshService");
 const state = require("../initializers/state");
 
 const viewsPath = path.join(global.dirname, "webui", "views");
@@ -81,6 +85,11 @@ async function handleApiRoutes(req, pathname) {
     pathname === "/api/heap/dump.heapsnapshot"
   ) {
     return await heapdumpHandler(req);
+  } else if (
+    req.method === "PUT" &&
+    pathname === "/api/leaderboard/visibility"
+  ) {
+    return await toggleLeaderboardVisibilityHandler(req);
   } else if (req.method === "GET" && pathname === "/api/prompts") {
     return new Response(JSON.stringify(await getPromptsData()), {
       headers: { "Content-Type": "application/json" },
@@ -110,6 +119,15 @@ const server = Bun.serve({
       } else if (pathname === "/leaderboard") {
         const leaderboardData = await getLeaderboardData();
         response = await handleEjsTemplate("leaderboard.ejs", leaderboardData);
+      } else if (pathname === "/leaderboard/manage") {
+        const managementData = await getAllUsersForManagement();
+        response = await handleEjsTemplate(
+          "leaderboard-manage.ejs",
+          managementData,
+        );
+      } else if (pathname === "/banned-users") {
+        const bannedUsersData = await getBannedUsersData();
+        response = await handleEjsTemplate("banned-users.ejs", bannedUsersData);
       } else if (pathname.startsWith("/api/")) {
         response = await handleApiRoutes(req, pathname);
       }
@@ -196,11 +214,13 @@ log("Initializing WebSocket broadcast...", "info", "webui.js");
 statsInterval = setInterval(() => broadcastStats(), 2000);
 log("WebSocket broadcast initialized", "info", "webui.js");
 
+cacheRefreshService.start();
+
 process.on("SIGINT", () => {
   log("Shutting down WebUI", "info", "webui.js");
   if (statsInterval) {
     clearInterval(statsInterval);
   }
-  server.stop(true);
+  cacheRefreshService.stop();
   process.exit(0);
 });

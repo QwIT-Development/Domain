@@ -110,13 +110,14 @@
                             </div>
                         </div>
 
-                        <a href="#bans" class="block">
+                        <a href="/banned-users" class="block">
                             <div class="flex items-center gap-2 p-2 bg-gray-800/30 hover:bg-gray-700/50 rounded-lg transition-colors cursor-pointer">
                                 <span class="material-symbols-rounded text-red-500">gavel</span>
                                 <div class="flex-1">
-                                    <span class="text-gray-300">Banned Users:</span>
-                                    <div class="text-blue-400 font-mono" id="banCount">-</div>
+                                    <span class="text-gray-300">Banned Users</span>
+                                    <div class="text-xs text-gray-400">Manage banned users</div>
                                 </div>
+                                <span class="material-symbols-rounded text-gray-400">arrow_forward</span>
                             </div>
                         </a>
                     </div>
@@ -135,77 +136,6 @@
                     <div class="p-4 flex-1">
                         <div id="logs" class="bg-gray-900/50 rounded-lg p-3 h-full overflow-y-auto font-mono text-sm border border-gray-700 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800"></div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bans and Reputation Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-            <!-- Bans Section -->
-            <div id="bans">
-                <h1 class="text-3xl font-bold mb-6 flex items-center gap-3">
-                    <span class="material-symbols-rounded text-red-500">gavel</span>
-                    Bans
-                </h1>
-
-                <div class="bg-domain-card rounded-lg shadow-xl border border-domain-border mb-6">
-                    <div class="px-4 py-3 border-b border-domain-border">
-                        <h3 class="text-lg font-semibold flex items-center gap-2">
-                            <span class="material-symbols-rounded text-red-400">gavel</span>
-                            Ban User
-                        </h3>
-                    </div>
-                    <div class="p-4">
-                        <form class="space-y-3">
-                            <div>
-                                <label for="ban-userid" class="block text-sm font-medium text-gray-300 mb-2">User ID</label>
-                                <input
-                                    type="text"
-                                    id="ban-userid"
-                                    name="userId"
-                                    placeholder="000000000000000000"
-                                    required
-                                    class="w-full px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-domain-red focus:border-transparent"
-                                >
-                            </div>
-                            <div>
-                                <label for="ban-reason" class="block text-sm font-medium text-gray-300 mb-2">Reason</label>
-                                <input
-                                    type="text"
-                                    id="ban-reason"
-                                    name="reason"
-                                    placeholder="Lorem ipsum dolor sit."
-                                    required
-                                    class="w-full px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-domain-red focus:border-transparent"
-                                >
-                            </div>
-                        </form>
-                        <button
-                            onclick="ban()"
-                            class="mt-3 w-full sm:w-auto px-4 py-2 bg-domain-red hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-                        >
-                            <span class="material-symbols-rounded text-sm">block</span>
-                            Ban User
-                        </button>
-                        <script src="/js/ban.js"></script>
-                    </div>
-                </div>
-
-                <div id="ban-cards-container" class="space-y-4">
-                    <!-- Ban cards will be dynamically inserted here -->
-                </div>
-            </div>
-
-            <!-- Reputation Section -->
-            <div id="reputation">
-                <h1 class="text-3xl font-bold mb-6 flex items-center gap-3">
-                    <span class="material-symbols-rounded text-yellow-500">star</span>
-                    Reputation
-                </h1>
-                <p class="text-gray-400 mb-6">We encourage fair game, but yes, you can cheat.</p>
-
-                <div id="user-cards-container" class="space-y-4">
-                    <!-- User reputation cards will be dynamically inserted here -->
                 </div>
             </div>
         </div>

@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const state = require("../../initializers/state");
 const usersCache = state.usersCache;
+const getEntry = require("../func/getEntry");
 
 const unban = async (req) => {
   const url = new URL(req.url);
@@ -24,6 +25,9 @@ const unban = async (req) => {
     if (usersCache[id]) {
       delete usersCache[id];
     }
+
+    // Recache the user with fresh Discord data
+    await getEntry(id);
     return new Response(JSON.stringify({ success: true }), {
       headers: { "Content-Type": "application/json" },
     });
