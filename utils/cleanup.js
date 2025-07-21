@@ -49,12 +49,6 @@ async function deleteUploadedItems() {
       }
     }
   }
-
-  log(
-    "OpenAI implementation uses Discord URLs - no remote file cleanup needed",
-    "info",
-    "cleanup.js",
-  );
 }
 
 module.exports = { deleteArtifacts, deleteUploadedItems };

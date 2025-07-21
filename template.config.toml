@@ -49,6 +49,10 @@ LOCALE = "hu-HU"
 # you might want to leave as it is
 WEBUI_PORT = 4500
 
+# disable data removal feature for security (set to true to disable)
+# this prevents accidental data removal operations in production
+DISABLE_DATA_REMOVAL = false
+
 # administrator user ids, capable of running some commands not available for regular users
 # this excludes running the /debug command
 OWNERS = []
